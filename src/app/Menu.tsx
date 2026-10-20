@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { net } from '../net/net';
 import { sfx } from '../audio/audio';
 import { useGame } from './store';
+import { quality, type Quality } from '../render/quality';
 
 function useAudioSettings() {
   const [s, setS] = useState(sfx.settings);
@@ -30,6 +31,20 @@ export function AudioToggle() {
   );
 }
 
+function QualityPicker() {
+  const [q, setQ] = useState<Quality>(quality.level);
+  useEffect(() => quality.on(setQ), []);
+  return (
+    <div className="seg">
+      {(['high', 'medium', 'low'] as Quality[]).map((v) => (
+        <button key={v} className={'seg-btn' + (q === v ? ' on' : '')} onClick={() => quality.set(v)}>
+          {v}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Menu() {
   const s = useAudioSettings();
   const set = useGame((st) => st.set);
@@ -49,6 +64,10 @@ export function Menu() {
         <label className="check">
           <input type="checkbox" checked={s.muted} onChange={(e) => sfx.set({ muted: e.target.checked })} /> Mute all (M)
         </label>
+        <div className="slider">
+          <span>Graphics</span>
+          <QualityPicker />
+        </div>
         <div className="menu-controls">
           <div><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump</div>
           <div><kbd>E</kbd> hold near the artifact to grip a rope</div>

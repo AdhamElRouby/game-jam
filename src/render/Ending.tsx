@@ -1,9 +1,9 @@
 // Ending cutscene: castle doors open, the King waddles out... and uses the magical artifact as a doorstop.
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGame } from '../app/store';
-import { castleDoor } from './Scenery';
+import { castleDoor } from './Castle';
 import { frame } from './frame';
 import { fx } from './Effects';
 import { sfx } from '../audio/audio';
@@ -14,38 +14,150 @@ export const kingState = { x: 0, y: 0, z: -171, talking: false };
 
 const DOOR_SPOT = new THREE.Vector3(1.75, 0.5, -169.2);
 
+const KING_BODY = (() => {
+  const pts = [[0, 0], [0.42, 0.02], [0.56, 0.16], [0.6, 0.42], [0.56, 0.72], [0.46, 0.92], [0.3, 1.02], [0, 1.05]].map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(pts, 28);
+})();
+
+/** The King: a round chibi monarch in a purple robe with an ermine collar, red cape, fluffy beard and jewelled crown. */
 function King() {
+  const m = useMemo(
+    () => ({
+      robe: new THREE.MeshStandardMaterial({ color: '#8f7be0', roughness: 0.55 }),
+      cape: new THREE.MeshStandardMaterial({ color: '#e45b6f', roughness: 0.7, side: THREE.DoubleSide }),
+      fur: new THREE.MeshStandardMaterial({ color: '#fff8f0', roughness: 0.9 }),
+      spot: new THREE.MeshStandardMaterial({ color: '#2a2338', roughness: 0.6 }),
+      skin: new THREE.MeshStandardMaterial({ color: '#ffd9b8', roughness: 0.65 }),
+      cheek: new THREE.MeshStandardMaterial({ color: '#ff9fb2', roughness: 0.8 }),
+      eye: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.25 }),
+      pupil: new THREE.MeshStandardMaterial({ color: '#241d33', roughness: 0.2 }),
+      gold: new THREE.MeshStandardMaterial({ color: '#ffcf5a', metalness: 1, roughness: 0.28 }),
+      gem: new THREE.MeshStandardMaterial({ color: '#ff5d7a', emissive: '#ff2d55', emissiveIntensity: 0.8, roughness: 0.2 }),
+      gem2: new THREE.MeshStandardMaterial({ color: '#7ff0ff', emissive: '#29d4e8', emissiveIntensity: 0.8, roughness: 0.2 }),
+      shoe: new THREE.MeshStandardMaterial({ color: '#5a3b6e', roughness: 0.6 }),
+    }),
+    [],
+  );
   return (
-    <group scale={1.9}>
-      <mesh position={[0, 0.55, 0]} material={MAT.lavender} castShadow>
-        <coneGeometry args={[0.62, 1.2, 16]} />
+    <group scale={1.55}>
+      <mesh geometry={KING_BODY} material={m.robe} castShadow />
+      {/* robe trim + buttons */}
+      <mesh position={[0, 0.06, 0]} rotation={[Math.PI / 2, 0, 0]} material={m.fur}>
+        <torusGeometry args={[0.5, 0.07, 8, 28]} />
       </mesh>
-      <mesh position={[0, 0.45, -0.25]} rotation={[0.15, 0, 0]} material={MAT.red} castShadow>
-        <boxGeometry args={[0.9, 1.0, 0.08]} />
-      </mesh>
-      <mesh position={[0, 1.32, 0]} castShadow>
-        <sphereGeometry args={[0.4, 18, 14]} />
-        <meshStandardMaterial color="#ffd9b8" roughness={0.7} />
-      </mesh>
-      <mesh position={[0, 1.08, 0.22]} scale={[1, 0.9, 0.7]} material={MAT.white}>
-        <sphereGeometry args={[0.3, 14, 10]} />
-      </mesh>
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * 0.14, 1.42, 0.35]}>
-          <sphereGeometry args={[0.05, 8, 6]} />
-          <meshStandardMaterial color="#2a2338" />
+      {[0.3, 0.48, 0.66].map((y) => (
+        <mesh key={y} position={[0, y, 0.58]} material={m.gold}>
+          <sphereGeometry args={[0.045, 10, 8]} />
         </mesh>
       ))}
-      <group position={[0, 1.7, 0]}>
-        <mesh material={MAT.gold}>
-          <cylinderGeometry args={[0.3, 0.32, 0.22, 16, 1, true]} />
+      {/* cape */}
+      <mesh position={[0, 0.5, -0.38]} rotation={[0.18, 0, 0]} material={m.cape} castShadow>
+        <cylinderGeometry args={[0.5, 0.66, 1.0, 20, 1, true, Math.PI * 0.62, Math.PI * 0.76]} />
+      </mesh>
+      {/* ermine collar */}
+      <mesh position={[0, 0.98, 0]} rotation={[Math.PI / 2, 0, 0]} material={m.fur}>
+        <torusGeometry args={[0.36, 0.11, 10, 28]} />
+      </mesh>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <mesh key={i} position={[Math.cos((i / 6) * Math.PI * 2 + 0.3) * 0.43, 1.0, Math.sin((i / 6) * Math.PI * 2 + 0.3) * 0.43]} material={m.spot}>
+          <sphereGeometry args={[0.025, 6, 5]} />
         </mesh>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <mesh key={i} position={[Math.cos((i / 5) * Math.PI * 2) * 0.3, 0.2, Math.sin((i / 5) * Math.PI * 2) * 0.3]} material={MAT.gold}>
-            <coneGeometry args={[0.07, 0.22, 4]} />
+      ))}
+      {/* head */}
+      <group position={[0, 1.42, 0]}>
+        <mesh material={m.skin} castShadow>
+          <sphereGeometry args={[0.42, 24, 18]} />
+        </mesh>
+        {[-1, 1].map((s) => (
+          <group key={s} position={[s * 0.15, 0.06, 0.34]}>
+            <mesh material={m.eye} scale={[1, 1.15, 0.6]}>
+              <sphereGeometry args={[0.09, 14, 10]} />
+            </mesh>
+            <mesh position={[0, -0.01, 0.05]} material={m.pupil} scale={[1, 1.1, 0.6]}>
+              <sphereGeometry args={[0.055, 12, 8]} />
+            </mesh>
+            <mesh position={[0.02, 0.03, 0.08]} material={m.eye}>
+              <sphereGeometry args={[0.018, 6, 5]} />
+            </mesh>
+            <mesh position={[0, 0.13, 0.02]} rotation={[0, 0, s * -0.25]} material={m.fur}>
+              <boxGeometry args={[0.13, 0.04, 0.04]} />
+            </mesh>
+          </group>
+        ))}
+        {[-1, 1].map((s) => (
+          <mesh key={'c' + s} position={[s * 0.27, -0.06, 0.3]} scale={[1, 0.6, 0.4]} material={m.cheek}>
+            <sphereGeometry args={[0.07, 10, 8]} />
           </mesh>
         ))}
+        <mesh position={[0, -0.04, 0.42]} material={m.skin}>
+          <sphereGeometry args={[0.07, 10, 8]} />
+        </mesh>
+        {/* mustache + fluffy beard */}
+        {[-1, 1].map((s) => (
+          <mesh key={'m' + s} position={[s * 0.1, -0.12, 0.39]} rotation={[0, 0, s * 0.35]} scale={[1.4, 0.6, 0.6]} material={m.fur}>
+            <sphereGeometry args={[0.08, 10, 8]} />
+          </mesh>
+        ))}
+        {[[0, -0.3, 0.3, 0.17], [-0.16, -0.24, 0.27, 0.13], [0.16, -0.24, 0.27, 0.13], [-0.08, -0.4, 0.24, 0.12], [0.08, -0.4, 0.24, 0.12], [0, -0.48, 0.2, 0.1]].map(([x, y, z, r], i) => (
+          <mesh key={'b' + i} position={[x, y, z]} material={m.fur} castShadow>
+            <icosahedronGeometry args={[r, 1]} />
+          </mesh>
+        ))}
+        {/* crown */}
+        <group position={[0, 0.34, 0]}>
+          <mesh material={m.gold}>
+            <cylinderGeometry args={[0.3, 0.33, 0.2, 20, 1, true]} />
+          </mesh>
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const a = (i / 6) * Math.PI * 2;
+            return (
+              <group key={i} position={[Math.cos(a) * 0.31, 0.17, Math.sin(a) * 0.31]}>
+                <mesh material={m.gold}>
+                  <coneGeometry args={[0.07, 0.2, 4]} />
+                </mesh>
+                <mesh position={[0, 0.13, 0]} material={m.gold}>
+                  <sphereGeometry args={[0.04, 8, 6]} />
+                </mesh>
+              </group>
+            );
+          })}
+          <mesh position={[0, 0.02, 0.31]} material={m.gem}>
+            <octahedronGeometry args={[0.07, 0]} />
+          </mesh>
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.22, 0.02, 0.22]} material={m.gem2}>
+              <octahedronGeometry args={[0.05, 0]} />
+            </mesh>
+          ))}
+          <mesh position={[0, -0.02, 0]} material={m.cape}>
+            <sphereGeometry args={[0.29, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          </mesh>
+        </group>
       </group>
+      {/* arms + scepter */}
+      {[-1, 1].map((s) => (
+        <group key={s} position={[s * 0.56, 0.62, 0.08]} rotation={[0, 0, s * 0.5]}>
+          <mesh position={[0, -0.12, 0]} material={m.robe}>
+            <capsuleGeometry args={[0.1, 0.22, 4, 10]} />
+          </mesh>
+          <mesh position={[0, -0.3, 0.02]} material={m.skin}>
+            <sphereGeometry args={[0.1, 12, 10]} />
+          </mesh>
+        </group>
+      ))}
+      <group position={[0.78, 0.5, 0.18]} rotation={[0.2, 0, -0.25]}>
+        <mesh position={[0, 0.35, 0]} material={m.gold}>
+          <cylinderGeometry args={[0.03, 0.035, 0.9, 8]} />
+        </mesh>
+        <mesh position={[0, 0.85, 0]} material={m.gem2}>
+          <icosahedronGeometry args={[0.1, 1]} />
+        </mesh>
+      </group>
+      {[-1, 1].map((s) => (
+        <mesh key={'f' + s} position={[s * 0.2, 0.04, 0.2]} scale={[1, 0.6, 1.5]} material={m.shoe}>
+          <sphereGeometry args={[0.13, 12, 8]} />
+        </mesh>
+      ))}
     </group>
   );
 }

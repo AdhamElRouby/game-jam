@@ -71,6 +71,15 @@ export const fx = {
       emit({ x, y: y + 0.1, z, vx: Math.cos(a) * s, vy: rand(0.3, 1.2), vz: Math.sin(a) * s, g: 0.2, drag: 3, size: rand(0.35, 0.7), max: rand(0.35, 0.6), color: '#f4ead8' });
     }
   },
+  /** Expanding ring of motes along the ground (activations, checkpoints, delivery). */
+  ring(x: number, y: number, z: number, radius = 3, color = '#ffe9a0') {
+    const n = 64;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const s = radius * 2.4;
+      emit({ x: x + Math.cos(a) * 0.4, y, z: z + Math.sin(a) * 0.4, vx: Math.cos(a) * s, vy: 0.3 + Math.random() * 0.4, vz: Math.sin(a) * s, g: 0, drag: 2.8, size: rand(0.26, 0.4), max: rand(0.55, 0.75), color: Math.random() < 0.25 ? '#ffffff' : color });
+    }
+  },
   wind(x: number, y: number, z: number, dx: number, dz: number) {
     emit({ x, y, z, vx: dx * rand(10, 16), vy: rand(-0.3, 0.3), vz: dz * rand(10, 16), g: 0, drag: 0.2, size: rand(0.12, 0.22), max: rand(0.6, 1.0), color: '#ffffff' });
   },

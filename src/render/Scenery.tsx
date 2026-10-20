@@ -3,10 +3,14 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { LEVEL } from '../shared/level';
-import { buildIsland, scenicIsland } from './islandGeo';
+import { scenicIsland } from './islandGeo';
+import { MergedIslands } from './Islands';
 import { MAT, rng } from './materials';
 import { frame } from './frame';
 import { Props, textTexture } from './Props';
+import { WindMachine } from './Ch2';
+import { Castle } from './Castle';
+import { Waterfall } from './Water';
 import { InstancedModel, type Placement } from './Models';
 import { SafeBoundary } from './SafeBoundary';
 import { Suspense } from 'react';
@@ -129,6 +133,16 @@ export function courseDecor(): DecoItem[] {
   }
   return out;
 }
+
+/** Small decorative islands right beside the course: windmill (ch2) and crooked tower (ch3). x, z, radius, top. */
+export const SMALL_ISLANDS: [number, number, number, number][] = [
+  [-18, -52, 4.5, 1.2],
+  [-15.5, -108, 3.6, 9],
+  // rock perches for the wind machines
+  [13.0, -51.5, 2.1, -2.0],
+  [13.0, -58.5, 2.1, -2.0],
+  [12.5, -133, 2.8, 0.6],
+];
 
 interface ScenicDef {
   isl: ReturnType<typeof scenicIsland>;
@@ -285,97 +299,63 @@ function Foliage({ items }: { items: DecoItem[] }) {
   );
 }
 
-// ------------------------------------------------------------------ waterfalls
-
-function useWaterTex() {
-  return useMemo(() => {
-    const c = document.createElement('canvas');
-    c.width = 64;
-    c.height = 256;
-    const g = c.getContext('2d')!;
-    g.fillStyle = '#bfefff';
-    g.fillRect(0, 0, 64, 256);
-    const R = rng(77);
-    for (let i = 0; i < 60; i++) {
-      g.fillStyle = `rgba(255,255,255,${0.25 + R() * 0.5})`;
-      g.fillRect(R() * 64, R() * 256, 1 + R() * 3, 20 + R() * 60);
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, []);
-}
-
-function Waterfall({ x, y, z, w, h, rotY }: { x: number; y: number; z: number; w: number; h: number; rotY: number }) {
-  const tex = useWaterTex();
-  const mat = useMemo(() => new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.82, depthWrite: false, side: THREE.DoubleSide, fog: true }), [tex]);
-  useFrame((_, dt) => {
-    tex.offset.y += dt * 0.9;
-  });
-  return (
-    <group position={[x, y, z]} rotation={[0, rotY, 0]}>
-      <mesh position={[0, -h / 2, 0]} material={mat}>
-        <planeGeometry args={[w, h, 1, 1]} />
-      </mesh>
-      <mesh position={[0, -h, 0.4]} material={MAT.white}>
-        <icosahedronGeometry args={[w * 0.6, 1]} />
-      </mesh>
-    </group>
-  );
-}
-
 // ------------------------------------------------------------------ fans + wind streaks
 
-function Fan({ x, y, z, which, scale = 1 }: { x: number; y: number; z: number; which: 'wind' | 'fan'; scale?: number }) {
-  const blades = useRef<THREE.Group>(null);
-  const spin = useRef(0);
-  useFrame((_, dt) => {
-    const w = frame.current.w;
-    const s = which === 'wind' ? w.wind : w.fan;
-    const speed = s > 0 ? 4 + s * 20 : s < 0 ? 1 + -s * 6 : 0.6;
-    spin.current += dt * speed;
-    if (blades.current) blades.current.rotation.x = spin.current;
-  });
-  return (
-    <group position={[x, y, z]} scale={scale}>
-      <mesh position={[0, -1.6, 0]} material={MAT.darkwood} castShadow>
-        <cylinderGeometry args={[0.35, 0.55, 3.2, 8]} />
-      </mesh>
-      <group position={[0, 0.4, 0]}>
-        <mesh rotation={[0, 0, Math.PI / 2]} material={MAT.teal} castShadow>
-          <torusGeometry args={[1.9, 0.18, 8, 28]} />
-        </mesh>
-        <mesh rotation={[0, 0, Math.PI / 2]} material={MAT.gold}>
-          <cylinderGeometry args={[0.45, 0.6, 0.8, 16]} />
-        </mesh>
-        <group ref={blades}>
-          {[0, 1, 2, 3].map((i) => (
-            <mesh key={i} rotation={[(i * Math.PI) / 2, 0, 0]} position={[-0.2, 0, 0]} material={MAT.cream} castShadow>
-              <boxGeometry args={[0.08, 0.5, 1.7]} />
-            </mesh>
-          ))}
-        </group>
-      </group>
-    </group>
-  );
-}
-
 function WindStreaks({ zone, idx }: { zone: (typeof LEVEL.windZones)[number]; idx: 'wind' | 'fan' }) {
-  const N = 36;
+  const N = 34;
   const ref = useRef<THREE.InstancedMesh>(null);
-  const mat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false }), []);
-  const geo = useMemo(() => new THREE.BoxGeometry(2.2, 0.05, 0.05), []);
+  const mat = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        uniforms: { op: { value: 0 }, t: { value: 0 } },
+        vertexShader: /* glsl */ `
+          attribute float aPhase;
+          uniform float t;
+          varying float vU;
+          varying float vV;
+          void main() {
+            vU = uv.x;
+            vV = uv.y;
+            vec3 p = position;
+            p.y += sin(uv.x * 6.2831 + t * 3.0 + aPhase) * 0.12;
+            p.z += cos(uv.x * 4.0 + aPhase) * 0.15;
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(p, 1.0);
+          }`,
+        fragmentShader: /* glsl */ `
+          uniform float op;
+          varying float vU;
+          varying float vV;
+          void main() {
+            float taper = pow(clamp(sin(vU * 3.14159), 0.0, 1.0), 1.6);
+            float core = 1.0 - abs(vV - 0.5) * 2.0;
+            gl_FragColor = vec4(vec3(1.0), op * taper * smoothstep(0.0, 0.6, core));
+          }`,
+      }),
+    [],
+  );
+  const geo = useMemo(() => {
+    const g = new THREE.PlaneGeometry(1, 1, 12, 1);
+    const R = rng(idx === 'wind' ? 51 : 91);
+    g.setAttribute('aPhase', new THREE.InstancedBufferAttribute(new Float32Array(Array.from({ length: N }, () => R() * 6.28)), 1));
+    return g;
+  }, [idx]);
   const state = useMemo(() => {
     const R = rng(idx === 'wind' ? 5 : 9);
-    return Array.from({ length: N }, () => ({ x: zone.min[0] + R() * (zone.max[0] - zone.min[0]), y: 0.4 + R() * 3.5, z: zone.min[2] + R() * (zone.max[2] - zone.min[2]), sp: 0.7 + R() * 0.6 }));
+    return Array.from({ length: N }, () => ({ x: zone.min[0] + R() * (zone.max[0] - zone.min[0]), y: 0.4 + R() * 3.2, z: zone.min[2] + R() * (zone.max[2] - zone.min[2]), sp: 0.7 + R() * 0.6, len: 1.6 + R() * 2.4 }));
   }, [zone, idx]);
   const m4 = useMemo(() => new THREE.Matrix4(), []);
+  const q = useMemo(() => new THREE.Quaternion(), []);
+  const v = useMemo(() => new THREE.Vector3(), []);
+  const sc = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dtRaw) => {
     const dt = Math.min(0.05, dtRaw);
     const s = idx === 'wind' ? frame.current.w.wind : frame.current.w.fan;
-    const strength = s > 0 ? s : s < 0 ? -s * 0.25 : 0;
-    mat.opacity += (strength * 0.75 - mat.opacity) * Math.min(1, dt * 6);
+    const strength = s > 0 ? s : s < 0 ? -s * 0.2 : 0;
+    mat.uniforms.op.value += (strength * 0.7 - mat.uniforms.op.value) * Math.min(1, dt * 6);
+    mat.uniforms.t.value += dt;
     const mesh = ref.current;
     if (!mesh) return;
     const baseY = idx === 'fan' ? 3 : 0;
@@ -384,205 +364,43 @@ function WindStreaks({ zone, idx }: { zone: (typeof LEVEL.windZones)[number]; id
       if (p.x < zone.min[0]) p.x = zone.max[0];
       if (p.x > zone.max[0]) p.x = zone.min[0];
       const ry = idx === 'fan' ? baseY + ((zone.max[2] - p.z) / (zone.max[2] - zone.min[2])) * -3.5 : baseY;
-      m4.makeTranslation(p.x, ry + p.y, p.z);
+      m4.compose(v.set(p.x, ry + p.y, p.z), q, sc.set(p.len * (0.6 + strength * 0.6), 0.08, 1));
       mesh.setMatrixAt(i, m4);
     });
     mesh.instanceMatrix.needsUpdate = true;
   });
-  return <instancedMesh ref={ref} args={[geo, mat, N]} frustumCulled={false} />;
+  return <instancedMesh ref={ref} args={[geo, mat, N]} frustumCulled={false} renderOrder={3} />;
 }
 
-// ------------------------------------------------------------------ castle
-
-function Tower({ x, y, z, r, h, roof, roofH, flag }: { x: number; y: number; z: number; r: number; h: number; roof: THREE.Material; roofH: number; flag?: string }) {
-  return (
-    <group position={[x, y, z]}>
-      <mesh position={[0, h / 2, 0]} material={MAT.cream} castShadow receiveShadow>
-        <cylinderGeometry args={[r, r * 1.06, h, 18]} />
-      </mesh>
-      <mesh position={[0, h + 0.25, 0]} material={MAT.stonePlain}>
-        <cylinderGeometry args={[r * 1.16, r * 1.16, 0.5, 18]} />
-      </mesh>
-      <mesh position={[0, h + 0.5 + roofH / 2, 0]} material={roof} castShadow>
-        <coneGeometry args={[r * 1.25, roofH, 18]} />
-      </mesh>
-      <mesh position={[0, h + 0.6 + roofH, 0]} material={MAT.gold}>
-        <sphereGeometry args={[0.3, 10, 8]} />
-      </mesh>
-      {flag && (
-        <group position={[0, h + 0.6 + roofH, 0]}>
-          <mesh position={[0, 1, 0]} material={MAT.darkwood}>
-            <cylinderGeometry args={[0.06, 0.06, 2, 6]} />
-          </mesh>
-          <mesh position={[0.7, 1.6, 0]}>
-            <boxGeometry args={[1.3, 0.75, 0.04]} />
-            <meshStandardMaterial color={flag} />
-          </mesh>
-        </group>
-      )}
-      {[0.35, 0.62].map((t) => (
-        <mesh key={t} position={[0, h * t, r * 0.98]} material={MAT.iron}>
-          <boxGeometry args={[r * 0.35, r * 0.6, 0.15]} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-export const castleDoor = { open: 0 };
-
-function Castle() {
-  const doorL = useRef<THREE.Group>(null);
-  const doorR = useRef<THREE.Group>(null);
-  useFrame(() => {
-    const a = castleDoor.open * 1.6;
-    if (doorL.current) doorL.current.rotation.y = a;
-    if (doorR.current) doorR.current.rotation.y = -a;
-  });
-  const merlons = useMemo(() => Array.from({ length: 13 }, (_, i) => -12 + i * 2), []);
-  const castleIsl = useMemo(() => buildIsland(scenicIsland(900, 0, -186, 26, 0, 30)), []);
-  return (
-    <group>
-      <mesh geometry={castleIsl.top} material={MAT.grass} receiveShadow />
-      <mesh geometry={castleIsl.lip} material={MAT.grassRim} />
-      <mesh geometry={castleIsl.cliff} material={MAT.cliff} />
-      <mesh geometry={castleIsl.under} material={MAT.rock} />
-      {/* crenellations on the physical front wall */}
-      {merlons.map((x) => (
-        <mesh key={x} position={[x, 6.5, -170.6]} material={MAT.cream} castShadow>
-          <boxGeometry args={[1.1, 1, 1.3]} />
-        </mesh>
-      ))}
-      <mesh position={[-7.8, 3, -170.6]} material={MAT.stone} castShadow receiveShadow>
-        <boxGeometry args={[10.4, 6, 1.2]} />
-      </mesh>
-      <mesh position={[7.8, 3, -170.6]} material={MAT.stone} castShadow receiveShadow>
-        <boxGeometry args={[10.4, 6, 1.2]} />
-      </mesh>
-      <mesh position={[0, 5.7, -170.6]} material={MAT.stone} castShadow>
-        <boxGeometry args={[5.2, 0.6, 1.2]} />
-      </mesh>
-      {/* dark hall behind the doorway so the open gate reads as an opening */}
-      <mesh position={[0, 2.7, -171.4]}>
-        <boxGeometry args={[5.2, 5.4, 0.1]} />
-        <meshBasicMaterial color="#2a2140" />
-      </mesh>
-      {[-1, 1].map((sx) => (
-        <mesh key={'jamb' + sx} position={[sx * 2.6, 2.7, -170.7]}>
-          <boxGeometry args={[0.1, 5.4, 1.4]} />
-          <meshStandardMaterial color="#3a2f55" />
-        </mesh>
-      ))}
-      {[-9, -5.5, 5.5, 9].map((x) => (
-        <mesh key={'win' + x} position={[x, 3.8, -169.93]} material={MAT.iron}>
-          <boxGeometry args={[0.9, 1.3, 0.05]} />
-        </mesh>
-      ))}
-      {/* gate arch + doors */}
-      <mesh position={[0, 5.6, -169.9]} material={MAT.gold}>
-        <torusGeometry args={[2.7, 0.22, 8, 24, Math.PI]} />
-      </mesh>
-      <group ref={doorL} position={[-2.6, 0, -169.85]}>
-        <mesh position={[1.3, 2.7, 0]} material={MAT.darkwood} castShadow>
-          <boxGeometry args={[2.6, 5.4, 0.25]} />
-        </mesh>
-        <mesh position={[2.2, 2.7, 0.16]} material={MAT.gold}>
-          <torusGeometry args={[0.22, 0.06, 6, 12]} />
-        </mesh>
-      </group>
-      <group ref={doorR} position={[2.6, 0, -169.85]}>
-        <mesh position={[-1.3, 2.7, 0]} material={MAT.darkwood} castShadow>
-          <boxGeometry args={[2.6, 5.4, 0.25]} />
-        </mesh>
-        <mesh position={[-2.2, 2.7, 0.16]} material={MAT.gold}>
-          <torusGeometry args={[0.22, 0.06, 6, 12]} />
-        </mesh>
-      </group>
-      {/* "GOAL" banner */}
-      <group position={[0, 8.6, -169.7]}>
-        <mesh material={MAT.pink}>
-          <boxGeometry args={[6, 1.3, 0.1]} />
-        </mesh>
-        <BannerText text="ROYAL DELIVERIES" />
-      </group>
-      {/* keep + towers */}
-      <mesh position={[0, 9, -184]} material={MAT.cream} castShadow receiveShadow>
-        <boxGeometry args={[18, 18, 12]} />
-      </mesh>
-      <mesh position={[0, 21, -184]} material={MAT.pink} castShadow>
-        <coneGeometry args={[12.5, 8, 4, 1]} />
-      </mesh>
-      <Tower x={-12.6} y={0} z={-171} r={2.6} h={13} roof={MAT.lavender} roofH={6} flag="#f49bb5" />
-      <Tower x={12.6} y={0} z={-171} r={2.6} h={13} roof={MAT.lavender} roofH={6} flag="#9b8de4" />
-      <Tower x={-10} y={0} z={-190} r={3} h={24} roof={MAT.pink} roofH={9} flag="#ffd153" />
-      <Tower x={10} y={0} z={-190} r={3} h={22} roof={MAT.pink} roofH={8} flag="#64b9f4" />
-      <Tower x={0} y={14} z={-186} r={3.4} h={22} roof={MAT.lavender} roofH={12} flag="#ff697f" />
-      <Tower x={-18} y={0} z={-182} r={2.2} h={16} roof={MAT.pink} roofH={6} />
-      <Tower x={18} y={0} z={-182} r={2.2} h={17} roof={MAT.lavender} roofH={6} />
-      {/* hanging banners */}
-      {[-7, 7].map((x) => (
-        <mesh key={x} position={[x, 9, -177.9]} material={x < 0 ? MAT.pink : MAT.lavender}>
-          <boxGeometry args={[2, 7, 0.1]} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function BannerText({ text }: { text: string }) {
-  const tex = useMemo(() => textTexture([text], 1024, 220, '#ffffff', 120), [text]);
-  return (
-    <mesh position={[0, 0, 0.06]}>
-      <planeGeometry args={[5.6, 1.2]} />
-      <meshBasicMaterial map={tex} transparent />
-    </mesh>
-  );
-}
+export { castleDoor } from './Castle';
 
 // ------------------------------------------------------------------ assembly
 
 export function Scenery() {
   const scenic = useMemo(() => scenicIslands(), []);
-  const scenicMeshes = useMemo(() => scenic.map((s) => buildIsland(s.isl)), [scenic]);
+  const scenicDefs = useMemo(() => [...scenic.map((s) => s.isl), ...SMALL_ISLANDS.map(([x, z, r, top]) => scenicIsland(Math.round(x * 13 + z), x, z, r, top, r * 1.3))], [scenic]);
   const deco = useMemo(() => [...courseDecor(), ...scenic.flatMap((s) => s.deco)], [scenic]);
   return (
     <group>
-      {scenicMeshes.map((m, i) => (
-        <group key={i}>
-          <mesh geometry={m.top} material={MAT.grass} receiveShadow />
-          <mesh geometry={m.lip} material={MAT.grassRim} />
-          <mesh geometry={m.cliff} material={MAT.cliff} />
-          <mesh geometry={m.under} material={MAT.rock} />
-        </group>
-      ))}
+      <MergedIslands defs={scenicDefs} scenic />
       {scenic
         .filter((s) => s.fall)
         .map((s, i) => {
           const p = s.isl.pts[0];
-          return <Waterfall key={i} x={p[0]} y={s.isl.top - 0.2} z={p[1]} w={2.4} h={22} rotY={Math.atan2(p[0] - s.isl.rect.cx, p[1] - s.isl.rect.cz)} />;
+          return <Waterfall key={i} x={p[0]} y={s.isl.top - 0.04} z={p[1]} w={2.2} h={20} rotY={Math.atan2(p[0] - s.isl.rect.cx, p[1] - s.isl.rect.cz)} />;
         })}
       {/* waterfall off the windy cliffs and the tower island */}
-      <Waterfall x={-10.1} y={-0.3} z={-71} w={2.6} h={20} rotY={Math.PI / 2} />
-      <Waterfall x={10.1} y={7.7} z={-110} w={3} h={26} rotY={Math.PI / 2} />
+      <Waterfall x={-10.0} y={-0.04} z={-71} w={2.4} h={18} rotY={-Math.PI / 2} />
+      <Waterfall x={10.0} y={7.96} z={-110} w={2.8} h={24} rotY={Math.PI / 2} />
       <SafeBoundary name="foliage" fallback={<Foliage items={deco} />}>
         <Suspense fallback={null}>
           <ModelFoliage items={deco} />
         </Suspense>
       </SafeBoundary>
       <Castle />
-      <Fan x={12.6} y={1.2} z={-51.5} which="wind" />
-      <Fan x={12.6} y={1.2} z={-58.5} which="wind" />
-      <Fan x={11.6} y={5.4} z={-133} which="fan" scale={1.5} />
-      {/* rock pedestals for the fans */}
-      {[
-        [12.6, -51.5, -0.6],
-        [12.6, -58.5, -0.6],
-        [11.6, -133, 3.0],
-      ].map(([x, z, y], i) => (
-        <mesh key={i} position={[x, y - 1.2, z]} material={MAT.stonePlain} castShadow>
-          <cylinderGeometry args={[1.4, 0.6, 2.4, 7]} />
-        </mesh>
-      ))}
+      <WindMachine p={[12.9, 1.2, -51.5]} which="wind" />
+      <WindMachine p={[12.9, 1.2, -58.5]} which="wind" />
+      <WindMachine p={[12.4, 5.4, -133]} which="fan" scale={1.5} />
       <WindStreaks zone={LEVEL.windZones[0]} idx="wind" />
       <WindStreaks zone={LEVEL.windZones[1]} idx="fan" />
       <Props />

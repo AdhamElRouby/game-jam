@@ -3,13 +3,16 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { MAT } from './materials';
-import { buildIsland, scenicIsland } from './islandGeo';
 import { Model } from './Models';
 import { SafeBoundary } from './SafeBoundary';
 import { Suspense, type ReactNode } from 'react';
+import { Airship, DockCrane, Sacks } from './Dressing';
+import { Kit } from './kit';
+import { IRON, KitMeshes, STONE, WOOD } from './Structures';
+import { CrookedTower } from './Ch3';
 
 /** Kenney model with a procedural fallback if the file is missing or fails to parse. */
-function M({ id, p, s = 1, r = 0, fallback, spin }: { id: string; p: [number, number, number]; s?: number; r?: number; fallback?: ReactNode; spin?: { node: string; axis: 'x' | 'y' | 'z'; speed: number } }) {
+function M({ id, p, s = 1, r = 0, fallback, spin }: { id: string; p: [number, number, number]; s?: number | [number, number, number]; r?: number; fallback?: ReactNode; spin?: { node: string; axis: 'x' | 'y' | 'z'; speed: number } }) {
   return (
     <SafeBoundary name={id} fallback={fallback ?? null}>
       <Suspense fallback={null}>
@@ -221,123 +224,38 @@ function Windmill({ p }: { p: [number, number, number] }) {
   );
 }
 
-function CrookedTower({ p }: { p: [number, number, number] }) {
-  const floors = [
-    { w: 4.2, h: 3.2, r: 0.0, dx: 0 },
-    { w: 3.8, h: 3.0, r: 0.06, dx: 0.3 },
-    { w: 3.4, h: 2.8, r: -0.05, dx: 0.1 },
-    { w: 3.0, h: 2.6, r: 0.09, dx: 0.5 },
-  ];
-  let y = 0;
-  return (
-    <group position={p}>
-      {floors.map((f, i) => {
-        const el = (
-          <group key={i} position={[f.dx, y + f.h / 2, 0]} rotation={[0, i * 0.2, f.r]}>
-            <mesh material={i % 2 ? MAT.wood : MAT.cream} castShadow receiveShadow>
-              <boxGeometry args={[f.w, f.h, f.w]} />
-            </mesh>
-            <mesh position={[0, 0, f.w / 2 + 0.01]} material={MAT.iron}>
-              <boxGeometry args={[0.7, 0.9, 0.05]} />
-            </mesh>
-            <mesh position={[0, -f.h / 2 + 0.1, 0]} material={MAT.darkwood}>
-              <boxGeometry args={[f.w + 0.3, 0.2, f.w + 0.3]} />
-            </mesh>
-          </group>
-        );
-        y += f.h - 0.05;
-        return el;
-      })}
-      <mesh position={[0.7, y + 1.6, 0]} rotation={[0, 0, 0.12]} material={MAT.teal} castShadow>
-        <coneGeometry args={[2.4, 3.4, 6]} />
-      </mesh>
-      <mesh position={[0.95, y + 3.5, 0]} material={MAT.gold}>
-        <sphereGeometry args={[0.3, 10, 8]} />
-      </mesh>
-    </group>
-  );
-}
-
-function SmallIsland({ x, z, r, top }: { x: number; z: number; r: number; top: number }) {
-  const m = useMemo(() => buildIsland(scenicIsland(Math.round(x * 13 + z), x, z, r, top, r * 1.3)), [x, z, r, top]);
-  return (
-    <group>
-      <mesh geometry={m.top} material={MAT.grass} receiveShadow />
-      <mesh geometry={m.lip} material={MAT.grassRim} />
-      <mesh geometry={m.cliff} material={MAT.cliff} />
-      <mesh geometry={m.under} material={MAT.rock} />
-    </group>
-  );
-}
-
-/** Stone frame + glowing LONG silhouette around the low arch so the clearance reads at a glance. */
+/** Low-arch dressing: timber lintel + quoins framing the 1.45 m opening and a glowing dashed LONG outline above it. */
 function ArchDressing() {
-  const glow = useRef<THREE.MeshStandardMaterial>(null);
+  const outline = useMemo(() => new THREE.MeshStandardMaterial({ color: '#ffe48a', emissive: '#ffb21e', emissiveIntensity: 1.4, roughness: 0.5 }), []);
   useFrame(({ clock }) => {
-    if (glow.current) glow.current.emissiveIntensity = 0.9 + Math.sin(clock.elapsedTime * 3) * 0.35;
+    outline.emissiveIntensity = 1.1 + Math.sin(clock.elapsedTime * 3) * 0.45;
   });
-  const z = -24.94;
-  return (
-    <group>
-      {[-1, 1].map((sx) => (
-        <mesh key={sx} position={[sx * 2.25, 1.0, z + 0.1]} material={MAT.stonePlain} castShadow>
-          <boxGeometry args={[0.5, 2.0, 0.4]} />
-        </mesh>
-      ))}
-      <mesh position={[0, 1.6, z + 0.12]} material={MAT.darkwood} castShadow>
-        <boxGeometry args={[5.0, 0.32, 0.36]} />
-      </mesh>
-      <group position={[0, 2.55, z + 0.05]}>
-        <mesh>
-          <boxGeometry args={[3.6, 0.85, 0.06]} />
-          <meshStandardMaterial color="#3d3360" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0, 0.05]}>
-          <boxGeometry args={[3.0, 0.42, 0.04]} />
-          <meshStandardMaterial ref={glow} color="#ffe07a" emissive="#ffb000" emissiveIntensity={1} />
-        </mesh>
-      </group>
-      {/* clearance tick marks */}
-      {[-1, 1].map((sx) => (
-        <mesh key={'t' + sx} position={[sx * 2.0, 1.45, z + 0.32]} material={MAT.gold}>
-          <boxGeometry args={[0.5, 0.08, 0.08]} />
-        </mesh>
-      ))}
-    </group>
+  const z = -25.0;
+  const make = useMemo(
+    () => () => {
+      const k = new Kit(2626);
+      for (const sx of [-1, 1]) for (let i = 0; i < 3; i++) k.box('stone', STONE.block[(i + (sx > 0 ? 1 : 0)) % 4], [0.55, 0.46, 0.36], [sx * 2.27, 0.25 + i * 0.5, z + 0.12], [0, 0, 0], 0.05, 0.05);
+      k.box('wood', WOOD.dark, [5.0, 0.3, 0.34], [0, 1.62, z + 0.14], [0, 0, 0], 0.05);
+      for (const sx of [-1.8, 0, 1.8]) k.box('metal', IRON, [0.12, 0.34, 0.06], [sx, 1.62, z + 0.32], [0, 0, 0], 0.02, 0);
+      // slate plaque behind the outline
+      k.box('stone', '#4a4166', [3.9, 0.95, 0.08], [0, 2.6, z + 0.05], [0, 0, 0], 0.04, 0);
+      return k;
+    },
+    [],
   );
-}
-
-/** Ledges, ivy and strata on the tower cliff face so it isn't a flat wall. */
-function CliffDressing() {
-  const items = useMemo(() => {
-    const R = (n: number) => ((Math.sin(n * 91.7) * 43758.5453) % 1 + 1) % 1;
-    const ivy: [number, number, number][] = [];
-    for (let i = 0; i < 9; i++) ivy.push([-9 + R(i) * 18, 3 + R(i + 9) * 4, 0.6 + R(i + 3) * 1.4]);
-    const ledges: [number, number, number][] = [];
-    for (let i = 0; i < 7; i++) ledges.push([-9 + R(i + 20) * 18, 1.5 + R(i + 30) * 5.5, 0.8 + R(i + 40) * 1.6]);
-    return { ivy, ledges };
+  const dashes = useMemo(() => {
+    const out: { p: [number, number, number]; s: [number, number, number] }[] = [];
+    const w = 3.3, h = 0.56, cy = 2.6, zz = z + 0.11;
+    for (let x = -w / 2 + 0.12; x < w / 2; x += 0.42) for (const sy of [-1, 1]) out.push({ p: [x + 0.1, cy + (sy * h) / 2, zz], s: [0.24, 0.07, 0.02] });
+    for (const sx of [-1, 1]) out.push({ p: [(sx * w) / 2, cy, zz], s: [0.07, 0.3, 0.02] });
+    return out;
   }, []);
   return (
     <group>
-      {items.ivy
-        .filter(([x]) => Math.abs(x - LEVER_X) > 1.6 && (x < 1.0 || x > 8.2))
-        .map(([x, y, w], i) => (
-          <mesh key={i} position={[x, y, -103.93]}>
-            <planeGeometry args={[w, 8 - y + 0.3]} />
-            <meshStandardMaterial color={i % 2 ? '#5fae6c' : '#73c07c'} roughness={0.9} side={THREE.DoubleSide} />
-          </mesh>
-        ))}
-      {items.ledges
-        .filter(([x]) => Math.abs(x - LEVER_X) > 1.8 && (x < 1.0 || x > 8.2))
-        .map(([x, y, w], i) => (
-          <mesh key={'l' + i} position={[x, y, -103.85]} material={MAT.stonePlain} castShadow>
-            <boxGeometry args={[w, 0.35, 0.45]} />
-          </mesh>
-        ))}
-      {[1.4, 3.1, 5.0, 6.8].map((y) => (
-        <mesh key={'s' + y} position={[0, y, -103.97]}>
-          <planeGeometry args={[20, 0.12]} />
-          <meshStandardMaterial color="#b3a8c2" roughness={1} />
+      <KitMeshes make={make} />
+      {dashes.map((d, i) => (
+        <mesh key={i} position={d.p} material={outline}>
+          <boxGeometry args={d.s} />
         </mesh>
       ))}
     </group>
@@ -365,7 +283,6 @@ export function Props() {
   return (
     <group>
       <ArchDressing />
-      <CliffDressing />
       {/* Chapter 1 — dock */}
       <M id="town/cottage_b" p={[-7.4, 0, 5.2]} s={2.3} r={0.5 + Math.PI / 2} fallback={<Cottage p={[-7.4, 0, 5.2]} rotY={0.5} />} />
       <M id="town/cottage_c" p={[-8.2, 0, -2.0]} s={2.2} r={Math.PI / 2 + 0.2} />
@@ -375,6 +292,15 @@ export function Props() {
       <M id="platformer/chest" p={[8.3, 0, 7.6]} s={2.0} r={-0.6} />
       <M id="platformer/barrel" p={[7.6, 0, 2.6]} s={2.0} fallback={<Barrel p={[7.6, 0, 2.6]} />} />
       <M id="platformer/barrel" p={[8.4, 0, 3.6]} s={1.9} r={1} fallback={<Barrel p={[8.3, 0, 3.4]} />} />
+      <DockCrane p={[8.3, 0, -3.4]} />
+      <Airship p={[16.5, 3.4, -2.6]} rotY={Math.PI} moor={[9.2, 0, -0.6]} />
+      <Sacks p={[6.4, 0, 0.6]} rotY={0.4} n={4} />
+      <Sacks p={[-5.9, 0, 8.0]} rotY={-0.6} n={3} />
+      <M id="town/cart" p={[-6.6, 0, 0.9]} s={2.1} r={0.35} />
+      <M id="platformer/barrel" p={[-6.4, 0, 2.6]} s={1.7} />
+      <M id="platformer/flowers" p={[-8.8, 0, 2.6]} s={2.3} />
+      <M id="platformer/flowers_tall" p={[-9.0, 0, 7.4]} s={2.0} r={0.7} />
+      <M id="town/cart_high" p={[6.8, 0, -7.0]} s={2.2} r={-0.4} />
       <Sign p={[-4.8, 0, -1.5]} rotY={0.25} tex={tex.plate} w={1.6} h={1.0} />
       <Sign p={[4.8, 0, 3.5]} rotY={-0.25} tex={tex.grip} w={1.5} h={0.75} />
       <Banner p={[-3.2, 0, -7.7]} color={MAT.pink} />
@@ -385,8 +311,9 @@ export function Props() {
       <M id="town/lantern" p={[-3.2, 0, -37.4]} s={1.5} fallback={<Lantern p={[-3.2, 0, -37.4]} />} />
       <M id="town/lantern" p={[3.2, 0, -37.4]} s={1.5} fallback={<Lantern p={[3.2, 0, -37.4]} />} />
       {/* Chapter 2 — windy cliffs */}
-      <SmallIsland x={-18} z={-52} r={4.5} top={1.2} />
       <M id="town/windmill" p={[-18, 1.2, -52]} s={1.7} r={0.9} spin={{ node: 'sails', axis: 'z', speed: 0.9 }} fallback={<Windmill p={[-18, 1.2, -52]} />} />
+      <M id="town/fence_curved" p={[-16.0, 1.2, -49.6]} s={2.4} r={0.6} />
+      <M id="platformer/flowers" p={[-19.5, 1.2, -50.0]} s={2.2} />
       <Sign p={[-6.5, 0, -47.5]} rotY={0.3} tex={tex.cubeWind} w={1.6} h={1.0} />
       <Sign p={[2.4, 0, -59]} rotY={-0.4} tex={tex.receiver} w={1.7} h={1.06} />
       <M id="town/cart" p={[7.6, 0, -76.5]} s={2.0} r={0.5} fallback={<Crate p={[8, 0, -76.5]} s={1} rotY={0.3} />} />
@@ -397,14 +324,10 @@ export function Props() {
       <Sign p={[-7.5, 0, -96]} rotY={0.4} tex={tex.tall} w={1.7} h={1.06} />
       <M id="platformer/barrel" p={[8.8, 0, -94.6]} s={1.9} fallback={<Barrel p={[8.6, 0, -95]} />} />
       <M id="platformer/crate" p={[8.9, 0, -96.3]} s={2.0} r={0.4} fallback={<Barrel p={[9.0, 0, -96.2]} />} />
-      <SmallIsland x={-15.5} z={-108} r={3.6} top={9} />
-      <CrookedTower p={[-15.5, 9, -108]} />
+      <CrookedTower p={[-15.5, 9, -108]} s={1.15} />
       {/* Chapter 4 — castle dash */}
       <Sign p={[-1.2, 8, -114.6]} rotY={0.2} tex={tex.safe} w={1.6} h={1.0} />
       <Sign p={[1.2, 8, -114.6]} rotY={-0.2} tex={tex.fast} w={1.6} h={1.0} />
-      <M id="castle/tower_hex_full" p={[-22, 0, -176]} s={4.2} r={0.3} />
-      <M id="castle/tower_hex_full" p={[22, 0, -178]} s={4.6} r={-0.4} />
-      <M id="castle/gatehouse" p={[0, 18, -196]} s={4.5} />
       <Banner p={[-9, 0, -156]} color={MAT.pink} />
       <Banner p={[9, 0, -156]} color={MAT.lavender} />
       <Banner p={[-9, 0, -166]} color={MAT.lavender} />
@@ -415,6 +338,16 @@ export function Props() {
       <M id="town/stall_green" p={[9.4, 0, -159]} s={2.3} r={-Math.PI / 2} />
       <M id="town/fountain" p={[-8.6, 0, -166.4]} s={1.9} />
       <M id="town/lantern" p={[4.5, 0, -168.6]} s={1.5} fallback={<Lantern p={[4.5, 0, -168.8]} />} />
+      {/* plaza life: market benches, hedges and flower beds along the castle wall (clear of the lanes) */}
+      <M id="town/stall_bench" p={[-10.6, 0, -161.4]} s={2.2} r={Math.PI / 2} />
+      <M id="town/stall_stool" p={[-8.6, 0, -161.6]} s={2.2} />
+      <M id="town/stall_bench" p={[10.6, 0, -161.4]} s={2.2} r={-Math.PI / 2} />
+      <M id="town/hedge_large" p={[-9.6, 0, -169.2]} s={[3.2, 2.2, 2.4]} r={Math.PI / 2} />
+      <M id="town/hedge_large" p={[9.6, 0, -169.2]} s={[3.2, 2.2, 2.4]} r={-Math.PI / 2} />
+      <M id="platformer/flowers_tall" p={[-7.0, 0, -168.9]} s={2.2} />
+      <M id="platformer/flowers_tall" p={[7.0, 0, -168.9]} s={2.2} r={1.2} />
+      <M id="platformer/flowers" p={[-11.0, 0, -165.2]} s={2.4} />
+      <M id="platformer/flowers" p={[11.0, 0, -165.0]} s={2.4} r={2} />
     </group>
   );
 }

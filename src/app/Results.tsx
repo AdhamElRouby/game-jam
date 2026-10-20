@@ -48,6 +48,7 @@ export function Results() {
             <span>Score</span>
             <b>{r.score}</b>
           </div>
+          <div className="score-formula">score = 1200 − 2×seconds − 35×drops − 10×tumbles</div>
         </div>
         <div className="team-line">
           {r.names.map((n, i) =>
@@ -81,7 +82,6 @@ export function Results() {
             Menu
           </button>
         </div>
-        <div className="small-note">score = 1200 − 2×seconds − 35×drops − 10×tumbles</div>
       </div>
     </div>
   );

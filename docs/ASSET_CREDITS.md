@@ -2,7 +2,7 @@
 
 All third-party models and sounds are **CC0 1.0 (public domain dedication)**; fonts are **SIL Open Font License 1.1**. Attribution is not required for CC0, but we credit every source anyway. No paywalled, gated or account-only files were used; no stock-music sites (e.g. Mixkit) were used.
 
-Shipped under `public/assets/`: `models/` (73 self-contained .glb), `audio/` (30 .mp3), `fonts/` (2 .woff2 + OFL texts), `manifest.json`. A labelled render of every model is in `docs/asset_contact_sheet.png`.
+Shipped under `public/assets/`: `models/` (85 self-contained .glb), `audio/` (30 .mp3), `fonts/` (2 .woff2 + OFL texts), `manifest.json`. A labelled render of every model is in `docs/asset_contact_sheet.png`.
 
 ## 1. 3D models
 
@@ -42,6 +42,11 @@ Shipped under `public/assets/`: `models/` (73 self-contained .glb), `audio/` (30
 | `planks.glb` | `planks.glb` | bridge |
 | `pillar_wood.glb` | `pillar-wood.glb` | prop |
 | `watermill_wheel.glb` | `watermill.glb` | prop |
+| `hedge_large.glb` | `hedge-large.glb` | hedge |
+| `fence_curved.glb` | `fence-curved.glb` | fence |
+| `cart_high.glb` | `cart-high.glb` | cart |
+| `stall_bench.glb` | `stall-bench.glb` | stall |
+| `stall_stool.glb` | `stall-stool.glb` | stall |
 
 ### Kenney Castle Kit 2.0 -> `public/assets/models/castle/`
 
@@ -63,6 +68,11 @@ Shipped under `public/assets/`: `models/` (73 self-contained .glb), `audio/` (30
 | `flag.glb` | `flag.glb` | flag |
 | `banner_long.glb` | `flag-banner-long.glb` | banner |
 | `drawbridge.glb` | `bridge-draw.glb` | bridge |
+| `tower_square_base.glb` | `tower-square-base.glb` | tower |
+| `tower_square_mid_windows.glb` | `tower-square-mid-windows.glb` | tower |
+| `tower_square_mid_door.glb` | `tower-square-mid-door.glb` | tower |
+| `tower_square_roof_windows.glb` | `tower-square-top-roof-high-windows.glb` | towerTop |
+| `tower_square_roof_rounded.glb` | `tower-square-top-roof-rounded.glb` | towerTop |
 
 ### Kenney Platformer Kit 4.1 -> `public/assets/models/platformer/`
 
@@ -78,6 +88,8 @@ Shipped under `public/assets/`: `models/` (73 self-contained .glb), `audio/` (30
 | `ramp_wood.glb` | `platform-ramp.glb` | bridge |
 | `lever.glb` | `lever.glb` | prop |
 | `pressure_plate.glb` | `button-square.glb` | prop |
+| `flowers.glb` | `flowers.glb` | flower |
+| `flowers_tall.glb` | `flowers-tall.glb` | flower |
 
 ### Kenney Nature Kit 2.1 (fallback) -> `public/assets/models/nature/`
 
@@ -112,6 +124,8 @@ Shipped under `public/assets/`: `models/` (73 self-contained .glb), `audio/` (30
 - **Nature Kit fixes**: materials had `metallicFactor: 1` (renders near-black without an environment map) -> set to metallic 0 / roughness 1; an invalid hierarchy (scene listed a child node of "tmpParent") was fixed; unused `KHR_materials_unlit` declaration and unused UVs dropped; colours re-palette-matched to the Fantasy Town Kit colormap (leaves/grass greens, wood browns, lavender-grey stone; flower/mushroom hues kept, gamma-corrected).
 - **Assembled buildings** (pieces placed on the 1-unit grid, joined into one mesh / one material): `town/cottage_a` (timber walls, door, windows, steep red roof, chimney), `town/cottage_b` (stone ground floor + timber upper floor, green roof, chimney), `town/cottage_c` (1-cell stone cottage, detailed gable roof, chimney), `town/windmill` (stone/timber storeys, red pointed roof, Fantasy Town `windmill.glb` sails as child node `sails`, scale 0.8), `castle/gatehouse` (tower-square-base + tower-square-mid-windows + tower-square-top-roof-high x2, wall-doorway, flag-banner-short x2, flag x2, `gate.glb` as child node `gate`), `castle/tower_hex_full` (tower-hexagon-base + tower-hexagon-mid + tower-hexagon-roof + flag).
 - **Derived**: `nature/bush_round` = Nature Kit `tree_fat` with the trunk removed and the canopy squashed to 75 % height.
+- **Visual overhaul additions** (12 files: the five castle storeys/roofs, five town props, two platformer flower patches): the kit's `Textures/colormap.png` was embedded into each GLB as a buffer view (no other edits). The castle is assembled at runtime in `src/render/Castle.tsx` from these storeys plus the existing wall/tower pieces.
+- **Procedural (original, made in code)**: islands, terrain/cobble shader, bridges, palisade, gate towers, stone walls, wind machines, windsocks, receiver cradle, drawbridge, tower wall, lever, lift crane, ramps + piers, castle gate, airship, dock crane, couriers, King, artifact, waterfalls, clouds, sky and all VFX.
 
 ## 2. Audio
 

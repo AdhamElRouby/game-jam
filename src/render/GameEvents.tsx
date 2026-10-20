@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { net } from '../net/net';
 import { sfx } from '../audio/audio';
 import { fx } from './Effects';
+import { shakeCamera } from './CameraRig';
 import { frame } from './frame';
 import { useGame } from '../app/store';
 import { LEVEL, chapterAt } from '../shared/level';
@@ -52,20 +53,28 @@ export function GameEvents() {
           sfx.play('gate_open', { vol: 0.9 });
           ui.toast('The gate rumbles open!', 'good');
           fx.sparkle(LEVEL.gate.p[0], 2, LEVEL.gate.p[2], 50, 4);
+          for (let x = -2.2; x <= 2.2; x += 1.1) fx.dust(LEVEL.gate.p[0] + x, 0.05, LEVEL.gate.p[2] + 0.4, 5);
+          fx.ring(LEVEL.plate.p[0], 0.15, LEVEL.plate.p[2], 3.2, '#ffd36b');
+          shakeCamera(0.28);
           break;
         case 'bridge':
           sfx.play('bridge_unfold', { vol: 0.9 });
           ui.toast('Click! The bridge unfolds!', 'good');
           fx.sparkle(LEVEL.receiver.p[0], 0.8, LEVEL.receiver.p[2], 60, 4, '#9ff7ef');
+          fx.ring(LEVEL.receiver.p[0], 0.12, LEVEL.receiver.p[2], 3.6, '#9ff7ef');
+          shakeCamera(0.18);
           break;
         case 'lever':
           sfx.play('lever', { vol: 1 });
           ui.toast('Lever thrown! Everyone onto the lift', 'good');
-          fx.sparkle(LEVEL.lever.p[0], LEVEL.lever.p[1], LEVEL.lever.p[2] + 0.5, 50, 1.5);
+          fx.sparkle(LEVEL.lever.p[0], 4.8, LEVEL.lever.p[2] + 0.6, 60, 1.5);
+          fx.sparkle(LEVEL.lift.cx, 0.6, LEVEL.lift.cz, 40, 3, '#9ff7ef');
+          shakeCamera(0.15);
           break;
         case 'liftStart':
           sfx.play('lift_start', { vol: 0.9 });
           ui.toast('Going up!', 'good');
+          shakeCamera(0.1);
           break;
         case 'liftTop':
           sfx.play('checkpoint', { vol: 0.5, rate: 1.2 });
@@ -75,12 +84,14 @@ export function GameEvents() {
           sfx.play('checkpoint', { vol: 0.9 });
           ui.toast(`Checkpoint! ${cp.name}`, 'good');
           fx.confetti(cp.flag[0], cp.flag[1] + 2.5, cp.flag[2], 70, 1);
+          fx.ring(cp.flag[0], cp.flag[1] + 0.12, cp.flag[2], 2.4, '#ffd36b');
           break;
         }
         case 'drop':
           sfx.play('fall_poof', { vol: 0.9 });
           sfx.play('fail_jingle', { vol: 0.6 });
           ui.toast('Oops! The artifact fell. Back to the checkpoint (+7s)', 'bad');
+          shakeCamera(0.3);
           break;
         case 'fall':
           sfx.play('fall_poof', { vol: e.by === you ? 0.8 : 0.35 });
@@ -97,6 +108,8 @@ export function GameEvents() {
           break;
         case 'finish':
           useGame.getState().set({ results: e.results, cutscene: true, showResults: false });
+          fx.ring(LEVEL.goal.p[0], 0.15, LEVEL.goal.p[2], 6, '#ffe9a0');
+          shakeCamera(0.25);
           sfx.duck(0.2, 6);
           sfx.play('victory', { vol: 0.9, minGap: 1000 });
           break;

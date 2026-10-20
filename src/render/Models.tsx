@@ -24,12 +24,24 @@ function useScene(id: string) {
   return { scene: gltf.scene, info };
 }
 
-/** Palette harmonizer: nudges kit materials toward the game's warm pastel palette. */
+// Nature-kit swatches remapped onto the terrain's yellow-green family so foliage and lawn read as one palette.
+const RECOLOR: Record<string, string> = {
+  leafsGreen: '#4f9f45',
+  leafsDark: '#3b8442',
+  grass: '#5daa45',
+  leafsFall: '#e2a23b',
+};
+
+/** Palette harmonizer: nudges kit materials toward the game's warm pastel palette (applied once per material). */
 function harmonize(mat: THREE.Material) {
   const m = mat as THREE.MeshStandardMaterial;
-  if (m.isMeshStandardMaterial) {
+  if (m.isMeshStandardMaterial && !m.userData.harmonized) {
+    m.userData.harmonized = true;
     m.roughness = Math.max(m.roughness ?? 0.8, 0.75);
     m.metalness = Math.min(m.metalness ?? 0, 0.1);
+    const re = RECOLOR[m.name];
+    if (re) m.color.set(re);
+    m.envMapIntensity = 0.7;
   }
   return m;
 }
@@ -90,7 +102,7 @@ export function InstancedModel({ id, items, shadow = true }: { id: string; items
 }
 
 /** A single placed model (bottom-center anchored), cloned so it can be positioned freely. */
-export function Model({ id, p, s = 1, r = 0, shadow = true, spin }: { id: string; p: [number, number, number]; s?: number; r?: number; shadow?: boolean; spin?: { node: string; axis: 'x' | 'y' | 'z'; speed: number } }) {
+export function Model({ id, p, s = 1, r = 0, shadow = true, spin }: { id: string; p: [number, number, number]; s?: number | [number, number, number]; r?: number; shadow?: boolean; spin?: { node: string; axis: 'x' | 'y' | 'z'; speed: number } }) {
   const { scene, info } = useScene(id);
   const spinNode = useRef<THREE.Object3D | null>(null);
   useFrame((_, dt) => {

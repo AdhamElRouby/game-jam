@@ -1,17 +1,20 @@
-// Canvas + lighting + composition of all visual layers.
-import { Suspense, useEffect, useRef } from 'react';
+// Canvas + lighting + post-processing + composition of all visual layers.
+import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { EffectComposer, Bloom, N8AO, ToneMapping, Vignette, HueSaturation } from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
 import { World } from './World';
 import { Artifact } from './Artifact';
 import { Players } from './Players';
-import { CameraRig, camFocus } from './CameraRig';
-import { Clouds, SkyDome, SUN_DIR } from './Sky';
+import { CameraRig, camFocus, camView } from './CameraRig';
+import { Clouds, CloudSea, SkyDome, SkyEnvironment, SUN_DIR, SKY } from './Sky';
 import { Scenery } from './Scenery';
 import { Effects } from './Effects';
 import { Ending } from './Ending';
 import { updateFrame } from './frame';
 import { GameEvents } from './GameEvents';
+import { quality, lookDev } from './quality';
 
 function FrameTicker() {
   useFrame(() => updateFrame(), -100);
@@ -21,41 +24,92 @@ function FrameTicker() {
 function Lights() {
   const sun = useRef<THREE.DirectionalLight>(null);
   const { scene } = useThree();
+  const ext = useRef(0);
   useEffect(() => {
     if (sun.current) scene.add(sun.current.target);
   }, [scene]);
   useFrame(() => {
     const l = sun.current;
     if (!l) return;
-    // keep the shadow frustum centered on the action, snapped to texels to avoid shimmer
-    const snap = 0.25;
+    // shadow frustum follows the framed action and grows with the camera distance (quantized to avoid shimmer)
+    const want = Math.min(42, Math.max(20, Math.ceil((camView.dist * 1.25) / 4) * 4));
+    if (want !== ext.current) {
+      ext.current = want;
+      const c = l.shadow.camera;
+      c.left = c.bottom = -want;
+      c.right = c.top = want;
+      c.updateProjectionMatrix();
+    }
+    const snap = (want * 2) / l.shadow.mapSize.x;
     const fx = Math.round(camFocus.x / snap) * snap;
     const fy = Math.round(camFocus.y / snap) * snap;
-    const fz = Math.round(camFocus.z / snap) * snap;
-    l.target.position.set(fx, fy, fz - 4);
-    l.position.set(fx + SUN_DIR.x * 60, fy + SUN_DIR.y * 60, fz - 4 + SUN_DIR.z * 60);
+    const fz = Math.round((camFocus.z - 4) / snap) * snap;
+    l.target.position.set(fx, fy, fz);
+    l.position.set(fx + SUN_DIR.x * 70, fy + SUN_DIR.y * 70, fz + SUN_DIR.z * 70);
   });
   return (
     <>
-      <hemisphereLight args={['#cfeeff', '#9bc78a', 1.25]} />
-      <ambientLight intensity={0.25} color="#fff4e6" />
+      <hemisphereLight args={['#dff2ff', '#b59a74', 0.55]} />
       <directionalLight
         ref={sun}
-        color="#fff0d6"
-        intensity={2.6}
+        color="#fff0d8"
+        intensity={2.5}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-left={-34}
-        shadow-camera-right={34}
-        shadow-camera-top={34}
-        shadow-camera-bottom={-34}
         shadow-camera-near={1}
-        shadow-camera-far={160}
-        shadow-bias={-0.0004}
-        shadow-normalBias={0.03}
+        shadow-camera-far={190}
+        shadow-bias={-0.0005}
+        shadow-normalBias={0.035}
+        shadow-radius={3.5}
+        shadow-intensity={0.82}
       />
+      {/* warm rim light from the castle side: pops couriers and the artifact off the ground */}
+      <directionalLight color="#ffc6dc" intensity={0.75} position={[18, 14, -40]} />
     </>
+  );
+}
+
+const TONE: Record<string, ToneMappingMode> = { agx: ToneMappingMode.AGX, neutral: ToneMappingMode.NEUTRAL, aces: ToneMappingMode.ACES_FILMIC, cineon: ToneMappingMode.OPTIMIZED_CINEON };
+
+function useQuality() {
+  const [q, setQ] = useState(quality.level);
+  useEffect(() => quality.on(setQ), []);
+  return q;
+}
+
+/** Applies the preset to the renderer: pixel ratio + shadow map resolution. */
+function QualityApplier() {
+  const q = useQuality();
+  const { setDpr, scene } = useThree();
+  useEffect(() => {
+    setDpr(Math.min(window.devicePixelRatio, q === 'low' ? 1.0 : q === 'medium' ? 1.35 : 1.75));
+    scene.traverse((o) => {
+      const l = o as THREE.DirectionalLight;
+      if (l.isDirectionalLight && l.castShadow) {
+        const size = q === 'low' ? 1024 : 2048;
+        if (l.shadow.mapSize.x !== size) {
+          l.shadow.mapSize.set(size, size);
+          l.shadow.map?.dispose();
+          l.shadow.map = null as unknown as THREE.WebGLRenderTarget;
+        }
+      }
+    });
+  }, [q, setDpr, scene]);
+  return null;
+}
+
+function Post() {
+  const q = useQuality();
+  if (q === 'low') return null;
+  return (
+    <EffectComposer multisampling={4} enableNormalPass={false}>
+      <>{lookDev.ao && <N8AO halfRes aoRadius={1.7} distanceFalloff={0.9} intensity={2.6} color={new THREE.Color('#2e2146')} quality={q === 'high' ? 'medium' : 'performance'} />}</>
+      <>{lookDev.bloom && <Bloom mipmapBlur luminanceThreshold={1.0} luminanceSmoothing={0.18} intensity={0.6} radius={0.72} />}</>
+      <HueSaturation saturation={lookDev.sat ?? 0.1} />
+      <ToneMapping mode={TONE[lookDev.tm ?? 'neutral'] ?? ToneMappingMode.NEUTRAL} />
+      <Vignette offset={0.3} darkness={0.38} />
+    </EffectComposer>
   );
 }
 
@@ -63,17 +117,20 @@ export function Scene() {
   return (
     <Canvas
       shadows
-      dpr={[1, 1.75]}
+      dpr={[1, quality.level === 'low' ? 1.0 : quality.level === 'medium' ? 1.35 : 1.75]}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
-      camera={{ fov: 45, near: 0.5, far: 1200, position: [2.2, 4.8, 13.5] }}
+      camera={{ fov: 44, near: 0.5, far: 1400, position: [2.2, 4.8, 13.5] }}
       onCreated={({ gl }) => {
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
+        gl.shadowMap.type = THREE.PCFShadowMap;
+        gl.toneMapping = THREE.NeutralToneMapping;
+        gl.toneMappingExposure = 1.0;
+        (window as any).__SH_GL = gl;
       }}
     >
       <FrameTicker />
-      <color attach="background" args={['#a9e2f7']} />
-      <fog attach="fog" args={['#cfeaf6', 70, 360]} />
+      <color attach="background" args={[SKY.fog]} />
+      <fog attach="fog" args={[SKY.fog, 60, 330]} />
+      <SkyEnvironment intensity={lookDev.env ?? 0.9} />
       <Lights />
       <SkyDome />
       <Suspense fallback={null}>
@@ -84,9 +141,12 @@ export function Scene() {
         <Ending />
       </Suspense>
       <Clouds />
+      <CloudSea />
       <Effects />
       <CameraRig />
       <GameEvents />
+      <QualityApplier />
+      <Post />
     </Canvas>
   );
 }
