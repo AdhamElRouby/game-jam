@@ -1,0 +1,1690 @@
+{
+ "generated": "2026-10-20",
+ "models": [
+  {
+   "id": "nature/tree_round_a",
+   "url": "/assets/models/nature/tree_round_a.glb",
+   "category": "tree",
+   "kit": "nature",
+   "bboxMin": [
+    -0.32,
+    -0.05,
+    -0.37
+   ],
+   "bboxMax": [
+    0.32,
+    1.176,
+    0.37
+   ],
+   "triangles": 196,
+   "bytes": 11516,
+   "notes": "round faceted canopy on short trunk with root flare",
+   "source": "Kenney Nature Kit 2.1 / tree_oak"
+  },
+  {
+   "id": "nature/tree_round_b",
+   "url": "/assets/models/nature/tree_round_b.glb",
+   "category": "tree",
+   "kit": "nature",
+   "bboxMin": [
+    -0.378,
+    -0.05,
+    -0.327
+   ],
+   "bboxMax": [
+    0.378,
+    1.1,
+    0.327
+   ],
+   "triangles": 50,
+   "bytes": 4264,
+   "notes": "big chubby round canopy, very short trunk",
+   "source": "Kenney Nature Kit 2.1 / tree_fat"
+  },
+  {
+   "id": "nature/tree_tall_round",
+   "url": "/assets/models/nature/tree_tall_round.glb",
+   "category": "tree",
+   "kit": "nature",
+   "bboxMin": [
+    -0.378,
+    -0.05,
+    -0.327
+   ],
+   "bboxMax": [
+    0.378,
+    1.658,
+    0.327
+   ],
+   "triangles": 114,
+   "bytes": 7348,
+   "notes": "tall oval canopy on slim trunk",
+   "source": "Kenney Nature Kit 2.1 / tree_default"
+  },
+  {
+   "id": "nature/tree_leafy_cluster",
+   "url": "/assets/models/nature/tree_leafy_cluster.glb",
+   "category": "tree",
+   "kit": "nature",
+   "bboxMin": [
+    -0.432,
+    -0.05,
+    -0.372
+   ],
+   "bboxMax": [
+    0.415,
+    1.282,
+    0.389
+   ],
+   "triangles": 402,
+   "bytes": 24704,
+   "notes": "stylized tree with several small canopy puffs on branches",
+   "source": "Kenney Nature Kit 2.1 / tree_detailed"
+  },
+  {
+   "id": "nature/tree_pine",
+   "url": "/assets/models/nature/tree_pine.glb",
+   "category": "tree",
+   "kit": "nature",
+   "bboxMin": [
+    -0.266,
+    -0.05,
+    -0.266
+   ],
+   "bboxMax": [
+    0.266,
+    1.496,
+    0.266
+   ],
+   "triangles": 230,
+   "bytes": 13528,
+   "notes": "classic tiered pine/fir",
+   "source": "Kenney Nature Kit 2.1 / tree_pineDefaultA"
+  },
+  {
+   "id": "nature/bush_round",
+   "url": "/assets/models/nature/bush_round.glb",
+   "category": "bush",
+   "kit": "nature",
+   "bboxMin": [
+    -0.378,
+    -0.02,
+    -0.327
+   ],
+   "bboxMax": [
+    0.378,
+    0.661,
+    0.327
+   ],
+   "triangles": 40,
+   "bytes": 3112,
+   "notes": "round low-poly bush (derived: tree_fat canopy, trunk removed, squashed 0.75 in Y)",
+   "source": "derived from Kenney Nature Kit 2.1 tree_fat"
+  },
+  {
+   "id": "nature/bush_leafy",
+   "url": "/assets/models/nature/bush_leafy.glb",
+   "category": "bush",
+   "kit": "nature",
+   "bboxMin": [
+    -0.301,
+    -0.05,
+    -0.301
+   ],
+   "bboxMax": [
+    0.301,
+    0.31,
+    0.301
+   ],
+   "triangles": 104,
+   "bytes": 7872,
+   "notes": "wide spiky fern-like leafy bush",
+   "source": "Kenney Nature Kit 2.1 / plant_bushDetailed"
+  },
+  {
+   "id": "nature/bush_small",
+   "url": "/assets/models/nature/bush_small.glb",
+   "category": "bush",
+   "kit": "nature",
+   "bboxMin": [
+    -0.187,
+    -0.05,
+    -0.168
+   ],
+   "bboxMax": [
+    0.187,
+    0.193,
+    0.168
+   ],
+   "triangles": 60,
+   "bytes": 4964,
+   "notes": "small vase-shaped clump of big leaves",
+   "source": "Kenney Nature Kit 2.1 / plant_bushLarge"
+  },
+  {
+   "id": "nature/flower_red",
+   "url": "/assets/models/nature/flower_red.glb",
+   "category": "flower",
+   "kit": "nature",
+   "bboxMin": [
+    -0.105,
+    -0.05,
+    -0.091
+   ],
+   "bboxMax": [
+    0.055,
+    0.242,
+    0.091
+   ],
+   "triangles": 76,
+   "bytes": 5488,
+   "notes": "single red tulip with leaves",
+   "source": "Kenney Nature Kit 2.1 / flower_redA"
+  },
+  {
+   "id": "nature/flower_purple",
+   "url": "/assets/models/nature/flower_purple.glb",
+   "category": "flower",
+   "kit": "nature",
+   "bboxMin": [
+    -0.105,
+    -0.05,
+    -0.091
+   ],
+   "bboxMax": [
+    0.076,
+    0.133,
+    0.091
+   ],
+   "triangles": 78,
+   "bytes": 5776,
+   "notes": "open purple bloom with white centre",
+   "source": "Kenney Nature Kit 2.1 / flower_purpleC"
+  },
+  {
+   "id": "nature/flower_yellow",
+   "url": "/assets/models/nature/flower_yellow.glb",
+   "category": "flower",
+   "kit": "nature",
+   "bboxMin": [
+    -0.105,
+    -0.05,
+    -0.091
+   ],
+   "bboxMax": [
+    0.076,
+    0.083,
+    0.091
+   ],
+   "triangles": 78,
+   "bytes": 5792,
+   "notes": "open yellow bloom with white centre",
+   "source": "Kenney Nature Kit 2.1 / flower_yellowC"
+  },
+  {
+   "id": "nature/rock_large",
+   "url": "/assets/models/nature/rock_large.glb",
+   "category": "rock",
+   "kit": "nature",
+   "bboxMin": [
+    -0.534,
+    -0.05,
+    -0.515
+   ],
+   "bboxMax": [
+    0.534,
+    0.518,
+    0.515
+   ],
+   "triangles": 80,
+   "bytes": 5860,
+   "notes": "big chunky grey-lavender boulder",
+   "source": "Kenney Nature Kit 2.1 / stone_largeD"
+  },
+  {
+   "id": "nature/rock_tall_cluster",
+   "url": "/assets/models/nature/rock_tall_cluster.glb",
+   "category": "rock",
+   "kit": "nature",
+   "bboxMin": [
+    -0.492,
+    -0.05,
+    -0.342
+   ],
+   "bboxMax": [
+    0.492,
+    0.946,
+    0.342
+   ],
+   "triangles": 136,
+   "bytes": 9108,
+   "notes": "tall rock spire with smaller rocks at its foot",
+   "source": "Kenney Nature Kit 2.1 / stone_tallA"
+  },
+  {
+   "id": "nature/rock_small",
+   "url": "/assets/models/nature/rock_small.glb",
+   "category": "rock",
+   "kit": "nature",
+   "bboxMin": [
+    -0.231,
+    -0.05,
+    -0.231
+   ],
+   "bboxMax": [
+    0.231,
+    0.357,
+    0.231
+   ],
+   "triangles": 60,
+   "bytes": 4456,
+   "notes": "small rounded rock",
+   "source": "Kenney Nature Kit 2.1 / stone_smallH"
+  },
+  {
+   "id": "nature/rock_flat",
+   "url": "/assets/models/nature/rock_flat.glb",
+   "category": "rock",
+   "kit": "nature",
+   "bboxMin": [
+    -0.548,
+    -0.05,
+    -0.46
+   ],
+   "bboxMax": [
+    0.548,
+    0.242,
+    0.46
+   ],
+   "triangles": 64,
+   "bytes": 4668,
+   "notes": "wide flat slab (stepping stone)",
+   "source": "Kenney Nature Kit 2.1 / stone_largeE"
+  },
+  {
+   "id": "nature/rock_grassy",
+   "url": "/assets/models/nature/rock_grassy.glb",
+   "category": "rock",
+   "kit": "nature",
+   "bboxMin": [
+    -0.548,
+    -0.05,
+    -0.449
+   ],
+   "bboxMax": [
+    0.548,
+    0.429,
+    0.449
+   ],
+   "triangles": 73,
+   "bytes": 5788,
+   "notes": "brown earthy rock with grass cap (matches floating-island look)",
+   "source": "Kenney Nature Kit 2.1 / rock_largeF"
+  },
+  {
+   "id": "nature/mushroom_red",
+   "url": "/assets/models/nature/mushroom_red.glb",
+   "category": "mushroom",
+   "kit": "nature",
+   "bboxMin": [
+    -0.086,
+    -0.05,
+    -0.095
+   ],
+   "bboxMax": [
+    0.088,
+    0.153,
+    0.105
+   ],
+   "triangles": 48,
+   "bytes": 4872,
+   "notes": "single red-cap mushroom, cream stem",
+   "source": "Kenney Nature Kit 2.1 / mushroom_red"
+  },
+  {
+   "id": "nature/mushroom_cluster_tan",
+   "url": "/assets/models/nature/mushroom_cluster_tan.glb",
+   "category": "mushroom",
+   "kit": "nature",
+   "bboxMin": [
+    -0.136,
+    -0.05,
+    -0.112
+   ],
+   "bboxMax": [
+    0.133,
+    0.2,
+    0.142
+   ],
+   "triangles": 144,
+   "bytes": 11600,
+   "notes": "cluster of three tan mushrooms",
+   "source": "Kenney Nature Kit 2.1 / mushroom_tanGroup"
+  },
+  {
+   "id": "nature/grass_tuft",
+   "url": "/assets/models/nature/grass_tuft.glb",
+   "category": "grass",
+   "kit": "nature",
+   "bboxMin": [
+    -0.199,
+    -0.05,
+    -0.239
+   ],
+   "bboxMax": [
+    0.182,
+    0.204,
+    0.153
+   ],
+   "triangles": 132,
+   "bytes": 8976,
+   "notes": "tuft of grass blades",
+   "source": "Kenney Nature Kit 2.1 / grass"
+  },
+  {
+   "id": "nature/grass_tuft_large",
+   "url": "/assets/models/nature/grass_tuft_large.glb",
+   "category": "grass",
+   "kit": "nature",
+   "bboxMin": [
+    -0.199,
+    -0.05,
+    -0.212
+   ],
+   "bboxMax": [
+    0.21,
+    0.204,
+    0.196
+   ],
+   "triangles": 224,
+   "bytes": 14512,
+   "notes": "wider tuft of grass blades",
+   "source": "Kenney Nature Kit 2.1 / grass_large"
+  },
+  {
+   "id": "nature/stump",
+   "url": "/assets/models/nature/stump.glb",
+   "category": "stump",
+   "kit": "nature",
+   "bboxMin": [
+    -0.161,
+    -0.05,
+    -0.185
+   ],
+   "bboxMax": [
+    0.196,
+    0.156,
+    0.185
+   ],
+   "triangles": 96,
+   "bytes": 6332,
+   "notes": "tree stump with rings and roots",
+   "source": "Kenney Nature Kit 2.1 / stump_roundDetailed"
+  },
+  {
+   "id": "nature/log",
+   "url": "/assets/models/nature/log.glb",
+   "category": "stump",
+   "kit": "nature",
+   "bboxMin": [
+    -0.5,
+    -0.05,
+    -0.253
+   ],
+   "bboxMax": [
+    0.5,
+    0.367,
+    0.297
+   ],
+   "triangles": 96,
+   "bytes": 6124,
+   "notes": "large fallen log lying along X",
+   "source": "Kenney Nature Kit 2.1 / log_large"
+  },
+  {
+   "id": "town/cottage_a",
+   "url": "/assets/models/town/cottage_a.glb",
+   "category": "house",
+   "kit": "town",
+   "bboxMin": [
+    -0.55,
+    0,
+    -0.567
+   ],
+   "bboxMax": [
+    1.55,
+    2.2,
+    0.567
+   ],
+   "triangles": 1244,
+   "bytes": 79636,
+   "notes": "assembled: 2x1-cell timber cottage, steep red roof, chimney on back slope; door faces +Z",
+   "source": "assembled from Kenney Fantasy Town Kit 2.0 pieces"
+  },
+  {
+   "id": "town/cottage_b",
+   "url": "/assets/models/town/cottage_b.glb",
+   "category": "house",
+   "kit": "town",
+   "bboxMin": [
+    -0.55,
+    0,
+    -0.55
+   ],
+   "bboxMax": [
+    1.55,
+    3,
+    0.535
+   ],
+   "triangles": 1880,
+   "bytes": 114476,
+   "notes": "assembled: 2x1-cell two-storey house, stone ground floor + timber upper floor, green roof, chimney; door faces +Z",
+   "source": "assembled from Kenney Fantasy Town Kit 2.0 pieces"
+  },
+  {
+   "id": "town/cottage_c",
+   "url": "/assets/models/town/cottage_c.glb",
+   "category": "house",
+   "kit": "town",
+   "bboxMin": [
+    -0.606,
+    0,
+    -0.55
+   ],
+   "bboxMax": [
+    0.606,
+    2,
+    0.55
+   ],
+   "triangles": 970,
+   "bytes": 64856,
+   "notes": "assembled: 1x1-cell small stone cottage, green gable (wood trim) facing +Z, chimney; door faces +Z",
+   "source": "assembled from Kenney Fantasy Town Kit 2.0 pieces"
+  },
+  {
+   "id": "town/windmill",
+   "url": "/assets/models/town/windmill.glb",
+   "category": "windmill",
+   "kit": "town",
+   "bboxMin": [
+    -1.245,
+    0,
+    -0.55
+   ],
+   "bboxMax": [
+    1.245,
+    4,
+    0.928
+   ],
+   "triangles": 2472,
+   "bytes": 155532,
+   "notes": "assembled: 3-storey stone/timber mill, red pointed roof; child node 'sails' pivots at the hub - spin sails.rotation.z; faces +Z",
+   "source": "assembled from Kenney Fantasy Town Kit 2.0 pieces"
+  },
+  {
+   "id": "town/wall_wood_door",
+   "url": "/assets/models/town/wall_wood_door.glb",
+   "category": "door",
+   "kit": "town",
+   "bboxMin": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1,
+    0.5
+   ],
+   "triangles": 376,
+   "bytes": 32460,
+   "notes": "timber wall panel with arched door; child node 'door' hinged at z=-0.2 (door.rotation.y opens it); panel on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / wall-wood-door"
+  },
+  {
+   "id": "town/wall_wood_window",
+   "url": "/assets/models/town/wall_wood_window.glb",
+   "category": "window",
+   "kit": "town",
+   "bboxMin": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1,
+    0.5
+   ],
+   "triangles": 122,
+   "bytes": 18472,
+   "notes": "timber wall panel with shuttered window; panel on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / wall-wood-window-shutters"
+  },
+  {
+   "id": "town/wall_wood",
+   "url": "/assets/models/town/wall_wood.glb",
+   "category": "wall",
+   "kit": "town",
+   "bboxMin": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1,
+    0.5
+   ],
+   "triangles": 32,
+   "bytes": 14528,
+   "notes": "plain timber wall panel with corner posts; panel on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / wall-wood"
+  },
+  {
+   "id": "town/wall_stone_door",
+   "url": "/assets/models/town/wall_stone_door.glb",
+   "category": "door",
+   "kit": "town",
+   "bboxMin": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1,
+    0.5
+   ],
+   "triangles": 376,
+   "bytes": 31300,
+   "notes": "stone (lavender plaster) wall panel with arched wooden door; child node 'door' hinged at z=-0.2; panel on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / wall-door"
+  },
+  {
+   "id": "town/wall_stone_window",
+   "url": "/assets/models/town/wall_stone_window.glb",
+   "category": "window",
+   "kit": "town",
+   "bboxMin": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1,
+    0.5
+   ],
+   "triangles": 178,
+   "bytes": 22124,
+   "notes": "stone wall panel with glazed window; panel on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / wall-window-glass"
+  },
+  {
+   "id": "town/roof_gable_green",
+   "url": "/assets/models/town/roof_gable_green.glb",
+   "category": "roof",
+   "kit": "town",
+   "bboxMin": [
+    -0.55,
+    0,
+    -0.535
+   ],
+   "bboxMax": [
+    0.55,
+    0.571,
+    0.535
+   ],
+   "triangles": 72,
+   "bytes": 16484,
+   "notes": "1-cell green gable roof, ridge along X; place at wall top (y=1 per storey)",
+   "source": "Kenney Fantasy Town Kit 2.0 / roof-gable"
+  },
+  {
+   "id": "town/roof_steep_red",
+   "url": "/assets/models/town/roof_steep_red.glb",
+   "category": "roof",
+   "kit": "town",
+   "bboxMin": [
+    -0.55,
+    -0.045,
+    -0.567
+   ],
+   "bboxMax": [
+    0.55,
+    1.112,
+    0.567
+   ],
+   "triangles": 72,
+   "bytes": 16348,
+   "notes": "1-cell steep red gable roof, ridge along X; place at y=1 per storey",
+   "source": "Kenney Fantasy Town Kit 2.0 / roof-high-gable"
+  },
+  {
+   "id": "town/chimney",
+   "url": "/assets/models/town/chimney.glb",
+   "category": "chimney",
+   "kit": "town",
+   "bboxMin": [
+    0.213,
+    0,
+    -0.17
+   ],
+   "bboxMax": [
+    0.425,
+    1,
+    0.17
+   ],
+   "triangles": 32,
+   "bytes": 14440,
+   "notes": "stone chimney stack, offset toward +X inside the cell; place at roof level so it pokes through",
+   "source": "Kenney Fantasy Town Kit 2.0 / chimney"
+  },
+  {
+   "id": "town/banner_red",
+   "url": "/assets/models/town/banner_red.glb",
+   "category": "banner",
+   "kit": "town",
+   "bboxMin": [
+    0.375,
+    0.161,
+    -0.25
+   ],
+   "bboxMax": [
+    0.425,
+    1,
+    0.25
+   ],
+   "triangles": 98,
+   "bytes": 18040,
+   "notes": "red hanging banner on a rod, offset to +X cell edge (wall-mounted)",
+   "source": "Kenney Fantasy Town Kit 2.0 / banner-red"
+  },
+  {
+   "id": "town/banner_green",
+   "url": "/assets/models/town/banner_green.glb",
+   "category": "banner",
+   "kit": "town",
+   "bboxMin": [
+    0.375,
+    0.161,
+    -0.25
+   ],
+   "bboxMax": [
+    0.425,
+    1,
+    0.25
+   ],
+   "triangles": 102,
+   "bytes": 18188,
+   "notes": "green hanging banner on a rod, offset to +X cell edge (wall-mounted)",
+   "source": "Kenney Fantasy Town Kit 2.0 / banner-green"
+  },
+  {
+   "id": "town/fence",
+   "url": "/assets/models/town/fence.glb",
+   "category": "fence",
+   "kit": "town",
+   "bboxMin": [
+    0.425,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    0.38,
+    0.5
+   ],
+   "triangles": 84,
+   "bytes": 16488,
+   "notes": "1-cell wooden rail fence along Z on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / fence"
+  },
+  {
+   "id": "town/fence_gate",
+   "url": "/assets/models/town/fence_gate.glb",
+   "category": "fence",
+   "kit": "town",
+   "bboxMin": [
+    0.425,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    0.38,
+    0.5
+   ],
+   "triangles": 560,
+   "bytes": 43096,
+   "notes": "1-cell wooden fence with small gate, along Z on +X cell edge",
+   "source": "Kenney Fantasy Town Kit 2.0 / fence-gate"
+  },
+  {
+   "id": "town/cart",
+   "url": "/assets/models/town/cart.glb",
+   "category": "cart",
+   "kit": "town",
+   "bboxMin": [
+    -0.447,
+    0,
+    -0.645
+   ],
+   "bboxMax": [
+    0.447,
+    0.536,
+    0.695
+   ],
+   "triangles": 416,
+   "bytes": 36416,
+   "notes": "wooden hand cart, long axis Z; two wheel child nodes (axle along X)",
+   "source": "Kenney Fantasy Town Kit 2.0 / cart"
+  },
+  {
+   "id": "town/lantern",
+   "url": "/assets/models/town/lantern.glb",
+   "category": "lantern",
+   "kit": "town",
+   "bboxMin": [
+    -0.108,
+    0,
+    -0.112
+   ],
+   "bboxMax": [
+    0.108,
+    1.556,
+    0.112
+   ],
+   "triangles": 158,
+   "bytes": 21592,
+   "notes": "tall iron street lantern post",
+   "source": "Kenney Fantasy Town Kit 2.0 / lantern"
+  },
+  {
+   "id": "town/stall_red",
+   "url": "/assets/models/town/stall_red.glb",
+   "category": "stall",
+   "kit": "town",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1.237,
+    0.5
+   ],
+   "triangles": 270,
+   "bytes": 28032,
+   "notes": "market stall with red awning",
+   "source": "Kenney Fantasy Town Kit 2.0 / stall-red"
+  },
+  {
+   "id": "town/stall_green",
+   "url": "/assets/models/town/stall_green.glb",
+   "category": "stall",
+   "kit": "town",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1.237,
+    0.5
+   ],
+   "triangles": 322,
+   "bytes": 30016,
+   "notes": "market stall with green awning",
+   "source": "Kenney Fantasy Town Kit 2.0 / stall-green"
+  },
+  {
+   "id": "town/fountain",
+   "url": "/assets/models/town/fountain.glb",
+   "category": "fountain",
+   "kit": "town",
+   "bboxMin": [
+    -1,
+    0,
+    -1
+   ],
+   "bboxMax": [
+    1,
+    0.48,
+    1
+   ],
+   "triangles": 1628,
+   "bytes": 104328,
+   "notes": "round 2x2-cell stone fountain with centre basin, water surface",
+   "source": "Kenney Fantasy Town Kit 2.0 / fountain-round-detail"
+  },
+  {
+   "id": "town/stairs_wood",
+   "url": "/assets/models/town/stairs_wood.glb",
+   "category": "bridge",
+   "kit": "town",
+   "bboxMin": [
+    -0.52,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1,
+    0.5
+   ],
+   "triangles": 424,
+   "bytes": 34164,
+   "notes": "1-cell wide wooden stairs rising 1 unit, climbs toward +X (top step at +X side)",
+   "source": "Kenney Fantasy Town Kit 2.0 / stairs-wide-wood"
+  },
+  {
+   "id": "town/planks",
+   "url": "/assets/models/town/planks.glb",
+   "category": "bridge",
+   "kit": "town",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    0.06,
+    0.5
+   ],
+   "triangles": 96,
+   "bytes": 18816,
+   "notes": "1x1 wooden plank deck tile (dock / bridge surface), 0.06 thick",
+   "source": "Kenney Fantasy Town Kit 2.0 / planks"
+  },
+  {
+   "id": "town/pillar_wood",
+   "url": "/assets/models/town/pillar_wood.glb",
+   "category": "prop",
+   "kit": "town",
+   "bboxMin": [
+    -0.08,
+    0,
+    -0.08
+   ],
+   "bboxMax": [
+    0.08,
+    1,
+    0.08
+   ],
+   "triangles": 44,
+   "bytes": 14900,
+   "notes": "wooden post on stone foot (dock / bridge support)",
+   "source": "Kenney Fantasy Town Kit 2.0 / pillar-wood"
+  },
+  {
+   "id": "town/watermill_wheel",
+   "url": "/assets/models/town/watermill_wheel.glb",
+   "category": "prop",
+   "kit": "town",
+   "bboxMin": [
+    -0.425,
+    -0.9,
+    -0.9
+   ],
+   "bboxMax": [
+    0.425,
+    0.9,
+    0.9
+   ],
+   "triangles": 600,
+   "bytes": 48352,
+   "notes": "wooden water wheel, axle along X, centred at origin (spin about X)",
+   "source": "Kenney Fantasy Town Kit 2.0 / watermill"
+  },
+  {
+   "id": "castle/gatehouse",
+   "url": "/assets/models/castle/gatehouse.glb",
+   "category": "gate",
+   "kit": "castle",
+   "bboxMin": [
+    -1.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    1.5,
+    4.166,
+    0.54
+   ],
+   "triangles": 2086,
+   "bytes": 126068,
+   "notes": "assembled: two square towers with pointed blue roofs + flags flanking an arched doorway; child node 'gate' (door) at doorway; faces +Z",
+   "source": "assembled from Kenney Castle Kit 2.0 pieces"
+  },
+  {
+   "id": "castle/tower_hex_full",
+   "url": "/assets/models/castle/tower_hex_full.glb",
+   "category": "tower",
+   "kit": "castle",
+   "bboxMin": [
+    -0.488,
+    0,
+    -0.423
+   ],
+   "bboxMax": [
+    0.488,
+    3.386,
+    0.423
+   ],
+   "triangles": 684,
+   "bytes": 49352,
+   "notes": "assembled: hexagonal tower (base + window band + pointed blue roof + flag)",
+   "source": "assembled from Kenney Castle Kit 2.0 pieces"
+  },
+  {
+   "id": "castle/tower_round",
+   "url": "/assets/models/castle/tower_round.glb",
+   "category": "tower",
+   "kit": "castle",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1.31,
+    0.5
+   ],
+   "triangles": 332,
+   "bytes": 36144,
+   "notes": "round tower body section, stackable (1.31 tall)",
+   "source": "Kenney Castle Kit 2.0 / tower-base"
+  },
+  {
+   "id": "castle/tower_round_top",
+   "url": "/assets/models/castle/tower_round_top.glb",
+   "category": "towerTop",
+   "kit": "castle",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    0.13,
+    0.5
+   ],
+   "triangles": 320,
+   "bytes": 26612,
+   "notes": "crenellated battlement ring for tower_round (place at y=1.31)",
+   "source": "Kenney Castle Kit 2.0 / tower-top"
+  },
+  {
+   "id": "castle/tower_hex_base",
+   "url": "/assets/models/castle/tower_hex_base.glb",
+   "category": "tower",
+   "kit": "castle",
+   "bboxMin": [
+    -0.45,
+    0,
+    -0.39
+   ],
+   "bboxMax": [
+    0.45,
+    1.31,
+    0.39
+   ],
+   "triangles": 68,
+   "bytes": 13300,
+   "notes": "hexagonal tower body (1.31 tall)",
+   "source": "Kenney Castle Kit 2.0 / tower-hexagon-base"
+  },
+  {
+   "id": "castle/tower_hex_mid",
+   "url": "/assets/models/castle/tower_hex_mid.glb",
+   "category": "tower",
+   "kit": "castle",
+   "bboxMin": [
+    -0.476,
+    0,
+    -0.412
+   ],
+   "bboxMax": [
+    0.476,
+    0.46,
+    0.412
+   ],
+   "triangles": 404,
+   "bytes": 30888,
+   "notes": "hexagonal window band (0.46 tall), stack on tower_hex_base at y=1.31",
+   "source": "Kenney Castle Kit 2.0 / tower-hexagon-mid"
+  },
+  {
+   "id": "castle/tower_hex_roof",
+   "url": "/assets/models/castle/tower_hex_roof.glb",
+   "category": "towerTop",
+   "kit": "castle",
+   "bboxMin": [
+    -0.488,
+    0,
+    -0.423
+   ],
+   "bboxMax": [
+    0.488,
+    0.83,
+    0.423
+   ],
+   "triangles": 68,
+   "bytes": 13300,
+   "notes": "pointed blue hexagonal roof, stack at y=1.77 on base+mid",
+   "source": "Kenney Castle Kit 2.0 / tower-hexagon-roof"
+  },
+  {
+   "id": "castle/tower_square",
+   "url": "/assets/models/castle/tower_square.glb",
+   "category": "tower",
+   "kit": "castle",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1.31,
+    0.5
+   ],
+   "triangles": 176,
+   "bytes": 19080,
+   "notes": "square tower block with battlement top (1.31 tall)",
+   "source": "Kenney Castle Kit 2.0 / tower-square"
+  },
+  {
+   "id": "castle/tower_square_roof",
+   "url": "/assets/models/castle/tower_square_roof.glb",
+   "category": "towerTop",
+   "kit": "castle",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1.35,
+    0.5
+   ],
+   "triangles": 116,
+   "bytes": 15312,
+   "notes": "crenellated top with tall pointed blue roof for 1x1 square towers",
+   "source": "Kenney Castle Kit 2.0 / tower-square-top-roof-high"
+  },
+  {
+   "id": "castle/wall",
+   "url": "/assets/models/castle/wall.glb",
+   "category": "castleWall",
+   "kit": "castle",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    1.31,
+    0.5
+   ],
+   "triangles": 178,
+   "bytes": 19064,
+   "notes": "1-cell crenellated castle wall segment (1.31 tall)",
+   "source": "Kenney Castle Kit 2.0 / wall"
+  },
+  {
+   "id": "castle/wall_doorway",
+   "url": "/assets/models/castle/wall_doorway.glb",
+   "category": "castleWall",
+   "kit": "castle",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0,
+    1.31,
+    0.5
+   ],
+   "triangles": 500,
+   "bytes": 33740,
+   "notes": "castle wall with arched opening, occupies -X half of cell, opening faces +/-X",
+   "source": "Kenney Castle Kit 2.0 / wall-doorway"
+  },
+  {
+   "id": "castle/gate",
+   "url": "/assets/models/castle/gate.glb",
+   "category": "gate",
+   "kit": "castle",
+   "bboxMin": [
+    -0.076,
+    0,
+    -0.331
+   ],
+   "bboxMax": [
+    0.076,
+    0.91,
+    0.331
+   ],
+   "triangles": 146,
+   "bytes": 17092,
+   "notes": "arched wooden gate with iron bands, fits wall_doorway; thin along X (faces +/-X)",
+   "source": "Kenney Castle Kit 2.0 / gate"
+  },
+  {
+   "id": "castle/portcullis",
+   "url": "/assets/models/castle/portcullis.glb",
+   "category": "gate",
+   "kit": "castle",
+   "bboxMin": [
+    -0.036,
+    0,
+    -0.348
+   ],
+   "bboxMax": [
+    0.036,
+    0.73,
+    0.348
+   ],
+   "triangles": 190,
+   "bytes": 23576,
+   "notes": "iron portcullis grille, thin along X",
+   "source": "Kenney Castle Kit 2.0 / metal-gate"
+  },
+  {
+   "id": "castle/flag",
+   "url": "/assets/models/castle/flag.glb",
+   "category": "flag",
+   "kit": "castle",
+   "bboxMin": [
+    -0.053,
+    0,
+    -0.379
+   ],
+   "bboxMax": [
+    0.053,
+    0.866,
+    0.053
+   ],
+   "triangles": 144,
+   "bytes": 18052,
+   "notes": "blue pennant flag on a pole; cloth extends toward -Z",
+   "source": "Kenney Castle Kit 2.0 / flag"
+  },
+  {
+   "id": "castle/banner_long",
+   "url": "/assets/models/castle/banner_long.glb",
+   "category": "banner",
+   "kit": "castle",
+   "bboxMin": [
+    0,
+    0,
+    -0.315
+   ],
+   "bboxMax": [
+    0.04,
+    2.17,
+    0.315
+   ],
+   "triangles": 68,
+   "bytes": 12180,
+   "notes": "long blue/white heraldic banner, origin at bottom, 2.17 tall, thin along X",
+   "source": "Kenney Castle Kit 2.0 / flag-banner-long"
+  },
+  {
+   "id": "castle/drawbridge",
+   "url": "/assets/models/castle/drawbridge.glb",
+   "category": "bridge",
+   "kit": "castle",
+   "bboxMin": [
+    -1.002,
+    0,
+    -0.416
+   ],
+   "bboxMax": [
+    0,
+    0.1,
+    0.416
+   ],
+   "triangles": 40,
+   "bytes": 11160,
+   "notes": "wooden drawbridge deck, hinge edge at x=0, extends to x=-1 (rotate about Z to raise)",
+   "source": "Kenney Castle Kit 2.0 / bridge-draw"
+  },
+  {
+   "id": "platformer/flag_checkpoint",
+   "url": "/assets/models/platformer/flag_checkpoint.glb",
+   "category": "flag",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.056,
+    0,
+    -0.056
+   ],
+   "bboxMax": [
+    0.367,
+    0.9,
+    0.056
+   ],
+   "triangles": 110,
+   "bytes": 19004,
+   "notes": "red flag on grey pole (checkpoint marker)",
+   "source": "Kenney Platformer Kit 4.1 / flag"
+  },
+  {
+   "id": "platformer/sign",
+   "url": "/assets/models/platformer/sign.glb",
+   "category": "sign",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.245,
+    0,
+    -0.056
+   ],
+   "bboxMax": [
+    0.239,
+    0.6,
+    0.075
+   ],
+   "triangles": 76,
+   "bytes": 17272,
+   "notes": "wooden signboard on a post",
+   "source": "Kenney Platformer Kit 4.1 / sign"
+  },
+  {
+   "id": "platformer/sign_arrow",
+   "url": "/assets/models/platformer/sign_arrow.glb",
+   "category": "sign",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.203,
+    0,
+    -0.056
+   ],
+   "bboxMax": [
+    0.253,
+    0.6,
+    0.086
+   ],
+   "triangles": 64,
+   "bytes": 16424,
+   "notes": "wooden arrow direction sign on a post",
+   "source": "Kenney Platformer Kit 4.1 / arrow"
+  },
+  {
+   "id": "platformer/chest",
+   "url": "/assets/models/platformer/chest.glb",
+   "category": "prop",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.25,
+    0,
+    -0.25
+   ],
+   "bboxMax": [
+    0.25,
+    0.45,
+    0.25
+   ],
+   "triangles": 232,
+   "bytes": 30068,
+   "notes": "treasure chest, front faces +Z; child node 'lid' hinged at the back (lid.rotation.x negative opens it)",
+   "source": "Kenney Platformer Kit 4.1 / chest"
+  },
+  {
+   "id": "platformer/barrel",
+   "url": "/assets/models/platformer/barrel.glb",
+   "category": "barrel",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.259,
+    0,
+    -0.259
+   ],
+   "bboxMax": [
+    0.259,
+    0.476,
+    0.259
+   ],
+   "triangles": 148,
+   "bytes": 20820,
+   "notes": "wooden barrel with grey hoops",
+   "source": "Kenney Platformer Kit 4.1 / barrel"
+  },
+  {
+   "id": "platformer/crate",
+   "url": "/assets/models/platformer/crate.glb",
+   "category": "crate",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.25,
+    0,
+    -0.25
+   ],
+   "bboxMax": [
+    0.25,
+    0.5,
+    0.25
+   ],
+   "triangles": 156,
+   "bytes": 20896,
+   "notes": "wooden crate with diagonal braces",
+   "source": "Kenney Platformer Kit 4.1 / crate"
+  },
+  {
+   "id": "platformer/platform_wood",
+   "url": "/assets/models/platformer/platform_wood.glb",
+   "category": "bridge",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    0.195,
+    0.5
+   ],
+   "triangles": 84,
+   "bytes": 18028,
+   "notes": "1x1 wooden plank platform on beams (bridge / dock segment)",
+   "source": "Kenney Platformer Kit 4.1 / platform"
+  },
+  {
+   "id": "platformer/ramp_wood",
+   "url": "/assets/models/platformer/ramp_wood.glb",
+   "category": "bridge",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.5,
+    0,
+    -0.5
+   ],
+   "bboxMax": [
+    0.5,
+    0.57,
+    0.527
+   ],
+   "triangles": 84,
+   "bytes": 18056,
+   "notes": "1x1 wooden plank ramp, rises toward -Z",
+   "source": "Kenney Platformer Kit 4.1 / platform-ramp"
+  },
+  {
+   "id": "platformer/lever",
+   "url": "/assets/models/platformer/lever.glb",
+   "category": "prop",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.3,
+    0,
+    -0.225
+   ],
+   "bboxMax": [
+    0.3,
+    0.642,
+    0.225
+   ],
+   "triangles": 134,
+   "bytes": 24056,
+   "notes": "floor lever on grey base; child node 'handle' pivots at its base (rotate it to flip the lever)",
+   "source": "Kenney Platformer Kit 4.1 / lever"
+  },
+  {
+   "id": "platformer/pressure_plate",
+   "url": "/assets/models/platformer/pressure_plate.glb",
+   "category": "prop",
+   "kit": "platformer",
+   "bboxMin": [
+    -0.3,
+    0,
+    -0.3
+   ],
+   "bboxMax": [
+    0.3,
+    0.2,
+    0.3
+   ],
+   "triangles": 84,
+   "bytes": 20460,
+   "notes": "square floor button / pressure plate; child node 'button' is the pressable red top (move down when pressed)",
+   "source": "Kenney Platformer Kit 4.1 / button-square"
+  }
+ ],
+ "audio": {
+  "music_main": {
+   "url": "/assets/audio/music_main.mp3",
+   "durationSec": 57.595,
+   "source": "opengameart.org/content/once-upon-a-time-loop (TAD) / once_upon_a_time_loop.wav",
+   "license": "CC0",
+   "loop": true,
+   "loopEndSec": 57.595397,
+   "bpm": 100,
+   "bars": 24
+  },
+  "music_alt": {
+   "url": "/assets/audio/music_alt.mp3",
+   "durationSec": 118.605,
+   "source": "opengameart.org/content/loop-town (Fupi) / loopcity.wav",
+   "license": "CC0",
+   "loop": true,
+   "loopEndSec": 118.604649,
+   "bpm": 172,
+   "bars": 85
+  },
+  "ui_click": {
+   "url": "/assets/audio/ui_click.mp3",
+   "durationSec": 0.245,
+   "source": "kenney-interface-sounds/select_003.ogg",
+   "license": "CC0"
+  },
+  "ui_hover": {
+   "url": "/assets/audio/ui_hover.mp3",
+   "durationSec": 0.11,
+   "source": "kenney-ui-audio/rollover4.ogg",
+   "license": "CC0"
+  },
+  "join": {
+   "url": "/assets/audio/join.mp3",
+   "durationSec": 0.29,
+   "source": "kenney-interface-sounds/confirmation_001.ogg",
+   "license": "CC0"
+  },
+  "countdown_tick": {
+   "url": "/assets/audio/countdown_tick.mp3",
+   "durationSec": 0.122,
+   "source": "kenney-interface-sounds/toggle_001.ogg",
+   "license": "CC0"
+  },
+  "countdown_go": {
+   "url": "/assets/audio/countdown_go.mp3",
+   "durationSec": 0.539,
+   "source": "kenney-interface-sounds/confirmation_002.ogg",
+   "license": "CC0"
+  },
+  "jump": {
+   "url": "/assets/audio/jump.mp3",
+   "durationSec": 0.225,
+   "source": "kenney-interface-sounds/maximize_008.ogg",
+   "license": "CC0"
+  },
+  "land": {
+   "url": "/assets/audio/land.mp3",
+   "durationSec": 0.447,
+   "source": "kenney-impact-sounds/impactSoft_medium_001.ogg + kenney-impact-sounds/footstep_grass_001.ogg",
+   "license": "CC0"
+  },
+  "step": {
+   "url": "/assets/audio/step.mp3",
+   "durationSec": 0.317,
+   "source": "kenney-impact-sounds/footstep_grass_001.ogg",
+   "license": "CC0"
+  },
+  "grip": {
+   "url": "/assets/audio/grip.mp3",
+   "durationSec": 0.368,
+   "source": "kenney-rpg-audio/dropLeather.ogg",
+   "license": "CC0"
+  },
+  "release": {
+   "url": "/assets/audio/release.mp3",
+   "durationSec": 0.38,
+   "source": "kenney-rpg-audio/cloth2.ogg",
+   "license": "CC0"
+  },
+  "shift": {
+   "url": "/assets/audio/shift.mp3",
+   "durationSec": 0.315,
+   "source": "kenney-interface-sounds/drop_003.ogg + kenney-interface-sounds/open_002.ogg + kenney-interface-sounds/glass_005.ogg",
+   "license": "CC0"
+  },
+  "shift_fail": {
+   "url": "/assets/audio/shift_fail.mp3",
+   "durationSec": 0.35,
+   "source": "kenney-impact-sounds/impactPunch_medium_000.ogg + kenney-impact-sounds/impactWood_medium_002.ogg",
+   "license": "CC0"
+  },
+  "impact_wood": {
+   "url": "/assets/audio/impact_wood.mp3",
+   "durationSec": 0.511,
+   "source": "kenney-impact-sounds/impactPlank_medium_001.ogg",
+   "license": "CC0"
+  },
+  "impact_heavy": {
+   "url": "/assets/audio/impact_heavy.mp3",
+   "durationSec": 0.628,
+   "source": "kenney-impact-sounds/impactPunch_heavy_000.ogg",
+   "license": "CC0"
+  },
+  "impact_metal": {
+   "url": "/assets/audio/impact_metal.mp3",
+   "durationSec": 0.392,
+   "source": "kenney-impact-sounds/impactMetal_medium_000.ogg + kenney-impact-sounds/impactMetal_light_003.ogg",
+   "license": "CC0"
+  },
+  "wind_gust": {
+   "url": "/assets/audio/wind_gust.mp3",
+   "durationSec": 2.565,
+   "source": "original: synthesized with ffmpeg (pink noise, band-pass layers, swell envelope)",
+   "license": "CC0"
+  },
+  "lever": {
+   "url": "/assets/audio/lever.mp3",
+   "durationSec": 0.326,
+   "source": "kenney-rpg-audio/metalLatch.ogg + kenney-impact-sounds/impactPunch_medium_000.ogg",
+   "license": "CC0"
+  },
+  "gate_open": {
+   "url": "/assets/audio/gate_open.mp3",
+   "durationSec": 1.443,
+   "source": "kenney-impact-sounds/impactSoft_heavy_000.ogg + kenney-rpg-audio/doorOpen_2.ogg",
+   "license": "CC0"
+  },
+  "bridge_unfold": {
+   "url": "/assets/audio/bridge_unfold.mp3",
+   "durationSec": 1.189,
+   "source": "kenney-rpg-audio/creak2.ogg + kenney-impact-sounds/impactPlank_medium_001.ogg",
+   "license": "CC0"
+  },
+  "lift_start": {
+   "url": "/assets/audio/lift_start.mp3",
+   "durationSec": 0.871,
+   "source": "kenney-rpg-audio/doorClose_4.ogg + kenney-rpg-audio/metalClick.ogg + kenney-rpg-audio/handleCoins.ogg",
+   "license": "CC0"
+  },
+  "checkpoint": {
+   "url": "/assets/audio/checkpoint.mp3",
+   "durationSec": 0.797,
+   "source": "kenney-music-jingles/Pizzicato jingles/jingles_PIZZI10.ogg",
+   "license": "CC0"
+  },
+  "fall_poof": {
+   "url": "/assets/audio/fall_poof.mp3",
+   "durationSec": 0.647,
+   "source": "kenney-interface-sounds/minimize_006.ogg + kenney-rpg-audio/cloth2.ogg",
+   "license": "CC0"
+  },
+  "respawn": {
+   "url": "/assets/audio/respawn.mp3",
+   "durationSec": 0.49,
+   "source": "kenney-interface-sounds/confirmation_004.ogg",
+   "license": "CC0"
+  },
+  "victory": {
+   "url": "/assets/audio/victory.mp3",
+   "durationSec": 1.387,
+   "source": "kenney-music-jingles/Steel jingles/jingles_STEEL02.ogg",
+   "license": "CC0"
+  },
+  "fail_jingle": {
+   "url": "/assets/audio/fail_jingle.mp3",
+   "durationSec": 0.99,
+   "source": "kenney-music-jingles/Pizzicato jingles/jingles_PIZZI01.ogg",
+   "license": "CC0"
+  },
+  "chapter": {
+   "url": "/assets/audio/chapter.mp3",
+   "durationSec": 1.163,
+   "source": "kenney-music-jingles/Hit jingles/jingles_HIT15.ogg",
+   "license": "CC0"
+  },
+  "confetti_pop": {
+   "url": "/assets/audio/confetti_pop.mp3",
+   "durationSec": 0.774,
+   "source": "kenney-rpg-audio/bookClose.ogg + kenney-interface-sounds/glass_004.ogg + kenney-rpg-audio/bookFlip1.ogg",
+   "license": "CC0"
+  },
+  "king_laugh": {
+   "url": "/assets/audio/king_laugh.mp3",
+   "durationSec": 1.095,
+   "source": "kenney-music-jingles/Sax jingles/jingles_SAX03.ogg",
+   "license": "CC0"
+  }
+ },
+ "fonts": {
+  "Fredoka": "/assets/fonts/Fredoka.woff2",
+  "Nunito": "/assets/fonts/Nunito.woff2"
+ },
+ "kits": {
+  "_units": "All models: +Y up, glTF meters-as-units, native Kenney scale (NOT pre-scaled). bboxMin/bboxMax are in native units incl. node transforms.",
+  "town": {
+   "source": "Kenney Fantasy Town Kit 2.0",
+   "gridCell": 1,
+   "storeyHeight": 1,
+   "suggestedScale": 3,
+   "origin": "cell centre at ground (y=0); wall panels sit on the +X cell edge",
+   "front": "assembled buildings face +Z"
+  },
+  "castle": {
+   "source": "Kenney Castle Kit 2.0",
+   "gridCell": 1,
+   "storeyHeight": 1.31,
+   "suggestedScale": 4,
+   "origin": "cell centre at ground",
+   "front": "gate/door/flags are thin along X (face +/-X); gatehouse faces +Z"
+  },
+  "platformer": {
+   "source": "Kenney Platformer Kit 4.1",
+   "gridCell": 1,
+   "suggestedScale": 2,
+   "origin": "centre bottom"
+  },
+  "nature": {
+   "source": "Kenney Nature Kit 2.1 (fallback for Quaternius Stylized Nature MegaKit)",
+   "suggestedScale": 3,
+   "origin": "centre bottom, most sit 0.05 below y=0 so they plant into terrain",
+   "palette": "recoloured to Fantasy Town Kit palette, matte (metalness 0)"
+  }
+ }
+}

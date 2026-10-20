@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--autoplay-policy=no-user-gesture-required'] });
+const page = await browser.newPage();
+const logs: string[] = [];
+page.on('console', (m) => logs.push(`[${m.type()}] ${m.text()}`));
+await page.goto('http://localhost:5173/?dev');
+await page.waitForTimeout(1500);
+console.log('before click ctx:', await page.evaluate(`window.__SH_AUDIO.ctx ? window.__SH_AUDIO.ctx.state : 'none'`));
+await page.getByText('Solo test room (dev)').click();
+await page.waitForTimeout(4000);
+const info = await page.evaluate(`(() => { const a = window.__SH_AUDIO; return { state: a.ctx && a.ctx.state, buffers: a.buffers.size, music: a.musicName, playing: !!a.music, settings: a.settings }; })()`);
+console.log('after PLAY:', JSON.stringify(info));
+console.log(logs.filter((l) => l.includes('audio')).join('\n') || 'no audio warnings');
+await browser.close();
