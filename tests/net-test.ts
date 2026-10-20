@@ -2,7 +2,7 @@
 import { io, type Socket } from 'socket.io-client';
 import type { LobbyState, Snapshot } from '../src/shared/protocol';
 
-const URL = process.argv[2] ?? 'http://localhost:3000';
+const URL = process.argv[2] ?? 'http://127.0.0.1:3000';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Bot {
