@@ -6,21 +6,7 @@ import { fmtTime } from './Hud';
 import { SLOT_COLORS } from '../shared/constants';
 import { MAPS, mapAt } from '../shared/maps';
 import type { Results as R } from '../shared/protocol';
-
-interface Rec {
-  bestMs: number;
-  bestScore: number;
-  crowns: number;
-}
-type Records = Record<string, Rec> & { adventure?: Rec };
-
-function loadRecords(): Records {
-  try {
-    return JSON.parse(localStorage.getItem('sh_records') || '{}');
-  } catch {
-    return {};
-  }
-}
+import { Voters, WorldGrid, loadRecords, vote, voteNote, type Records } from './WorldPicker';
 
 /** Store this browser's bests once per result; returns which ones were beaten. */
 function useRecords(r: R | null) {
@@ -57,13 +43,6 @@ function Crowns({ n, max = 3, size = 44 }: { n: number; max?: number; size?: num
   );
 }
 
-/** Majority rule text (matches the server: more than half of the team decides). */
-function voteNote(team: number, voted: boolean) {
-  if (team <= 1) return 'Pick what happens next';
-  const need = Math.floor(team / 2) + 1;
-  return voted ? `Waiting for a teammate to agree (${need} of ${team} decide)…` : `${need === 2 ? 'Two' : need} of you decide what happens next`;
-}
-
 export function Results() {
   const r = useGame((s) => s.results);
   const show = useGame((s) => s.showResults);
@@ -79,22 +58,14 @@ export function Results() {
   const myVote = lobby?.votes?.[lobby.you] ?? null;
   const adventure = lobby?.mode !== 'single';
   const last = r.map >= MAPS.length - 1;
-  const vote = (v: string) => {
-    sfx.play('ui_click');
-    net.action('vote', v);
-  };
   const best = rec[map.id];
-  const voters = (v: string) =>
-    (lobby?.votes ?? [])
-      .map((x, i) => (x === v ? i : -1))
-      .filter((i) => i >= 0)
-      .map((i) => <span key={i} className="vote-dot" style={{ background: SLOT_COLORS[i] }} />);
   const VoteBtn = ({ v, label, primary }: { v: string; label: string; primary?: boolean }) => (
     <button className={(primary ? 'play' : 'secondary') + (myVote === v ? ' voted' : '')} onClick={() => vote(v)}>
       {label}
-      <span className="voters">{voters(v)}</span>
+      <Voters lobby={lobby} v={v} />
     </button>
   );
+  const next = adventure && !last;
   return (
     <div className="overlay results">
       <div className="card results-card">
@@ -105,54 +76,58 @@ export function Results() {
         {r.adventure && <div className="results-sub">The King has a brand-new… doorstop.</div>}
         <Crowns n={r.crowns} />
         <div className="rank">{r.title}</div>
-        <ul className="achievements">
-          {r.achievements.map((a, i) => (
-            <li key={i} className={a.got ? 'got' : ''}>
-              <span>{a.got ? '✔' : '✘'}</span> {a.label}
-            </li>
-          ))}
-        </ul>
-        <div className="stats">
-          <div>
-            <span>Team time {r.drops ? `(incl. +${r.drops * 7}s drops)` : ''}</span>
-            <b>
-              {fmtTime(r.timeMs)} <small>par {fmtTime(r.par * 1000)}</small>
-            </b>
-          </div>
-          <div>
-            <span>Royal stamps</span>
-            <b>
-              {r.stamps}/{r.stampTotal}
-            </b>
-          </div>
-          <div>
-            <span>Artifact drops · courier tumbles</span>
-            <b>
-              {r.drops} · {r.falls}
-            </b>
-          </div>
-          <div>
-            <span>Shape shifts (never penalized)</span>
-            <b>{r.shifts}</b>
-          </div>
-          <div className="score">
-            <span>Score</span>
-            <b>{r.score}</b>
-          </div>
-          {best && (
-            <div className="records">
-              {newTime ? '🏅 New best time!' : `Best ${fmtTime(best.bestMs)}`} · {newScore ? '🏅 New best score!' : `best score ${best.bestScore}`}
+        {!picking && (
+          <>
+            <ul className="achievements">
+              {r.achievements.map((a, i) => (
+                <li key={i} className={a.got ? 'got' : ''}>
+                  <span>{a.got ? '✔' : '✘'}</span> {a.label}
+                </li>
+              ))}
+            </ul>
+            <div className="stats">
+              <div>
+                <span>Team time {r.drops ? `(incl. +${r.drops * 7}s drops)` : ''}</span>
+                <b>
+                  {fmtTime(r.timeMs)} <small>par {fmtTime(r.par * 1000)}</small>
+                </b>
+              </div>
+              <div>
+                <span>Royal stamps</span>
+                <b>
+                  {r.stamps}/{r.stampTotal}
+                </b>
+              </div>
+              <div>
+                <span>Object drops · player falls</span>
+                <b>
+                  {r.drops} · {r.falls}
+                </b>
+              </div>
+              <div>
+                <span>Shape changes (no penalty)</span>
+                <b>{r.shifts}</b>
+              </div>
+              <div className="score">
+                <span>Score</span>
+                <b>{r.score}</b>
+              </div>
+              {best && (
+                <div className="records">
+                  {newTime ? '🏅 New best time!' : `Best ${fmtTime(best.bestMs)}`} · {newScore ? '🏅 New best score!' : `best score ${best.bestScore}`}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        {r.adventure && (
-          <div className="adventure-total">
-            <div>Whole adventure</div>
-            <Crowns n={r.adventure.crowns} max={r.adventure.maxCrowns} size={18} />
-            <b>
-              {r.adventure.score} pts · {fmtTime(r.adventure.timeMs)} {newAdv ? '· 🏅 record!' : ''}
-            </b>
-          </div>
+            {r.adventure && (
+              <div className="adventure-total">
+                <div>Whole adventure</div>
+                <Crowns n={r.adventure.crowns} max={r.adventure.maxCrowns} size={18} />
+                <b>
+                  {r.adventure.score} pts · {fmtTime(r.adventure.timeMs)} {newAdv ? '· 🏅 record!' : ''}
+                </b>
+              </div>
+            )}
+          </>
         )}
         <div className="team-line">
           {r.names.map((n, i) =>
@@ -165,30 +140,17 @@ export function Results() {
           )}
         </div>
         {picking ? (
-          <div className="map-grid">
-            {MAPS.map((m) => (
-              <button key={m.id} className={'map-pick' + (myVote === `map:${m.index}` ? ' voted' : '')} onClick={() => vote(`map:${m.index}`)}>
-                <small>{m.sub}</small>
-                <b>{m.name}</b>
-                <span className="map-best">{rec[m.id] ? `${'👑'.repeat(rec[m.id].crowns)} ${fmtTime(rec[m.id].bestMs)}` : 'not played yet'}</span>
-                <span className="voters">{voters(`map:${m.index}`)}</span>
-              </button>
-            ))}
-            <button className="link" onClick={() => setPicking(false)}>
-              back
-            </button>
-          </div>
+          <WorldGrid lobby={lobby} rec={rec} back={() => setPicking(false)} />
         ) : (
           <div className="row vote-row">
-            {adventure && !last && <VoteBtn v="next" label={`Next: ${mapAt(r.map + 1).name} →`} primary />}
-            {(last || !adventure) && <VoteBtn v="again" label="New adventure" primary />}
-            <VoteBtn v="retry" label="Retry this world" />
-            <button className="secondary" onClick={() => setPicking(true)}>
+            {next && <VoteBtn v="next" label={`Next: ${mapAt(r.map + 1).name} →`} primary />}
+            <button className={next ? 'secondary' : 'play'} onClick={() => setPicking(true)}>
               Pick a world…
             </button>
+            <VoteBtn v="retry" label="Retry this world" />
           </div>
         )}
-        <div className="vote-note">{voteNote(lobby?.slots.filter(Boolean).length ?? 3, !!myVote)}</div>
+        <div className="vote-note">{voteNote(lobby)}</div>
         <div className="row">
           <button
             className="link"

@@ -1284,7 +1284,7 @@ export class CartMech extends Mech<CartDef> {
           // lever pulled with an empty bed: refuse (and say why, now and then)
           if (sim.time - this.warned > 3) {
             this.warned = sim.time;
-            sim.events.push({ k: 'toast', text: 'Load the artifact into the cart bed first!' });
+            sim.events.push({ k: 'toast', text: 'Put the golden object in the cart first!' });
           }
           (sim.mechById(lever) as SwitchMech | undefined)?.set(0);
         } else {

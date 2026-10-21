@@ -1,4 +1,5 @@
-// Keyboard input. Camera yaw is fixed (looking toward -Z), so W = -Z, D = +X.
+// Keyboard input. WASD is relative to the camera: the camera rig sets `camYaw` every frame and `sample()` turns the
+// keys into a world-space direction (yaw 0 looks toward -Z, so W = -Z and D = +X).
 import { BTN_ABILITY, BTN_SPRINT, BTN_USE } from '../shared/protocol';
 
 type ShiftHandler = (shape: number) => void;
@@ -16,7 +17,9 @@ class Input {
   enabled = false;
   private shiftHandlers = new Set<ShiftHandler>();
   private keyHandlers = new Set<KeyHandler>();
-  /** optional external override (automated tests) */
+  /** heading of the local camera (radians); sent along so the server knows which way "left" is */
+  camYaw = 0;
+  /** optional external override (automated tests): world-space direction, camera yaw ignored */
   override: { mx: number; mz: number; grab: boolean; use?: boolean; sprint?: boolean } | null = null;
 
   constructor() {
@@ -73,11 +76,11 @@ class Input {
   }
 
   sample() {
-    const counters = { jump: this.jumpCount, respawn: this.respawnCount, pilot: this.pilotCount, use: this.useCount };
+    const counters = { jump: this.jumpCount, respawn: this.respawnCount, pilot: this.pilotCount, use: this.useCount, camYaw: this.camYaw };
     if (!this.enabled) return { mx: 0, mz: 0, grab: false, buttons: 0, ...counters };
     if (this.override) {
       const o = this.override;
-      return { mx: o.mx, mz: o.mz, grab: o.grab, buttons: (o.use ? BTN_USE : 0) | (o.sprint ? BTN_SPRINT : 0), ...counters };
+      return { mx: o.mx, mz: o.mz, grab: o.grab, buttons: (o.use ? BTN_USE : 0) | (o.sprint ? BTN_SPRINT : 0), ...counters, camYaw: 0 };
     }
     const k = this.keys;
     let mx = 0;
@@ -91,6 +94,12 @@ class Input {
       mx /= m;
       mz /= m;
     }
+    // camera space -> world: right = (cos y, -sin y), forward = (-sin y, -cos y)
+    const c = Math.cos(this.camYaw), sn = Math.sin(this.camYaw);
+    const wx = mx * c + mz * sn;
+    const wz = -mx * sn + mz * c;
+    mx = wx;
+    mz = wz;
     let buttons = 0;
     if (k.has('KeyQ')) buttons |= BTN_USE;
     if (k.has('ShiftLeft') || k.has('ShiftRight')) buttons |= BTN_SPRINT;

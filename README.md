@@ -24,11 +24,15 @@ npm start        # production: serves everything on http://127.0.0.1:3000
 
 To play, open the URL in three browser windows or on three machines, then press **PLAY** in each. The first three players form a room, and a fourth player starts the next room. To guarantee friends end up together, all three enter the same **room code**.
 
+In the lobby, each player picks a world from the six pictures (or **All six in a row**). When two of the three pick the same one, it starts. If all three pick differently, one of the three picks is drawn after 5 seconds.
+
 ## Controls
 
 | Key | Action |
 |---|---|
-| WASD / arrows | move |
+| Mouse / touchpad | look around: click the game to capture the mouse (Esc frees it), or drag with a button held. Two‑finger sideways swipe also turns |
+| Scroll / pinch | zoom the camera in and out |
+| WASD / arrows | move, relative to where your camera looks |
 | Space | jump |
 | Shift (hold) | sprint (faster, less grip) |
 | **E** (hold) | grip a rope on the artifact and pull |
@@ -37,7 +41,9 @@ To play, open the URL in three browser windows or on three machines, then press 
 | **1 2 3 4** | shift to CUBE / LONG / TALL / ROUND (near the artifact or from inside; shared 1.5 s cooldown) |
 | R | hop back next to your team (inside the artifact: bail out) |
 | T | vote to recall the artifact to the last checkpoint (2 votes; +7 s, free when it's stuck) |
-| Esc | menu (music / SFX volume, quality, mute, leave) |
+| V | inside the artifact: switch between first person and an outside view (scrolling out / all the way in does the same) |
+| H | controls card (also the **? H** button), with this world's goal and tradeoff |
+| Esc | free the mouse; again: menu (volume, mouse speed, invert mouse, quality, mute, leave) |
 | M | mute |
 
 ## The four shapes (all one rigid body with one collider)
@@ -49,7 +55,9 @@ To play, open the URL in three browser windows or on three machines, then press 
 | TALL 1.1×4.4×1.1 | reaches the high lever | top‑heavy; wobbles and tips unless **two** couriers hold E | waddle + lean · **Brace** |
 | ROUND r 1.05 | rolls down the castle chute faster than anything | hard to stop; wind and fans blow it away | roll (steer back to brake) · **Boost** |
 
-**Piloting.** Stand next to the artifact and press F. Inside, WASD drives it with the current shape's movement, Space is the shape's ability, 1–4 still shift, and the others can keep pushing and pulling. Hopping out picks a safe spot beside the artifact (ground below, room to stand, no walls in between). If there isn't one, or the artifact is moving too fast, the game keeps trying for a few seconds; R always bails you out to the nearest safe spot.
+**Camera.** Every player has their own third‑person camera around their courier. It never passes through level geometry (it is pulled in instead), and decorations between it and you get a see‑through hole. A new world starts facing down the course.
+
+**Piloting.** Stand next to the artifact and press F. The camera moves inside it: first person with mouse look, a golden frame that fits the shape, and the view kept level (ROUND's cage rolls around you). WASD drives it toward where you look with the current shape's movement, Space is the shape's ability (LONG: hold A or D to pick the way it turns), 1–4 still shift, and the others can keep pushing and pulling. Everyone else still sees the artifact with your face in its little dome. Hopping out picks a safe spot beside the artifact (ground below, room to stand, no walls in between). If there isn't one, or the artifact is moving too fast, the game keeps trying for a few seconds; R always bails you out to the nearest safe spot.
 
 ## The six worlds (each built for about 2–4 minutes)
 
@@ -62,7 +70,7 @@ To play, open the URL in three browser windows or on three machines, then press 
 
 **Recovery.** Checkpoints sit inside each world. If the artifact falls, it and the team respawn at the checkpoint (+7 s). A courier who falls respawns next to the team. If the artifact gets stuck, recalling it (T) is free, and if it wanders off the map it comes back by itself. Machines that could trap it (the lift, the cart, gates) reset or wait for it.
 
-**Scoring.** Each world gives up to three crowns: delivered, under par time, and every royal stamp found. Score adds a time bonus under par, stamps, shortcuts and a clean‑run bonus, and subtracts drops and tumbles. Shape shifts are never penalized. Best times and crowns are saved in the browser. After each world, two of the three players vote to go to the next world, retry, or pick any world; an adventure of all six ends with a total.
+**Scoring.** Each world gives up to three crowns: delivered, under par time, and every royal stamp found. Score adds a time bonus under par, stamps, shortcuts and a clean‑run bonus, and subtracts drops and tumbles. Shape shifts are never penalized. Best times and crowns are saved in the browser. After each world, two of the three players vote to retry it or pick any world (or the next one, when playing all six in a row, which ends with a total).
 
 ## Architecture
 
@@ -97,8 +105,11 @@ npx tsx tests/net-test.ts             # 4 socket clients: 3 matched, 4th isolate
 npx tsx tests/net-test2.ts            # pilot sync, stale/malformed packets, identical mechanisms, results votes + drop
 npx tsx tests/play-three.ts           # 3 real Chrome sessions: shared room, identical artifact state, shift seen by all
 npx tsx tests/flow-three.ts           # browsers: 4th isolated, disconnect→pause→reload rejoin, results, vote → World 2
+npx tsx tests/camera-test.ts          # camera: mouse/touchpad turn + zoom, WASD per camera, walls, first person per shape
+npx tsx tests/camera-three.ts         # 3 browsers: independent cameras, one rides in first person, others unaffected
 npx tsx tests/perf.ts                 # FPS, draw calls, triangles in every world (dev server)
 npx tsx tests/tour.ts                 # screenshots of every world + ending (dev server)
+npx tsx tests/thumbs.ts               # regenerate the lobby's world pictures (public/assets/worlds/, dev server)
 ```
 
 The browser and socket tests use the installed Google Chrome through Playwright (`channel: 'chrome'`). Pass a URL as the first argument to test a production or public server.

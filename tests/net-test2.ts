@@ -1,5 +1,6 @@
-// Socket-level multiplayer checks for the expansion: pilot sync, duplicated / reordered input packets, world votes,
-// identical mechanism state, disconnect during results. Needs the DEV server. npx tsx tests/net-test2.ts [url]
+// Socket-level multiplayer checks for the expansion: lobby world pick (majority, split-vote draw), pilot sync,
+// duplicated / reordered input packets, results votes, identical mechanism state, disconnect during results.
+// Needs the DEV server. npx tsx tests/net-test2.ts [url]
 import { io, type Socket } from 'socket.io-client';
 import type { LobbyState, Snapshot } from '../src/shared/protocol';
 
@@ -45,13 +46,44 @@ const commonT = (mp?: number) => {
   return Math.max(-1, ...[...sets[0]].filter((t) => sets.every((x) => x.has(t))));
 };
 
+const vote = (b: Bot, v: string) => b.s.emit('act', { type: 'vote', value: v });
+
+// ---- lobby: a split vote (one pick each) draws one of the three picks
+{
+  const trio = await Promise.all(['Xi', 'Yo', 'Zed'].map((n) => bot(n)));
+  const code = 'NS' + Math.floor(Math.random() * 9000 + 1000);
+  for (const b of trio) {
+    b.s.emit('queue:join', { name: b.name, code });
+    await sleep(120);
+  }
+  await sleep(300);
+  trio.forEach((b, i) => vote(b, `map:${i + 1}`));
+  await sleep(600);
+  check('split lobby vote announces a draw', trio[0].lobby?.phase === 'waiting' && (trio[0].lobby?.tieMs ?? 0) > 3000, `phase=${trio[0].lobby?.phase} tieMs=${trio[0].lobby?.tieMs}`);
+  await sleep(5000);
+  const l = trio[0].lobby;
+  check('the draw starts one of the picked worlds', l?.phase === 'countdown' && [1, 2, 3].includes(l.map) && l.mode === 'single', `${l?.phase} map=${l?.map}`);
+  for (const b of trio) b.s.disconnect();
+}
+
+// ---- lobby: picks made while waiting count once the team is complete; one pick waits, two start
 const bots = await Promise.all(['Ada', 'Bo', 'Cy'].map((n) => bot(n)));
 const code = 'NT' + Math.floor(Math.random() * 9000 + 1000);
-for (const b of bots) {
-  b.s.emit('queue:join', { name: b.name, code });
-  await sleep(120);
-}
-await sleep(5800);
+bots[0].s.emit('queue:join', { name: bots[0].name, code });
+await sleep(200);
+vote(bots[0], 'map:0');
+bots[1].s.emit('queue:join', { name: bots[1].name, code });
+await sleep(200);
+vote(bots[1], 'map:0');
+await sleep(250);
+check('two matching picks wait for the third courier', bots[0].lobby?.phase === 'waiting', bots[0].lobby?.phase);
+vote(bots[1], 'next');
+await sleep(150);
+check('"next" is not a lobby choice', bots[0].lobby?.votes?.[1] === 'map:0', JSON.stringify(bots[0].lobby?.votes));
+bots[2].s.emit('queue:join', { name: bots[2].name, code });
+await sleep(400);
+check('the complete team starts the agreed world', bots[2].lobby?.phase === 'countdown' && bots[2].lobby?.map === 0 && bots[2].lobby?.mode === 'single', `${bots[2].lobby?.phase} map=${bots[2].lobby?.map} mode=${bots[2].lobby?.mode}`);
+await sleep(5600);
 check('room playing on World 1', bots.every((b) => b.lobby?.phase === 'playing' && b.lobby.map === 0), bots.map((b) => `${b.lobby?.phase}/${b.lobby?.map}`).join(','));
 
 // walk the slot-1 courier next to the artifact and hop in (F counter)

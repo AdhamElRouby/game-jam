@@ -31,6 +31,13 @@ for (const n of ['Ada', 'Bo', 'Cy']) {
 await pages[0].waitForTimeout(800);
 const L = await Promise.all(pages.map(lobby));
 check('three share a room', L.every((l) => l?.room === L[0]?.room), L.map((l) => l?.room).join(','));
+// the lobby: all six worlds + "all six in a row"; one pick waits, the second matching pick starts
+check('lobby shows the world picker', (await pages[0].locator('.lobby-card .map-pick').count()) === 7 && L.every((l) => l?.phase === 'waiting'));
+await pages[0].getByRole('button', { name: /All six in a row/ }).click();
+await pages[0].waitForTimeout(500);
+check('one pick waits for a teammate', (await lobby(pages[1]))?.phase === 'waiting');
+await pages[2].getByRole('button', { name: /All six in a row/ }).click();
+await pages[0].waitForTimeout(500);
 check('countdown visible', (await pages[0].locator('.countdown').count()) > 0);
 await pages[0].waitForTimeout(5200);
 check('playing', (await lobby(pages[0]))?.phase === 'playing');
@@ -46,7 +53,7 @@ check('4th sees waiting lobby', (await fourth.locator('.lobby-card').count()) ==
 await pages[2].evaluate(`window.__SH_NET.socket.disconnect()`);
 await pages[0].waitForTimeout(800);
 check('room pauses when a courier drops', (await lobby(pages[0]))?.phase === 'paused');
-check('pause overlay shown', (await pages[0].getByText('to reconnect').count()) > 0);
+check('pause overlay shown', (await pages[0].getByText('to come back').count()) > 0);
 await pages[2].reload();
 await pages[2].waitForTimeout(2500);
 const after = await lobby(pages[2]);

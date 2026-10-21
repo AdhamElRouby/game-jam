@@ -1,4 +1,5 @@
-// One 3-player room: lobby -> countdown -> playing <-> paused -> finished (map results + votes) -> next map / retry / pick.
+// One 3-player room: lobby (pick a world) -> countdown -> playing <-> paused -> finished (map results + votes) -> retry / pick
+// another world (or the next one when playing all six in a row).
 import type { Server, Socket } from 'socket.io';
 import { Sim } from './sim';
 import * as C from '../src/shared/constants';
@@ -19,6 +20,8 @@ export interface Member {
 
 const SNAP_EVERY = Math.round(C.TICK_HZ / C.SNAPSHOT_HZ);
 const NEXT_COUNTDOWN_MS = C.RESUME_COUNTDOWN_MS + 500;
+/** everyone voted but no majority: one of their picks is drawn after this long */
+const TIE_MS = 5000;
 
 export class Room {
   members: (Member | null)[];
@@ -27,6 +30,8 @@ export class Room {
   phaseEndsAt = 0;
   /** disconnect grace deadline while on the results screen (0 = nobody missing) */
   graceEndsAt = 0;
+  /** split vote (everyone picked, no majority): when one of the picks gets drawn (0 = no tie) */
+  tieEndsAt = 0;
   tick = 0;
   emptySince = 0;
   lastResults: Results | null = null;
@@ -72,11 +77,12 @@ export class Room {
     this.members[slot] = m;
     socket.join(this.id);
     this.log(`room ${this.id}: ${name} joined slot ${slot} (${this.list.length}/${this.capacity})`);
-    if (this.list.length === this.capacity) {
+    if (this.list.length === this.capacity && this.solo) {
+      // dev solo room: straight into World 1
       this.mode = 'adventure';
       this.history = [];
       this.startMap(0, C.COUNTDOWN_MS);
-    } else this.broadcastLobby();
+    } else this.tally(); // a full team may already agree on a world (picks made while waiting count)
     this.io.to(this.id).emit('sfx', 'join');
     return m;
   }
@@ -100,7 +106,7 @@ export class Room {
       this.io.to(this.id).emit('notice', { text, back: true });
     }
     if (this.list.length === 0) this.closed = true;
-    else this.broadcastLobby();
+    else this.tally();
   }
 
   attach(m: Member, socket: Socket) {
@@ -160,6 +166,7 @@ export class Room {
     for (const m of this.list) if (!m.connected) this.sim.setConnected(m.slot, false);
     this.lastResults = null;
     this.graceEndsAt = 0;
+    this.tieEndsAt = 0;
     this.phase = 'countdown';
     this.phaseEndsAt = Date.now() + ms;
     this.log(`room ${this.id}: ${mapAt(this.map).name} (${this.mode}) countdown (${this.list.map((m) => m.name).join(', ')})`);
@@ -179,6 +186,7 @@ export class Room {
         x ? { slot: x.slot, name: x.name, connected: x.connected, you: !!m && x.token === m.token, again: x.vote !== null } : null,
       ),
       timerMs: timed ? Math.max(0, this.phaseEndsAt - now) : this.graceEndsAt ? Math.max(0, this.graceEndsAt - now) : undefined,
+      tieMs: this.tieEndsAt ? Math.max(0, this.tieEndsAt - now) : undefined,
       dev: this.dev,
       map: this.map,
       mode: this.mode,
@@ -194,13 +202,13 @@ export class Room {
   // ------------------------------------------------------------------ messages
   input(m: Member, data: unknown) {
     if (!this.sim || !Array.isArray(data) || data.length < 6 || data.length > 12) return;
-    const [seq, mx, mz, jump, grab, resp, buttons, pilot, use] = data as number[];
+    const [seq, mx, mz, jump, grab, resp, buttons, pilot, use, camYaw] = data as number[];
     if (![seq, mx, mz, jump, grab, resp].every((x) => typeof x === 'number' && Number.isFinite(x))) return;
     const opt = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : undefined);
     // drop duplicated / reordered packets (the counter fields make a skipped packet harmless)
     if (seq <= m.lastSeq && m.lastSeq - seq < 1e6) return;
     m.lastSeq = seq;
-    this.sim.setInput(m.slot, mx, mz, jump, grab === 1, resp, opt(buttons) ?? 0, opt(pilot), opt(use));
+    this.sim.setInput(m.slot, mx, mz, jump, grab === 1, resp, opt(buttons) ?? 0, opt(pilot), opt(use), opt(camYaw));
   }
 
   shift(m: Member, shape: unknown) {
@@ -208,52 +216,73 @@ export class Room {
     this.sim.requestShift(m.slot, shape);
   }
 
-  /** Is `v` a valid results-screen choice right now? */
+  /** Is `v` a valid choice right now? Lobby: any world or all six in a row. Results: also retry / next. */
   private validVote(v: string) {
-    if (v === 'retry' || v === 'again') return true;
-    if (v === 'next') return this.mode === 'adventure' && this.map < MAPS.length - 1;
     const mm = /^map:(\d+)$/.exec(v);
-    return !!mm && Number(mm[1]) < MAPS.length;
+    if (mm) return Number(mm[1]) < MAPS.length;
+    if (v === 'adventure') return true;
+    if (this.phase !== 'finished') return false;
+    if (v === 'retry' || v === 'again') return true;
+    return v === 'next' && this.mode === 'adventure' && this.map < MAPS.length - 1;
   }
 
   action(m: Member, type: unknown, value?: unknown) {
-    if (type === 'vote' && this.phase === 'finished' && typeof value === 'string' && this.validVote(value)) {
+    if (type === 'vote' && (this.phase === 'finished' || this.phase === 'waiting') && typeof value === 'string' && this.validVote(value)) {
       m.vote = value;
-      this.broadcastLobby();
       this.tally();
     } else if (type === 'again' && this.phase === 'finished') {
       // older clients: "play again" = next map in an adventure, restart after the last one
       m.vote = this.mode === 'adventure' && this.map < MAPS.length - 1 ? 'next' : 'again';
-      this.broadcastLobby();
       this.tally();
     } else if (type === 'resetVote' && this.sim && this.phase === 'playing') {
       this.sim.voteReset(m.slot);
     }
   }
 
-  /** Majority of the team (2 of 3) decides; everyone must be connected so nobody gets left behind mid-transition. */
+  /**
+   * Majority of the team (2 of 3) decides, in the lobby (full team only) and on the results screen; everyone must be
+   * connected so nobody gets left behind mid-transition. A three-way split draws one of the picks after `TIE_MS`.
+   * Always ends by broadcasting the lobby (directly, or through `startMap`).
+   */
   private tally() {
-    if (this.phase !== 'finished' || !this.list.every((x) => x.connected)) return;
+    const deciding =
+      (this.phase === 'finished' || (this.phase === 'waiting' && this.list.length === this.capacity)) && this.list.length > 0 && this.list.every((x) => x.connected);
+    if (!deciding) {
+      this.tieEndsAt = 0;
+      this.broadcastLobby();
+      return;
+    }
     const counts = new Map<string, number>();
     for (const x of this.list) if (x.vote) counts.set(x.vote, (counts.get(x.vote) ?? 0) + 1);
     const need = Math.floor(this.list.length / 2) + 1;
     for (const [v, n] of counts) {
-      if (n < need) continue;
-      if (v === 'next') this.startMap(this.map + 1, NEXT_COUNTDOWN_MS);
-      else if (v === 'retry') {
-        // a retried map replaces its earlier result
-        this.history = this.history.filter((r) => r.map !== this.map);
-        this.startMap(this.map, NEXT_COUNTDOWN_MS);
-      } else if (v === 'again') {
-        this.mode = 'adventure';
-        this.history = [];
-        this.startMap(0, NEXT_COUNTDOWN_MS);
-      } else {
-        this.mode = 'single';
-        this.history = [];
-        this.startMap(Number(v.slice(4)), NEXT_COUNTDOWN_MS);
+      if (n >= need) {
+        this.execute(v);
+        return;
       }
-      return;
+    }
+    const allVoted = this.list.every((x) => x.vote);
+    if (!allVoted) this.tieEndsAt = 0;
+    else if (!this.tieEndsAt) this.tieEndsAt = Date.now() + TIE_MS;
+    this.broadcastLobby();
+  }
+
+  /** Carry out the team's choice. */
+  private execute(v: string) {
+    const ms = this.phase === 'waiting' ? C.COUNTDOWN_MS : NEXT_COUNTDOWN_MS;
+    if (v === 'next') this.startMap(this.map + 1, ms);
+    else if (v === 'retry') {
+      // a retried map replaces its earlier result
+      this.history = this.history.filter((r) => r.map !== this.map);
+      this.startMap(this.map, ms);
+    } else if (v === 'again' || v === 'adventure') {
+      this.mode = 'adventure';
+      this.history = [];
+      this.startMap(0, ms);
+    } else {
+      this.mode = 'single';
+      this.history = [];
+      this.startMap(Number(v.slice(4)), ms);
     }
   }
 
@@ -309,6 +338,17 @@ export class Room {
     } else if (this.phase === 'finished' && this.graceEndsAt && now >= this.graceEndsAt) {
       for (const m of this.list) if (!m.connected) this.remove(m.token, 'timeout');
       return;
+    }
+    if (this.tieEndsAt && !this.list.every((x) => x.connected)) this.tieEndsAt = 0; // (the draw waits for everyone)
+    if (this.tieEndsAt) {
+      if (now >= this.tieEndsAt) {
+        // split vote: draw one of the team's picks
+        const picks = this.list.map((x) => x.vote).filter((v): v is string => !!v);
+        this.tieEndsAt = 0;
+        if (picks.length) this.execute(picks[Math.floor(Math.random() * picks.length)]);
+        return;
+      }
+      if (this.tick % 30 === 0) this.broadcastLobby();
     }
     const sim = this.sim;
     if (!sim) return;

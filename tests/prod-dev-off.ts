@@ -20,6 +20,8 @@ for (const b of bots) {
   b.s.emit('queue:join', { name: 'x', code });
   await sleep(100);
 }
+await sleep(200);
+for (const b of bots.slice(0, 2)) b.s.emit('act', { type: 'vote', value: 'map:0' }); // the team picks World 1
 await sleep(5800);
 const before = bots[0].lobby;
 bots[0].s.emit('dev', { finish: true });

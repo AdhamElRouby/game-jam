@@ -11,11 +11,15 @@ import { Results } from './Results';
 import { Menu } from './Menu';
 import { WorldLabels } from './WorldLabels';
 import { mapAt } from '../shared/maps';
+import { look } from '../render/look';
+import { toggleInsideView } from '../render/CameraRig';
 
 export function App() {
   const screen = useGame((s) => s.screen);
   const lobby = useGame((s) => s.lobby);
   const menuOpen = useGame((s) => s.menuOpen);
+  const showResults = useGame((s) => s.showResults);
+  const cutscene = useGame((s) => s.cutscene);
   const set = useGame((s) => s.set);
 
   useEffect(() => {
@@ -43,7 +47,7 @@ export function App() {
     return () => offs.forEach((f) => f());
   }, [set]);
 
-  // keyboard: shifting, menu, reset vote
+  // keyboard: shifting, menu, help, inside view, reset vote
   useEffect(() => {
     const offShift = input.onShift((shape) => {
       const l = useGame.getState().lobby;
@@ -52,7 +56,11 @@ export function App() {
     const offKey = input.onKey((code) => {
       sfx.unlock();
       const st = useGame.getState();
-      if (code === 'Escape' && st.screen === 'game') st.set({ menuOpen: !st.menuOpen });
+      // the Esc that frees a captured mouse doesn't also open the menu (and frees it if the browser didn't)
+      if (code === 'Escape' && look.locked) look.unlock();
+      else if (code === 'Escape' && st.screen === 'game' && !look.escFreedMouse()) st.set({ menuOpen: !st.menuOpen, help: false });
+      if (code === 'KeyH' && st.screen === 'game') st.set({ help: !st.help });
+      if (code === 'KeyV' && st.lobby?.phase === 'playing') toggleInsideView();
       if (code === 'KeyT' && st.lobby?.phase === 'playing') net.action('resetVote');
       if (code === 'KeyM') sfx.set({ muted: !sfx.settings.muted });
     });
@@ -65,6 +73,13 @@ export function App() {
   useEffect(() => {
     input.enabled = screen === 'game' && lobby?.phase === 'playing' && !menuOpen;
   }, [screen, lobby?.phase, menuOpen]);
+
+  // the camera can be turned during a run (also while counting down); menus, results and cutscenes free the mouse
+  useEffect(() => {
+    const ph = lobby?.phase;
+    look.enabled = screen === 'game' && !menuOpen && !showResults && !cutscene && (ph === 'countdown' || ph === 'playing' || ph === 'resuming');
+    if (!look.enabled) look.unlock();
+  }, [screen, lobby?.phase, menuOpen, showResults, cutscene]);
 
   return (
     <div className="app">

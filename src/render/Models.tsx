@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import manifest from '../../public/assets/manifest.json';
+import { patchSeeThrough } from './seeThrough';
 
 interface ModelInfo {
   id: string;
@@ -42,6 +43,7 @@ function harmonize(mat: THREE.Material) {
     const re = RECOLOR[m.name];
     if (re) m.color.set(re);
     m.envMapIntensity = 0.7;
+    patchSeeThrough(m); // decor never hides the player from the camera
   }
   return m;
 }

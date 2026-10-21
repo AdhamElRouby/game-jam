@@ -5,7 +5,7 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import * as C from '../src/shared/constants';
 import { ShapeId, shapeSpec } from '../src/shared/shapes';
-import { axisDiff, clamp, cross, hlen, len, r3, rotate, scale, sub, yawOfX, type Quat, type Vec } from '../src/shared/math';
+import { clamp, cross, hlen, len, r3, rotate, scale, sub, wrapAngle, yawOfX, type Quat, type Vec } from '../src/shared/math';
 import type { PlayerBody, Sim } from './sim';
 
 const IDENT: Quat = { x: 0, y: 0, z: 0, w: 1 };
@@ -55,15 +55,15 @@ export class Pilot {
   tryEnter(p: PlayerBody): boolean {
     const sim = this.sim;
     if (sim.finished || p.inside) return false;
-    if (p.respawnTimer > 0 || p.tumble > 0) return this.fail(p, 'Steady yourself first!');
-    if (this.slot >= 0) return this.fail(p, `${sim.players[this.slot]?.name ?? 'Someone'} is already inside!`);
-    if (sim.artifactLocked()) return this.fail(p, 'Not while it is being carried!');
+    if (p.respawnTimer > 0 || p.tumble > 0) return this.fail(p, 'Get back on your feet first');
+    if (this.slot >= 0) return this.fail(p, `${sim.players[this.slot]?.name ?? 'Someone'} is already inside`);
+    if (sim.artifactLocked()) return this.fail(p, 'Not while the crane is holding it');
     const pos = p.body.translation();
     const proj = sim.artCol.projectPoint(pos, false);
-    if (!proj || len(sub(proj.point, pos)) - C.PLAYER_RADIUS > C.PILOT_RANGE) return this.fail(p, 'Get right next to the artifact to hop in');
+    if (!proj || len(sub(proj.point, pos)) - C.PLAYER_RADIUS > C.PILOT_RANGE) return this.fail(p, 'Stand right next to the golden object to climb in');
     const v = sim.artifact.linvel();
-    if (!sim.artGrounded && Math.abs(v.y) > 1.5) return this.fail(p, 'Can’t hop in mid-air!');
-    if (hlen(v) > 6) return this.fail(p, 'Too fast to catch!');
+    if (!sim.artGrounded && Math.abs(v.y) > 1.5) return this.fail(p, 'Wait until it lands');
+    if (hlen(v) > 6) return this.fail(p, 'It is moving too fast to climb in');
     if (p.grip) {
       p.grip = null;
       sim.events.push({ k: 'release', by: p.slot });
@@ -94,14 +94,15 @@ export class Pilot {
     const sim = this.sim;
     const v = sim.artifact.linvel();
     if (hlen(v) > C.PILOT_EXIT_MAX_SPEED || Math.abs(v.y) > 3) {
-      if (!quiet && !this.exitWarned) this.fail(p, 'Too fast to hop out — slow down!');
+      if (!quiet && !this.exitWarned) this.fail(p, 'Too fast to get out! Slow down first');
       this.exitWarned = true;
       return false;
     }
-    const prefer = Math.hypot(p.mx, p.mz) > 0.3 ? { x: p.mx, y: 0, z: p.mz } : null;
+    // the steering direction, else the camera's side (the courier lands between the camera and the artifact)
+    const prefer = Math.hypot(p.mx, p.mz) > 0.3 ? { x: p.mx, y: 0, z: p.mz } : { x: Math.sin(p.camYaw), y: 0, z: Math.cos(p.camYaw) };
     const spot = this.findExitSpot(prefer);
     if (!spot) {
-      if (!quiet && !this.exitWarned) this.fail(p, 'No safe spot to hop out here…');
+      if (!quiet && !this.exitWarned) this.fail(p, 'No room to get out here. Move a little');
       this.exitWarned = true;
       return false;
     }
@@ -145,7 +146,7 @@ export class Pilot {
     const c = sim.artifact.translation();
     const extY = sim.artifactExtentY(sim.shape, sim.artifact.rotation());
     const baseY = c.y - extY;
-    // prefer the steering direction, then the camera side (+Z), then everything else
+    // prefer the given direction (default: +Z), then the nearest others around the ring
     const base = prefer ? Math.atan2(prefer.z, prefer.x) : Math.PI / 2;
     for (const ring of [0.3, 0.85, 1.5]) {
       for (let k = 0; k < 16; k++) {
@@ -198,7 +199,9 @@ export class Pilot {
       }
       case ShapeId.LONG: {
         if (!grounded) return;
-        const dir = Math.abs(p.mx) > 0.3 ? -Math.sign(p.mx) : 1; // A = turn left (positive yaw), D = right
+        // A = turn left (positive yaw), D = right: the input's sideways part as the player's camera sees it
+        const side = p.mx * Math.cos(p.camYaw) - p.mz * Math.sin(p.camYaw);
+        const dir = Math.abs(side) > 0.3 ? -Math.sign(side) : 1;
         this.swing = { target: yawOfX(art.rotation()) + (dir * Math.PI) / 2, t: 1.8 };
         break;
       }
@@ -256,7 +259,7 @@ export class Pilot {
       }
       if (this.exitPending <= 0) {
         this.exitWarned = false;
-        this.fail(p, 'Still no safe spot — F to try again, R to bail out');
+        this.fail(p, 'Still no room to get out. Press F to try again or R to jump out');
       }
     }
     if (sim.artifactLocked()) return;
@@ -312,7 +315,8 @@ export class Pilot {
         drive(1.4, 50);
         if (this.swing) {
           this.swing.t -= dt;
-          const err = axisDiff(this.swing.target, yawOfX(q));
+          // signed: a quarter turn is exactly ±90°, where the axis-symmetric difference would pick either way
+          const err = wrapAngle(this.swing.target - yawOfX(q));
           const wy = clamp(w.y, -2.6, 2.6);
           if (wy !== w.y) art.setAngvel({ x: w.x, y: wy, z: w.z }, true);
           if (Math.abs(err) < 0.05 || this.swing.t <= 0) this.swing = null; // it coasts on: swinging has momentum

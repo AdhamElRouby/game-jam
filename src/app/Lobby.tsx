@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { net } from '../net/net';
 import { sfx } from '../audio/audio';
 import { useGame } from './store';
 import { SLOT_COLORS, SLOT_NAMES } from '../shared/constants';
 import { Logo } from './Landing';
+import { WorldGrid, loadRecords, voteNote } from './WorldPicker';
 
 const TIPS = [
-  'CUBE shrugs off wind, but won’t fit under low arches.',
-  'LONG slides under arches and into receivers — but it turns slowly.',
-  'TALL reaches high levers. Two couriers holding E keep it upright.',
-  'ROUND races downhill… straight off a cliff if nobody holds on.',
-  'Hold E near the artifact to grab a rope and pull together.',
-  'Fell off? Press R to hop back next to your team.',
-  'Press F next to the artifact to hop inside and steer it — but then only two of you are left outside.',
-  'Piloting, Space is the form’s trick: CUBE hops, LONG swings, TALL braces, ROUND boosts.',
+  'Move the mouse to look around. Scroll to zoom.',
+  'CUBE is steady in the wind, but too tall for low arches.',
+  'LONG fits under arches and into slots, but it turns slowly.',
+  'TALL reaches high levers. Two players hold E to keep it standing.',
+  'ROUND rolls fast downhill, and right off a cliff if nobody holds on.',
+  'Hold E next to the golden object to grab it, then pull together.',
+  'Fell off? You come back by yourself. R jumps you back to your team.',
+  'Press F next to the golden object to climb inside and drive it.',
+  'Inside, Space does a special move: CUBE hops, LONG turns, TALL stands up, ROUND speeds up.',
+  'Press H in a game to see all the controls.',
 ];
 
 export function Portrait({ slot, name, empty, you, connected = true }: { slot: number; name?: string; empty?: boolean; you?: boolean; connected?: boolean }) {
@@ -58,6 +61,7 @@ export function Lobby() {
   }, []);
   const filled = lobby?.slots.filter(Boolean).length ?? 0;
   const cap = lobby?.slots.length ?? 3;
+  const rec = useMemo(() => loadRecords(), []);
   const cancel = () => {
     sfx.play('ui_click');
     net.leave();
@@ -67,7 +71,7 @@ export function Lobby() {
     <div className="overlay lobby">
       <Logo small />
       <div className="card lobby-card">
-        <h2>{lobby ? (filled < cap ? 'Finding couriers…' : 'Team assembled!') : 'Connecting…'}</h2>
+        <h2>{lobby ? (filled < cap ? 'Finding couriers…' : 'Team assembled — pick a world!') : 'Connecting…'}</h2>
         <div className="count">
           {filled}/{cap}
         </div>
@@ -77,6 +81,12 @@ export function Lobby() {
             return <Portrait key={i} slot={i} name={s?.name ?? SLOT_NAMES[i]} empty={!s} you={s?.you} connected={s?.connected} />;
           })}
         </div>
+        {lobby && (
+          <>
+            <WorldGrid lobby={lobby} rec={rec} />
+            <div className="vote-note">{voteNote(lobby, filled < cap)}</div>
+          </>
+        )}
         {lobby?.code && (
           <div className="code-line">
             Room code <b>{lobby.code}</b> — friends enter the same code

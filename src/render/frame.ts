@@ -86,5 +86,7 @@ export function updateFrame() {
     const fl = net.frame(LOCAL_DELAY);
     const mine = fl?.players.find((p) => p.slot === you);
     if (mine) frame.current.players = f.players.map((p) => (p.slot === you ? mine : p));
+    // piloting: the artifact is your body, so it gets the same short delay (the first-person view rides it)
+    if (fl && mine?.pilot) frame.current.artifact = fl.artifact;
   }
 }

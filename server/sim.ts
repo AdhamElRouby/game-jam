@@ -106,6 +106,8 @@ export interface PlayerBody {
   lastTumbleEv: number;
   launchT: number; // vertical speed cap lifted (spring launch)
   onMover: boolean;
+  /** heading of the player's camera (radians, 0 = looking toward -Z): their left/right for LONG's swing and exits */
+  camYaw: number;
   /** after a reconnect the client's counters restart: adopt them without treating the jump as a press */
   syncCounters: boolean;
 }
@@ -330,6 +332,7 @@ export class Sim {
       lastTumbleEv: -99,
       launchT: 0,
       onMover: false,
+      camYaw: 0,
       syncCounters: false,
     };
   }
@@ -357,9 +360,10 @@ export class Sim {
   }
 
   // ------------------------------------------------------------------ inputs
-  setInput(slot: number, mx: number, mz: number, jumpCount: number, grab: boolean, respawnCount: number, buttons = 0, pilotCount?: number, useCount?: number) {
+  setInput(slot: number, mx: number, mz: number, jumpCount: number, grab: boolean, respawnCount: number, buttons = 0, pilotCount?: number, useCount?: number, camYaw?: number) {
     const p = this.players[slot];
     if (!p) return;
+    if (camYaw !== undefined && Number.isFinite(camYaw)) p.camYaw = camYaw;
     const m = Math.hypot(mx, mz);
     if (!Number.isFinite(m)) return;
     if (m > 1) {
@@ -1044,7 +1048,7 @@ export class Sim {
     const B = this.map.bounds;
     this.outT = B && !inBox(c, B.min, B.max) ? this.outT + dt : 0;
     if (this.outT > 3) {
-      this.events.push({ k: 'toast', text: 'The artifact wandered off — back to the checkpoint' });
+      this.events.push({ k: 'toast', text: 'The golden object went too far. It is back at the checkpoint' });
       this.resetToCheckpoint();
       return;
     }
@@ -1217,11 +1221,11 @@ export class Sim {
         this.drops++;
         this.penalty += C.DROP_PENALTY_MS / 1000;
       }
-      this.events.push({ k: 'toast', text: free ? 'Artifact recalled to the checkpoint (free: it was stuck)' : 'Artifact recalled to the checkpoint (+7s)' });
+      this.events.push({ k: 'toast', text: free ? 'The golden object is back at the checkpoint (free: it was stuck)' : 'The golden object is back at the checkpoint (+7 s)' });
       this.resetToCheckpoint();
     } else {
       const name = this.players[slot]?.name ?? 'Someone';
-      this.events.push({ k: 'toast', text: `${name} wants to recall the artifact — press T to agree` });
+      this.events.push({ k: 'toast', text: `${name} wants to bring the golden object back. Press T to agree` });
     }
   }
 
@@ -1233,15 +1237,15 @@ export class Sim {
     if (this.time - p.lastShiftReq < 0.25) return;
     p.lastShiftReq = this.time;
     const fail = (why: string) => this.events.push({ k: 'shiftFail', shape, by: slot, why });
-    if (this.time - this.lastShiftAt < C.SHIFT_COOLDOWN_MS / 1000) return fail('Shift recharging…');
-    if (this.artifactLocked()) return fail('Not while it is being carried!');
+    if (this.time - this.lastShiftAt < C.SHIFT_COOLDOWN_MS / 1000) return fail('Wait a moment before changing shape again');
+    if (this.artifactLocked()) return fail('Not while the crane is holding it');
     if (!p.inside) {
       const pos = p.body.translation();
       const proj = this.artCol.projectPoint(pos, false);
-      if (!proj || len(sub(proj.point, pos)) - C.PLAYER_RADIUS > C.SHIFT_RANGE) return fail('Get closer to the artifact!');
+      if (!proj || len(sub(proj.point, pos)) - C.PLAYER_RADIUS > C.SHIFT_RANGE) return fail('Get closer to the golden object to change its shape');
     }
     const pose = this.findShiftPose(shape);
-    if (!pose) return fail('No room to shift!');
+    if (!pose) return fail('No room for that shape here');
     const v = this.artifact.linvel();
     this.applyShape(shape, pose.pos, pose.rot, { x: v.x * 0.5, y: Math.max(0, v.y) * 0.5, z: v.z * 0.5 });
     this.artifact.setAngvel({ x: 0, y: 0, z: 0 }, true);

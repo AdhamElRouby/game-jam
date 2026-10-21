@@ -25,13 +25,15 @@ export interface LobbyState {
   you: number;
   /** ms until countdown/resume/pause deadline, if relevant */
   timerMs?: number;
+  /** split vote: ms until one of the team's picks is drawn */
+  tieMs?: number;
   reason?: string;
   dev?: boolean;
   /** index of the map being played (MAPS order) */
   map: number;
-  /** 'adventure' plays every map in order; 'single' replays one map */
+  /** 'adventure' plays every map in order; 'single' plays the one picked */
   mode: 'adventure' | 'single';
-  /** per-slot choice on the results screen: 'next' | 'retry' | 'map:<i>' | 'again' | null */
+  /** per-slot choice in the lobby ('map:<i>' | 'adventure') or on the results screen (also 'retry' | 'next') */
   votes: (string | null)[];
   /** results of the maps finished so far in this run */
   history: Results[];
@@ -154,10 +156,12 @@ export interface JoinMsg {
 }
 
 /**
- * Input packet: [seq, moveX, moveZ, jumpCounter, grab(0/1), respawnCounter, buttons, pilotCounter, useCounter].
- * Counters only ever increase, so a lost packet never loses a press. The last three fields are optional (older clients).
+ * Input packet: [seq, moveX, moveZ, jumpCounter, grab(0/1), respawnCounter, buttons, pilotCounter, useCounter, camYaw].
+ * moveX/moveZ are a world-space direction (the client already turned WASD by its camera); camYaw is that camera's
+ * heading, so the server can tell the player's left from right (LONG's swing, which side to hop out on).
+ * Counters only ever increase, so a lost packet never loses a press. The last four fields are optional (older clients).
  */
-export type InputMsg = [number, number, number, number, number, number, number?, number?, number?];
+export type InputMsg = [number, number, number, number, number, number, number?, number?, number?, number?];
 export const BTN_USE = 1; // Q held
 export const BTN_SPRINT = 2; // Shift held
 export const BTN_ABILITY = 4; // Space held

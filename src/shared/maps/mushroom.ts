@@ -44,7 +44,7 @@ const mechs: MechDef[] = [
   { kind: 'collect', id: 'shroomStamp2', p: v(-0.6, 8.1, -43.6), item: 'mushroom' },
 
   // Puzzle C — the Giant Bounce: aim it (Q lever), pump it (hold Q) and the artifact flies straight to the village
-  { kind: 'switch', id: 'aim', p: v(9.6, 5, -42.8), radius: 1.6, mode: 'select', positions: 3, label: 'Bounce aim', states: ['aim: LEFT (the hollow)', 'aim: VILLAGE', 'aim: RIGHT (the void!)'], style: 'lever' },
+  { kind: 'switch', id: 'aim', p: v(9.6, 5, -42.8), radius: 1.6, mode: 'select', positions: 3, label: 'Bounce aim', states: ['aims LEFT', 'aims at the VILLAGE', 'aims RIGHT (off the edge!)'], style: 'lever' },
   { kind: 'switch', id: 'pump', p: v(9.6, 5, -46.6), radius: 1.6, mode: 'pump', time: 1.6, label: 'Bounce pump', states: ['', 'BOING!'], style: 'crank' },
   {
     kind: 'spring',
@@ -108,10 +108,25 @@ export const MUSHROOM: MapDef = {
   goal: { p: v(0, 2, -80), r: 3.0 },
   mechs,
   objectives: [
-    { text: 'Push the artifact onto the big mushroom — couriers bounce on the small caps', done: { cp: 1 }, hint: { p: v(0, 2.6, -6.4), text: 'BOING' } },
-    { text: 'Over the bridge into the slippery grove — mind the puffball', done: { cp: 2 } },
-    { text: 'Aim + pump the Giant Bounce (Q) to fling it to the village — or ride the bobbing caps', done: { goal: true }, hint: { p: v(5.0, 7.4, -47.8), text: 'Giant Bounce' } },
-    { text: 'Everyone into the ring!', done: { not: { goal: true } }, hint: { p: v(0, 4.6, -80), text: 'Deliver' } },
+    {
+      text: 'Push it onto the big mushroom to bounce it up. Jump on a small mushroom to follow',
+      tip: 'CUBE [1] lands where you aim. ROUND [4] flies too far.',
+      done: { cp: 1 },
+      hint: { p: v(0, 2.6, -6.4), text: 'Bounce pad' },
+    },
+    {
+      text: 'Push it over the log bridge into the grove',
+      tip: 'The glowing moss is slippery, and the big puffball blows you away!',
+      done: { cp: 2 },
+      hint: { p: v(2, 6.6, -30.5), text: 'Log bridge' },
+    },
+    {
+      text: 'Push it onto the Giant Bounce. Set the aim lever [Q], then hold [Q] at the pump',
+      tip: 'Slower but safer: ride the moving mushrooms down on the left.',
+      done: { goal: true },
+      hint: { p: v(5.0, 7.4, -47.8), text: 'Giant Bounce', marks: [v(9.6, 5, -42.8), v(9.6, 5, -46.6)] },
+    },
+    { text: 'Everyone into the ring!', done: { not: { goal: true } }, hint: { p: v(0, 4.6, -80), text: 'Goal' } },
   ],
   par: 150,
   bonus: { label: 'Collect all 3 golden mushrooms', stamps: 3 },
@@ -119,5 +134,8 @@ export const MUSHROOM: MapDef = {
   killY: -14,
   longAxisZones: [],
   bounds: { min: v(-40, -30, -130), max: v(40, 60, 40) },
-  camera: { pitch: 40, lift: 7, near: 13, far: 30, ahead: 3.5, fov: 46 },
+  intro: {
+    goal: 'Bounce the golden object to the mushroom village.',
+    tradeoff: 'Mushrooms throw it high. CUBE lands where you aim; ROUND flies far but rolls away.',
+  },
 };

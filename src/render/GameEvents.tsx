@@ -45,7 +45,7 @@ function mechEvent(e: Extract<GameEvent, { k: 'mech' }>, you: number) {
       } else if (e.ev === 'on') sfx.synth('click', { vol: 0.6 });
       else if (e.ev === 'warn') {
         sfx.synth('warn', { vol: 0.6 });
-        ui.toast(`${def.label} is about to run out!`, 'warn');
+        ui.toast(`${def.label} is about to stop!`, 'warn');
       }
       break;
     case 'gate':
@@ -71,7 +71,7 @@ function mechEvent(e: Extract<GameEvent, { k: 'mech' }>, you: number) {
       sfx.play('gate_open', { vol: 0.5 });
       break;
     case 'lift':
-      if (e.ev === 'return') ui.toast('The lift comes back down for the artifact', 'info');
+      if (e.ev === 'return') ui.toast('The lift is coming back down for the golden object', 'info');
       break;
   }
 }
@@ -92,14 +92,14 @@ export function GameEvents() {
           }
           break;
         case 'shift':
-          if (e.by !== you) ui.toast(`${nameOf(e.by)} shifted it to ${SHAPES[e.shape].name}`, 'info');
+          if (e.by !== you) ui.toast(`${nameOf(e.by)} made it ${SHAPES[e.shape].name}`, 'info');
           break;
         case 'grip':
           sfx.play('grip', { vol: e.by === you ? 0.6 : 0.25 });
           break;
         case 'release':
           sfx.play('release', { vol: e.by === you ? (e.snap ? 0.7 : 0.45) : 0.2 });
-          if (e.snap && e.by === you) ui.toast('Rope snapped — too far!', 'warn');
+          if (e.snap && e.by === you) ui.toast('You let go: you got too far away', 'warn');
           break;
         case 'impact': {
           const v = Math.min(1, e.v / 9);
@@ -110,7 +110,7 @@ export function GameEvents() {
         }
         case 'gate':
           sfx.play('gate_open', { vol: 0.9 });
-          ui.toast('The gate rumbles open!', 'good');
+          ui.toast('The gate is open!', 'good');
           fx.sparkle(LEVEL.gate.p[0], 2, LEVEL.gate.p[2], 50, 4);
           for (let x = -2.2; x <= 2.2; x += 1.1) fx.dust(LEVEL.gate.p[0] + x, 0.05, LEVEL.gate.p[2] + 0.4, 5);
           fx.ring(LEVEL.plate.p[0], 0.15, LEVEL.plate.p[2], 3.2, '#ffd36b');
@@ -118,14 +118,14 @@ export function GameEvents() {
           break;
         case 'bridge':
           sfx.play('bridge_unfold', { vol: 0.9 });
-          ui.toast('Click! The bridge unfolds!', 'good');
+          ui.toast('The bridge is coming down!', 'good');
           fx.sparkle(LEVEL.receiver.p[0], 0.8, LEVEL.receiver.p[2], 60, 4, '#9ff7ef');
           fx.ring(LEVEL.receiver.p[0], 0.12, LEVEL.receiver.p[2], 3.6, '#9ff7ef');
           shakeCamera(0.18);
           break;
         case 'lever':
           sfx.play('lever', { vol: 1 });
-          ui.toast('Lever thrown! Load the lift', 'good');
+          ui.toast('Lever pulled! Now get on the lift', 'good');
           fx.sparkle(LEVEL.lever.p[0], 4.8, LEVEL.lever.p[2] + 0.6, 60, 1.5);
           fx.sparkle(LEVEL.lift.cx, 0.6, LEVEL.lift.cz, 40, 3, '#9ff7ef');
           shakeCamera(0.15);
@@ -151,27 +151,25 @@ export function GameEvents() {
         case 'drop':
           sfx.play('fall_poof', { vol: 0.9 });
           sfx.play('fail_jingle', { vol: 0.6 });
-          ui.toast('Oops! The artifact fell. Back to the checkpoint (+7s)', 'bad');
+          ui.toast('The golden object fell! It is back at the checkpoint (+7 s)', 'bad');
           shakeCamera(0.3);
           break;
         case 'fall':
           sfx.play('fall_poof', { vol: e.by === you ? 0.8 : 0.35 });
-          ui.toast(e.by === you ? 'Whoops! You tumbled off' : `${nameOf(e.by)} tumbled off!`, 'warn');
+          ui.toast(e.by === you ? 'You fell off!' : `${nameOf(e.by)} fell off!`, 'warn');
           break;
         case 'respawn':
           sfx.play('respawn', { vol: e.by === you ? 0.6 : 0.2, minGap: 120 });
           break;
         case 'hop':
-          ui.toast(e.by === you ? 'Hop! Back with the team' : `${nameOf(e.by)} hopped back to the team`, 'info');
+          ui.toast(e.by === you ? 'You were too far away: back with your team' : `${nameOf(e.by)} jumped back to the team`, 'info');
           break;
         case 'toast':
           if (e.slot === undefined || e.slot === you) ui.toast(e.text, 'info');
           break;
         case 'pilotIn': {
           sfx.synth('pilot_in', { vol: e.by === you ? 0.8 : 0.45 });
-          const spec = SHAPES[a.shape];
-          if (e.by === you) ui.toast(`You're inside! WASD ${spec.pilotMove} · Space ${spec.ability} · F hop out`, 'good');
-          else ui.toast(`${nameOf(e.by)} hopped inside the artifact!`, 'info');
+          if (e.by !== you) ui.toast(`${nameOf(e.by)} climbed inside the golden object!`, 'info');
           fx.sparkle(a.x, a.y + 0.6, a.z, 30, 1.2);
           break;
         }
@@ -219,15 +217,15 @@ export function GameEvents() {
           const def = activeMap().mechs[e.i];
           sfx.synth('chime', { vol: 0.85 });
           if (def?.kind === 'collect') fx.sparkle(def.p[0], def.p[1], def.p[2], 40, 1, '#ffe48a');
-          ui.toast(`${e.by >= 0 ? nameOf(e.by) + ' found a' : 'Found a'} royal stamp! (${e.n}/${e.total})`, 'good');
+          ui.toast(`${e.by >= 0 ? nameOf(e.by) + ' found a' : 'Found a'} royal stamp! (${e.n} of ${e.total})`, 'good');
           break;
         }
         case 'shortcut':
           sfx.play('countdown_go', { vol: 0.6 });
-          ui.toast(`Shortcut! ${e.label} (+bonus)`, 'good');
+          ui.toast(`Shortcut! ${e.label} (bonus points)`, 'good');
           break;
         case 'stuck':
-          ui.toast('Artifact stuck? Press T twice (two of you) to recall it — free this time', 'warn');
+          ui.toast('Stuck? Two players press T to bring it back (free)', 'warn');
           break;
         case 'finish': {
           const castle = activeMap().id === 'castle';
@@ -258,7 +256,7 @@ export function GameEvents() {
     // a world banner + its music whenever a new map starts
     if (mi !== mapShown.current) {
       mapShown.current = mi;
-      useGame.getState().set({ banner: { title: map.name, sub: `${map.sub} · ${map.theme}`, key: Date.now() } });
+      useGame.getState().set({ banner: { title: map.name, sub: `${map.sub} · ${map.theme}`, goal: map.intro.goal, tradeoff: map.intro.tradeoff, key: Date.now() } });
       sfx.play('chapter', { vol: 0.7 });
       void sfx.playMusic(map.music, 1.5, map.musicRate ?? 1);
     }

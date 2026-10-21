@@ -11,9 +11,9 @@ const rawSteps = process.argv[4] ?? '[]';
 const steps = JSON.parse(rawSteps.startsWith('@') ? readFileSync(rawSteps.slice(1), 'utf8') : rawSteps) as Record<string, unknown>[];
 const W = Number(process.argv[5] ?? 1280);
 const H = Number(process.argv[6] ?? 720);
-const base = process.env.SH_URL ?? 'http://localhost:5173';
+const base = process.env.SH_URL ?? 'http://localhost:5173'; // SH_DPR=2 for a retina-sized capture
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist'] });
-const page = await browser.newPage({ viewport: { width: W, height: H } });
+const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: Number(process.env.SH_DPR ?? 1) });
 const logs: string[] = [];
 page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && logs.push(`[${m.type()}] ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`));

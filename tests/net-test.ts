@@ -47,8 +47,15 @@ await sleep(500);
 const rid = bots[0].lobby?.roomId;
 check('first three share one room', bots.slice(0, 3).every((b) => b.lobby?.roomId === rid), bots.map((b) => b.lobby?.roomId).join(','));
 check('fourth gets a different room', bots[3].lobby?.roomId !== rid, `${bots[3].lobby?.roomId} phase=${bots[3].lobby?.phase}`);
-check('countdown started', bots[0].lobby?.phase === 'countdown', bots[0].lobby?.phase);
 check('slots distinct', new Set(bots.slice(0, 3).map((b) => b.lobby?.you)).size === 3);
+// the full team picks its world in the lobby: one pick waits, two matching picks start it
+check('full team waits in the lobby to pick a world', bots[0].lobby?.phase === 'waiting', bots[0].lobby?.phase);
+bots[0].s.emit('act', { type: 'vote', value: 'map:0' });
+await sleep(250);
+check('one pick is not enough', bots[0].lobby?.phase === 'waiting' && bots[1].lobby?.votes?.[bots[0].lobby!.you] === 'map:0', JSON.stringify(bots[1].lobby?.votes));
+bots[1].s.emit('act', { type: 'vote', value: 'map:0' });
+await sleep(300);
+check('countdown started on the picked world', bots[2].lobby?.phase === 'countdown' && bots[2].lobby?.map === 0, `${bots[2].lobby?.phase} map=${bots[2].lobby?.map}`);
 await sleep(5600);
 check('playing after countdown', bots[0].lobby?.phase === 'playing', bots[0].lobby?.phase);
 

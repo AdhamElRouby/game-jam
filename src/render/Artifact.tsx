@@ -11,7 +11,7 @@ import { sfx } from '../audio/audio';
 import { artifactOverride } from './Ending';
 import { groundAt } from './ground';
 import { blobTexture } from './shadows';
-import { shakeCamera } from './CameraRig';
+import { camView, shakeCamera } from './CameraRig';
 
 /** Engraved panel: albedo variation + matching rune glow mask (same layout). */
 function panelTextures() {
@@ -235,8 +235,17 @@ export function Artifact() {
   const MOTES = 14;
   const moteSeed = useMemo(() => Array.from({ length: MOTES }, (_, i) => ({ a: (i / MOTES) * Math.PI * 2, r: 1.5 + Math.random() * 0.8, y: Math.random() * 2.4 - 0.6, sp: 0.4 + Math.random() * 0.5, ph: Math.random() * 6 })), []);
   const m4 = useMemo(() => new THREE.Matrix4(), []);
+  const shellHidden = useRef(false);
 
   useFrame(({ clock }, dtRaw) => {
+    // the local pilot looks out from inside: the shell draws nothing on screen but still casts its shadow
+    if (camView.fpv !== shellHidden.current) {
+      shellHidden.current = camView.fpv;
+      for (const mat of [m.body, m.trim, m.ball, m.gem]) {
+        mat.colorWrite = !camView.fpv;
+        mat.depthWrite = !camView.fpv;
+      }
+    }
     const dt = Math.min(0.05, dtRaw);
     const t = clock.elapsedTime;
     const a = frame.current.artifact;

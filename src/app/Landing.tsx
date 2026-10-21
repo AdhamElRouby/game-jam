@@ -38,8 +38,8 @@ export function Landing() {
       <div className="landing-left">
         <Logo />
         <div className="story card">
-          The King ordered a <b>giant magical golden artifact</b> for his ceremony. You and two friends must deliver it across the floating islands.
-          It can <b>shift shape</b> — but every shape helps in some ways and hurts in others.
+          The King wants a <b>giant golden object</b> for his party. You and two friends must bring it across the floating islands.
+          It can <b>change shape</b>, and every shape is good at some things and bad at others.
         </div>
         <div className="shape-row">
           {[0, 1, 2, 3].map((s) => (
@@ -71,11 +71,12 @@ export function Landing() {
           </button>
         )}
         <div className="mini-controls">
-          <span><kbd>WASD</kbd> move</span>
-          <span><kbd>Space</kbd> jump</span>
-          <span><kbd>E</kbd> hold to grip</span>
-          <span><kbd>F</kbd> hop inside</span>
-          <span><kbd>1</kbd>–<kbd>4</kbd> shift</span>
+          <span><kbd>WASD</kbd> walk</span>
+          <span><b>Mouse</b> look</span>
+          <span><kbd>E</kbd> grab</span>
+          <span><kbd>F</kbd> climb in</span>
+          <span><kbd>1</kbd>–<kbd>4</kbd> shape</span>
+          <span><kbd>H</kbd> help</span>
         </div>
         <div className="small-note">Exactly 3 players • no sign-up • auto-matchmaking</div>
         {notice && <div className="notice">{notice.text}</div>}

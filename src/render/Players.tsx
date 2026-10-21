@@ -12,6 +12,7 @@ import { sfx } from '../audio/audio';
 import { useGame } from '../app/store';
 import { groundAt } from './ground';
 import { blobTexture } from './shadows';
+import { camView } from './CameraRig';
 
 const HAT = ['#ffb13b', '#2f5fa8', '#3f8a4f'];
 
@@ -216,7 +217,7 @@ function Courier({ slot, local }: { slot: number; local: boolean }) {
       if (blob.current) blob.current.visible = false;
       return;
     }
-    r.visible = true;
+    r.visible = !(local && camView.hideMe); // the camera is right behind your head (pulled in by a wall)
     const A = anim.current;
     const feetY = p.y - PLAYER_CENTER_Y;
     if (!A.init) {

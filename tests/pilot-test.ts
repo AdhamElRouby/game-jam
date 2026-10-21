@@ -3,7 +3,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { Sim, initPhysics } from '../server/sim';
 import { ShapeId } from '../src/shared/shapes';
 import * as C from '../src/shared/constants';
-import { rotate, yawOfX, axisDiff } from '../src/shared/math';
+import { rotate, yawOfX, axisDiff, wrapAngle } from '../src/shared/math';
 
 await initPhysics();
 
@@ -14,7 +14,7 @@ function check(name: string, ok: boolean, info = '') {
 }
 const f = (n: number) => n.toFixed(2);
 
-interface In { mx: number; mz: number; jump: number; grab: boolean; resp: number; buttons: number; pilot: number; use: number }
+interface In { mx: number; mz: number; jump: number; grab: boolean; resp: number; buttons: number; pilot: number; use: number; camYaw?: number }
 function mk() {
   const sim = new Sim({ names: ['R', 'B', 'G'], slots: [0, 1, 2] });
   const inp: In[] = [0, 1, 2].map(() => ({ mx: 0, mz: 0, jump: 0, grab: false, resp: 0, buttons: 0, pilot: 0, use: 0 }));
@@ -23,7 +23,7 @@ function mk() {
     for (let k = 0; k < n; k++) {
       for (let i = 0; i < 3; i++) {
         const q = inp[i];
-        sim.setInput(i, q.mx, q.mz, q.jump, q.grab, q.resp, q.buttons, q.pilot, q.use);
+        sim.setInput(i, q.mx, q.mz, q.jump, q.grab, q.resp, q.buttons, q.pilot, q.use, q.camYaw);
       }
       sim.step(C.TICK_DT, true);
       evs.push(...sim.events);
@@ -115,6 +115,27 @@ function embedded(s: Sim, slot: number) {
   secs(1.8);
   const dyaw = Math.abs(axisDiff(yawOfX(sim.artifact.rotation()), yaw0));
   check('LONG swing turns about 90°', dyaw > 1.2, `turned ${f((dyaw * 180) / Math.PI)}°`);
+  // A / D pick the way it turns, as the pilot's camera sees left and right (WASD arrives already turned to world space)
+  for (const [cam, key, mx, mz, want] of [
+    [0, 'A', -1, 0, 1],
+    [0, 'D', 1, 0, -1],
+    [Math.PI / 2, 'A', 0, 1, 1],
+    [Math.PI / 2, 'D', 0, -1, -1],
+  ] as const) {
+    secs(0.4);
+    const y0 = yawOfX(sim.artifact.rotation());
+    inp[0].camYaw = cam;
+    inp[0].mx = mx;
+    inp[0].mz = mz;
+    step(2);
+    inp[0].jump++;
+    secs(0.3);
+    inp[0].mx = inp[0].mz = 0;
+    secs(1.5);
+    const d = wrapAngle(yawOfX(sim.artifact.rotation()) - y0);
+    check(`LONG swing: ${key} turns ${want > 0 ? 'left' : 'right'} with the camera at ${f((cam * 180) / Math.PI)}°`, d * want > 1.1, `turned ${f((d * 180) / Math.PI)}°`);
+  }
+  inp[0].camYaw = 0;
 
   // ---------------------------------------------------------------- 4. hopping out
   sim.lastShiftAt = -99;

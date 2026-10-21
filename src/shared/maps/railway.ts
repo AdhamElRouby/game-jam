@@ -40,10 +40,10 @@ const boxes: BoxDef[] = [
 
 const mechs: MechDef[] = [
   // Puzzle A — the cargo cart: push the artifact up the ramp into the bed, pull the depart lever
-  { kind: 'switch', id: 'departA', p: v(6.6, 0, -1.4), radius: 1.6, mode: 'toggle', label: 'Depart', states: ['waiting', 'all aboard!'], style: 'lever' },
+  { kind: 'switch', id: 'departA', p: v(6.6, 0, -1.4), radius: 1.6, mode: 'toggle', label: 'Depart lever', states: ['waiting', 'all aboard!'], style: 'lever' },
   // Puzzle B — the switch junction: the safe loop to the crane yard, or the express buffer that flings the cargo
-  { kind: 'switch', id: 'junction', p: v(8.0, 0, -30.2), radius: 1.6, mode: 'select', positions: 2, label: 'Junction', states: ['SAFE loop → crane yard', 'EXPRESS → catapult!'], style: 'lever' },
-  { kind: 'switch', id: 'departB', p: v(7.4, 0, -34.0), radius: 1.5, mode: 'toggle', label: 'Depart', states: ['waiting', 'all aboard!'], style: 'lever' },
+  { kind: 'switch', id: 'junction', p: v(8.0, 0, -30.2), radius: 1.6, mode: 'select', positions: 2, label: 'Junction lever', states: ['SAFE track (slow)', 'EXPRESS track (fast, risky!)'], style: 'lever' },
+  { kind: 'switch', id: 'departB', p: v(7.4, 0, -34.0), radius: 1.5, mode: 'toggle', label: 'Depart lever', states: ['waiting', 'all aboard!'], style: 'lever' },
   {
     kind: 'cart',
     id: 'cart',
@@ -105,11 +105,26 @@ export const RAILWAY: MapDef = {
   goal: { p: v(-0.5, 6, -64.4), r: 2.4 },
   mechs,
   objectives: [
-    { text: 'Push the artifact up the ramp into the cart, then pull the Depart lever (Q) — hop in!', done: { cp: 1 }, hint: { p: v(3.5, 2.6, -3), text: 'Cart' } },
-    { text: 'Junction: set the points (Q) — SAFE loop or EXPRESS catapult — and depart', done: { any: [{ cp: 2 }, { cp: 3 }] }, hint: { p: v(8.0, 2.4, -30.2), text: 'Points' } },
-    { text: 'Crane it up the mesa: hold Q at the crane (let go mid-swing to fling it!)', done: { cp: 3 }, hint: { p: v(-13.0, 2.6, -54.6), text: 'Crane' } },
-    { text: 'Deliver it to the depot ring', done: { goal: true }, hint: { p: v(-0.5, 8.6, -64.4), text: 'Deliver' } },
-    { text: 'Everyone into the ring!', done: { not: { goal: true } }, hint: { p: v(-0.5, 8.6, -64.4), text: 'Deliver' } },
+    {
+      text: 'Push it up the ramp into the cart, then pull the Depart lever [Q]',
+      tip: 'Jump in the cart too, or run along the track.',
+      done: { cp: 1 },
+      hint: { p: v(3.5, 2.6, -3), text: 'Cart', marks: [v(6.6, 0, -1.4)] },
+    },
+    {
+      text: 'Pick a track with the junction lever [Q], then pull the Depart lever [Q]',
+      tip: 'SAFE is slow. EXPRESS throws the object up the cliff: fast, but it can miss!',
+      done: { any: [{ cp: 2 }, { cp: 3 }] },
+      hint: { p: v(8.0, 2.4, -30.2), text: 'Junction lever', marks: [v(7.4, 0, -34.0)] },
+    },
+    {
+      text: 'Hold [Q] at the crane to lift it up the cliff',
+      tip: 'Let go while it swings to throw it (fast, but it can miss).',
+      done: { cp: 3 },
+      hint: { p: v(-13.0, 2.6, -54.6), text: 'Crane' },
+    },
+    { text: 'Push it into the ring', done: { goal: true }, hint: { p: v(-0.5, 8.6, -64.4), text: 'Goal' } },
+    { text: 'Everyone into the ring!', done: { not: { goal: true } }, hint: { p: v(-0.5, 8.6, -64.4), text: 'Goal' } },
   ],
   par: 140,
   bonus: { label: 'Collect all 3 royal stamps', stamps: 3 },
@@ -117,7 +132,10 @@ export const RAILWAY: MapDef = {
   killY: -14,
   longAxisZones: [],
   bounds: { min: v(-45, -30, -110), max: v(45, 60, 40) },
-  camera: { pitch: 41, lift: 7, near: 13, far: 30, ahead: 3.2, fov: 46 },
+  intro: {
+    goal: 'Take the golden object to the depot by train.',
+    tradeoff: 'The SAFE track is slow but sure. The EXPRESS track is fast, but it throws your cargo!',
+  },
 };
 
 export { ShapeId };

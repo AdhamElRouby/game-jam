@@ -308,23 +308,23 @@ export type Cond =
   | { any: Cond[] }
   | { not: Cond };
 
+/**
+ * One step of a world. Texts are short plain English that say exactly what to do; a key in brackets (`[Q]`) is drawn
+ * as a key cap.
+ */
 export interface ObjectiveDef {
   text: string;
+  /** optional second line: another way to do it, or what to watch out for */
+  tip?: string;
   /** move on once this is true */
   done: Cond;
-  /** floating world label; `{pct:id}` in text is replaced with that mechanism's progress */
-  hint?: { p: V3; text: string; progress?: string };
+  /**
+   * floating world label at the thing to go to or use (highlighted with a ground ring and a light column);
+   * `progress` appends that mechanism's progress; `marks` rings more spots (both pressure plates, the levers)
+   */
+  hint?: { p: V3; text: string; progress?: string; marks?: V3[] };
   /** suggest a form in the shape bar */
   shape?: number;
-}
-
-export interface CameraDef {
-  pitch: number;
-  lift: number;
-  near: number;
-  far: number;
-  ahead: number;
-  fov: number;
 }
 
 export interface MapDef {
@@ -356,7 +356,8 @@ export interface MapDef {
   longAxisZones: { min: V2; max: V2; yaw: number }[];
   /** artifact outside this box for a while is recalled for free */
   bounds?: { min: V3; max: V3 };
-  camera: CameraDef;
+  /** briefing shown while the world counts down (and in the help card): the goal and this world's shape tradeoff */
+  intro: { goal: string; tradeoff: string };
 }
 
 export function inBox(p: { x: number; y: number; z: number }, min: V3, max: V3) {

@@ -23,6 +23,9 @@ for (let i = 0; i < 3; i++) {
   await pages[i].waitForTimeout(400);
   await pages[i].screenshot({ path: `${out}-lobby-${i}.png` });
 }
+// two of the three pick World 1 in the lobby (the third is outvoted)
+await pages[0].waitForTimeout(400);
+for (const p of pages.slice(0, 2)) await p.getByRole('button', { name: /Royal Loading Dock/ }).click();
 await pages[0].waitForTimeout(6000);
 const state = (p: Page) => p.evaluate(`(() => { const s = window.__SH_NET.latest(); const l = window.__SH_NET.lobby; return { t: s && s.t, ph: s && s.ph, ar: s && s.ar, you: l && l.you, room: l && l.roomId }; })()`) as Promise<any>;
 const st0 = await Promise.all(pages.map(state));

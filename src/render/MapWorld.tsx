@@ -28,9 +28,12 @@ export function MapWorld() {
           <StandaloneWorld map={map} />
         </Disposer>
       )}
-      <Disposer key={map.id + ':m'}>
-        <Mechanisms map={map} />
-      </Disposer>
+      {/* gameplay pieces stay visible at any distance (DetailCull skips them) */}
+      <group userData={{ noCull: true }}>
+        <Disposer key={map.id + ':m'}>
+          <Mechanisms map={map} />
+        </Disposer>
+      </group>
     </>
   );
 }

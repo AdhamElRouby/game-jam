@@ -19,7 +19,10 @@ interface GameUI {
   showResults: boolean;
   cutscene: boolean;
   menuOpen: boolean;
-  banner: { title: string; sub: string; key: number } | null;
+  /** the controls card (H or the ? button) */
+  help: boolean;
+  /** world briefing shown when a map starts: title, goal and the world's shape tradeoff */
+  banner: { title: string; sub: string; goal: string; tradeoff: string; key: number } | null;
   connected: boolean;
   set: (p: Partial<GameUI>) => void;
   toast: (text: string, kind?: Toast['kind']) => void;
@@ -36,6 +39,7 @@ export const useGame = create<GameUI>((set, get) => ({
   showResults: false,
   cutscene: false,
   menuOpen: false,
+  help: false,
   banner: null,
   connected: false,
   set: (p) => set(p),

@@ -579,9 +579,15 @@ if (roomMode) {
   room = new Room(fakeIo, 'bots', null, false, true, (m) => console.log(`  [room] ${m}`));
   members = ['A', 'B', 'C'].map((n, i) => room!.add(`tok-${n}`, n, fakeSocket(i)));
   const phase = (): string => room!.phase; // (re-read after steps; no narrowing)
-  // `--room <world id>`: debug one world through the Room (dev map command, no adventure totals)
+  // the team picks in the lobby: all six in a row, or (`--room <world id>`, for debugging) just that world
   const start = only.length ? Math.max(0, MAPS.findIndex((m) => m.id === only[0])) : 0;
-  if (only.length) room.devCommand(members[0], { map: start });
+  const pick = only.length ? `map:${start}` : 'adventure';
+  room.action(members[0], 'vote', pick);
+  const lobbyWaited = phase() === 'waiting';
+  room.action(members[1], 'vote', pick);
+  const lobbyStarted = phase() === 'countdown' && room.map === start;
+  results.push(`lobby: one pick waits=${lobbyWaited}, two matching picks start ${MAPS[start].sub}=${lobbyStarted}`);
+  if (!lobbyWaited || !lobbyStarted) allOk = false;
   for (const map of MAPS.slice(start, only.length ? start + 1 : MAPS.length)) {
     const script = scripts[map.id];
     // countdown (the sim steps frozen), then play the world through the Room

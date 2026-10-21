@@ -27,6 +27,10 @@ for (let i = 0; i < 3; i++) {
   await pages[i].getByRole('button', { name: 'PLAY', exact: true }).click();
   await pages[i].waitForTimeout(300);
 }
+// the lobby world picker, then two of the three pick World 1
+await pages[0].waitForTimeout(600);
+if (!only || only.has('lobby')) await pages[0].screenshot({ path: `${out}-lobby.png` });
+for (const p of pages.slice(1)) await p.evaluate(`window.__SH_NET.action('vote', 'map:0')`);
 const phase = (p: Page) => p.evaluate(`(() => { const s = window.__SH_NET.latest(); return s ? s.ph : null; })()`) as Promise<string | null>;
 for (let k = 0; k < 60 && (await phase(pages[0])) !== 'playing'; k++) await pages[0].waitForTimeout(250);
 const you = (await Promise.all(pages.map((p) => p.evaluate(`window.__SH_NET.lobby && window.__SH_NET.lobby.you`)))) as number[];

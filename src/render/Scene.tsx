@@ -15,9 +15,20 @@ import { Ending } from './Ending';
 import { updateFrame } from './frame';
 import { GameEvents } from './GameEvents';
 import { quality, lookDev } from './quality';
+import { look } from './look';
+import { Cockpit } from './Cockpit';
+import { HintBeacon } from './Beacon';
+import { DetailCull } from './DetailCull';
 
 function FrameTicker() {
   useFrame(() => updateFrame(), -100);
+  return null;
+}
+
+/** Mouse / touchpad look listens on the canvas (HUD buttons above it keep their clicks). */
+function LookInput() {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => look.attach(gl.domElement), [gl]);
   return null;
 }
 
@@ -40,10 +51,11 @@ function Lights() {
       c.right = c.top = want;
       c.updateProjectionMatrix();
     }
+    // centred a little ahead of what the camera looks at, along its heading
     const snap = (want * 2) / l.shadow.mapSize.x;
-    const fx = Math.round(camFocus.x / snap) * snap;
+    const fx = Math.round((camFocus.x + camView.fx * 4) / snap) * snap;
     const fy = Math.round(camFocus.y / snap) * snap;
-    const fz = Math.round((camFocus.z - 4) / snap) * snap;
+    const fz = Math.round((camFocus.z + camView.fz * 4) / snap) * snap;
     l.target.position.set(fx, fy, fz);
     l.position.set(fx + SUN_DIR.x * 70, fy + SUN_DIR.y * 70, fz + SUN_DIR.z * 70);
   });
@@ -114,36 +126,44 @@ function Post() {
 }
 
 export function Scene() {
+  const world = useRef<THREE.Group>(null);
   return (
     <Canvas
       shadows
       dpr={[1, quality.level === 'low' ? 1.0 : quality.level === 'medium' ? 1.35 : 1.75]}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
-      camera={{ fov: 44, near: 0.5, far: 1400, position: [2.2, 4.8, 13.5] }}
-      onCreated={({ gl }) => {
+      camera={{ fov: 44, near: 0.15, far: 1400, position: [2.2, 4.8, 13.5] }}
+      onCreated={({ gl, scene }) => {
         gl.shadowMap.type = THREE.PCFShadowMap;
         gl.toneMapping = THREE.NeutralToneMapping;
         gl.toneMappingExposure = 1.0;
         (window as any).__SH_GL = gl;
+        (window as any).__SH_SCENE = scene;
       }}
     >
       <FrameTicker />
+      <LookInput />
       <color attach="background" args={[SKY.fog]} />
       <fog attach="fog" args={[SKY.fog, 60, 330]} />
       <SkyEnvironment intensity={lookDev.env ?? 0.9} />
       <Lights />
       <SkyDome />
       <Suspense fallback={null}>
-        <MapWorld />
+        <group ref={world}>
+          <MapWorld />
+        </group>
         <Artifact />
         <PilotBadge />
+        <Cockpit />
         <Players />
         <Ending />
       </Suspense>
+      <HintBeacon />
       <Clouds />
       <CloudSea />
       <Effects />
       <CameraRig />
+      <DetailCull root={world} />
       <GameEvents />
       <QualityApplier />
       <Post />

@@ -3,6 +3,8 @@ import { net } from '../net/net';
 import { sfx } from '../audio/audio';
 import { useGame } from './store';
 import { quality, type Quality } from '../render/quality';
+import { look } from '../render/look';
+import { ControlsList } from './Hud';
 
 function useAudioSettings() {
   const [s, setS] = useState(sfx.settings);
@@ -45,14 +47,26 @@ function QualityPicker() {
   );
 }
 
+function useLookSettings() {
+  const [s, setS] = useState(look.settings);
+  useEffect(() => look.on(() => setS({ ...look.settings })), []);
+  return s;
+}
+
 export function Menu() {
   const s = useAudioSettings();
+  const ls = useLookSettings();
   const set = useGame((st) => st.set);
+  const resume = () => {
+    set({ menuOpen: false });
+    look.enabled = true;
+    look.lock(); // this click is a user gesture: capture the mouse again
+  };
   return (
     <div className="overlay menu" onClick={() => set({ menuOpen: false })}>
       <div className="card menu-card" onClick={(e) => e.stopPropagation()}>
-        <h2>Paused menu</h2>
-        <p className="small-note">The run keeps going for your teammates!</p>
+        <h2>Menu</h2>
+        <p className="small-note">The game keeps going for your teammates!</p>
         <label className="slider">
           <span>Music</span>
           <input type="range" min={0} max={1} step={0.05} value={s.music} onChange={(e) => sfx.set({ music: Number(e.target.value) })} />
@@ -64,24 +78,27 @@ export function Menu() {
         <label className="check">
           <input type="checkbox" checked={s.muted} onChange={(e) => sfx.set({ muted: e.target.checked })} /> Mute all (M)
         </label>
+        <label className="slider">
+          <span>Mouse speed</span>
+          <input type="range" min={0.3} max={2.5} step={0.05} value={ls.sens} onChange={(e) => look.set({ sens: Number(e.target.value) })} />
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={ls.invertY} onChange={(e) => look.set({ invertY: e.target.checked })} /> Invert mouse up / down
+        </label>
         <div className="slider">
           <span>Graphics</span>
           <QualityPicker />
         </div>
         <div className="menu-controls">
-          <div><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump · <kbd>Shift</kbd> sprint</div>
-          <div><kbd>E</kbd> hold near the artifact to grip a rope</div>
-          <div><kbd>F</kbd> hop inside the artifact and steer it · <kbd>Q</kbd> use levers &amp; machines</div>
-          <div><kbd>1</kbd> CUBE · <kbd>2</kbd> LONG · <kbd>3</kbd> TALL · <kbd>4</kbd> ROUND</div>
-          <div><kbd>R</kbd> hop back to your team · <kbd>T</kbd> vote to recall the artifact</div>
+          <ControlsList />
         </div>
         <div className="row">
           <button className="secondary" onClick={() => net.action('resetVote')}>
-            Artifact stuck? Vote recall (T)
+            Golden object stuck? Call it back (T)
           </button>
         </div>
         <div className="row">
-          <button className="play" onClick={() => set({ menuOpen: false })}>
+          <button className="play" onClick={resume}>
             Resume
           </button>
           <button

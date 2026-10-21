@@ -10,7 +10,7 @@ import { terrainMaterial } from './terrain';
 import { MAT } from './materials';
 import { frame } from './frame';
 import { fx } from './Effects';
-import { camFocus } from './CameraRig';
+import { camFocus, camRef } from './CameraRig';
 import { useGame } from '../app/store';
 import { Kit } from './kit';
 import { IRON, KitMeshes, STONE, WOOD, buildBridge, buildCurb, buildGateTowers, buildPalisade, buildStoneWall } from './Structures';
@@ -25,7 +25,30 @@ const tmpQ = new THREE.Quaternion();
 
 export const CASTLE_ISLAND = scenicIsland(900, 0, -186, 26, 0, 30);
 
-/** Fades its meshes when the camera focus sits just behind it (walls between camera and team). */
+/** Does the segment a -> b pass through the axis-aligned box `b` grown by `pad`? */
+function segmentHits(ax: number, ay: number, az: number, bx: number, by: number, bz: number, box: BoxDef, pad: number) {
+  let t0 = 0;
+  let t1 = 1;
+  const o = [ax, ay, az];
+  const d = [bx - ax, by - ay, bz - az];
+  for (let k = 0; k < 3; k++) {
+    const lo = box.p[k] - box.s[k] / 2 - pad;
+    const hi = box.p[k] + box.s[k] / 2 + pad;
+    if (Math.abs(d[k]) < 1e-9) {
+      if (o[k] < lo || o[k] > hi) return false;
+      continue;
+    }
+    let u = (lo - o[k]) / d[k];
+    let w = (hi - o[k]) / d[k];
+    if (u > w) [u, w] = [w, u];
+    t0 = Math.max(t0, u);
+    t1 = Math.min(t1, w);
+    if (t0 > t1) return false;
+  }
+  return true;
+}
+
+/** Fades its meshes when it stands between the camera and what the camera looks at (walls between camera and team). */
 function Fade({ b, children }: { b: BoxDef; children: React.ReactNode }) {
   const ref = useRef<THREE.Group>(null);
   const mats = useRef<THREE.Material[]>([]);
@@ -46,14 +69,9 @@ function Fade({ b, children }: { b: BoxDef; children: React.ReactNode }) {
     mats.current = list;
   }, []);
   useFrame((_, dt) => {
-    const top = b.p[1] + b.s[1] / 2;
-    const zNear = b.p[2] + b.s[2] / 2;
-    const zFar = b.p[2] - b.s[2] / 2;
-    const fz = camFocus.z;
-    const fx = camFocus.x;
-    const inX = fx > b.p[0] - b.s[0] / 2 - 6 && fx < b.p[0] + b.s[0] / 2 + 6;
-    const behind = fz < zNear + 1 && fz > zFar - (top - camFocus.y) / 1.05 - 3.5;
-    const target = inX && behind ? 0.22 : 1;
+    const c = camRef.current?.position;
+    const between = !!c && segmentHits(c.x, c.y, c.z, camFocus.x, camFocus.y + 0.4, camFocus.z, b, 0.6);
+    const target = between ? 0.22 : 1;
     op.current += (target - op.current) * Math.min(1, dt * 6);
     for (const m of mats.current) {
       (m as THREE.MeshStandardMaterial).opacity = op.current;

@@ -10,7 +10,7 @@ live here; Astra owns art, lighting, VFX look and camera presentation. This file
 ## Architecture decisions
 
 1. **Six maps, one Sim per map.** `src/shared/maps/` holds declarative `MapDef`s (spawns, checkpoints, anchors, goal,
-   mechanisms, objectives, par time, music, camera). The room builds a fresh `Sim` per map and disposes the old one.
+   mechanisms, objectives, par time, music, briefing). The room builds a fresh `Sim` per map and disposes the old one.
 2. **Original course = Worlds 1, 2, 3, 6.** Those maps keep using `LEVEL` geometry (so Astra's islands, bridges, castle,
    scenery and props stay exactly where they are). Every original-course Sim builds *all* `LEVEL` static colliders, so
    nothing visible is ever non-solid; per-map *blockers* close the exits. Legacy machines (plate, gate, receiver,
@@ -35,18 +35,30 @@ live here; Astra owns art, lighting, VFX look and camera presentation. This file
 - Boxes with `mat: 'invisible'` + `vis: '<kind>'` are gameplay-owned visuals (rendered by `render/Mechanisms.tsx`).
 - Decoration keep-out rectangles for new gameplay areas come from `LEVEL.decorKeepOut`.
 - `render/mapState.ts`: `useActiveMap()` (React, from the lobby) and `activeMap()` / `mechState(i)` (per frame, from the
-  snapshot). `MapDef.camera` replaces the per-chapter camera table for the follow camera.
+  snapshot). `MapDef.intro` (goal + shape tradeoff) is the world briefing; objectives carry plain-English `text` / `tip`
+  (`[Q]` draws a key cap) and a `hint` with optional `marks`. The old `MapDef.camera` table is gone: every player now
+  has a free camera (below).
+- Camera (`render/CameraRig.tsx`): `camView` tells visuals what the local camera is doing (`fpv` while it sits inside
+  the artifact: the shell, the pilot dome and your tag hide, `render/Cockpit.tsx` shows; `hideMe` when it's pressed
+  against your courier; `dist` / `fx` / `fz` for the shadow frustum). Decor materials from `Models.tsx` get the
+  see-through cut (`render/seeThrough.ts`); `render/DetailCull.tsx` skips tiny far decor, and anything that must stay
+  visible at a distance goes under a group with `userData.noCull` (the mechanisms do).
 - `render/MapWorld.tsx` mounts the course once (a memoized element: it must not re-render on world switches) and puts
   everything per-map under `<Disposer>` (`render/Disposer.tsx`), which frees GPU resources on unmount.
 - `useGame().cutscene` hides the World 6 portcullis (its lintel sits between the ending camera and the King).
+- The lobby has a world picker (`app/WorldPicker.tsx`): `lobby.votes` holds each slot's pick in the lobby as well as on
+  the results screen, and `lobby.tieMs` counts down a split-vote draw. World pictures are
+  `public/assets/worlds/<map id>.jpg`, made by `tests/thumbs.ts` (re-run it after visual changes).
 - Visual work that would help (not done here, Astra's files): `KitMeshes` doesn't dispose the previous build when
   `make` changes, and `Lever` in `Ch3.tsx` passes a fresh `pivot` array into its memo deps, so it rebuilds on every
   render. Harmless now that the course never re-renders, but a trap for future parents.
 
 ## Controls
 
-WASD move · Space jump · Shift sprint · E grip (hold) · F enter/exit artifact · Q use mechanism · 1–4 shift ·
-R hop back · T recall vote · Esc menu · M mute. Piloting reuses WASD, Space (shape ability), 1–4, F.
+Mouse / touchpad look (click to capture, Esc frees) · scroll / pinch zoom · WASD move (relative to the camera) ·
+Space jump · Shift sprint · E grip (hold) · F enter/exit artifact (first person) · V first person / outside view ·
+Q use mechanism · 1–4 shift · R hop back · T recall vote · H controls · Esc menu · M mute. Piloting reuses WASD,
+Space (shape ability; LONG: A / D pick the turn), 1–4, F.
 
 ## Milestones
 

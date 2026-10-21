@@ -169,7 +169,7 @@ class Net {
     this.inputTimer = window.setInterval(() => {
       if (!this.connected || !this.lobby || this.lobby.you < 0) return;
       const i = input.sample();
-      this.socket.emit('in', [this.seq++, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use]);
+      this.socket.emit('in', [this.seq++, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use, Math.round(i.camYaw * 1000) / 1000]);
     }, 1000 / INPUT_HZ);
   }
 

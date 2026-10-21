@@ -4,7 +4,7 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { frame } from './frame';
-import { camRef } from './CameraRig';
+import { camRef, camView } from './CameraRig';
 import { SLOT_COLORS } from '../shared/constants';
 import { shapeSpec } from '../shared/shapes';
 import { artifactOverride } from './Ending';
@@ -49,9 +49,10 @@ export function PilotBadge() {
     const slot = artifactOverride.active ? -1 : f.pilot;
     if (slot >= 0) S.slot = slot;
     S.k += ((slot >= 0 ? 1 : 0) - S.k) * Math.min(1, dt * 9);
-    g.visible = S.k > 0.02 && S.slot >= 0;
-    if (ring.current) ring.current.visible = g.visible;
-    if (!g.visible) return;
+    const shown = S.k > 0.02 && S.slot >= 0;
+    if (ring.current) ring.current.visible = shown;
+    g.visible = shown && !camView.fpv; // your own dome and face would sit right in front of your eyes
+    if (!shown) return;
     const a = f.artifact;
     q.set(a.qx, a.qy, a.qz, a.qw);
     const top = a.y + extentY(a.shape, q);
