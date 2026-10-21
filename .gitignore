@@ -5,3 +5,4 @@ tests/out/performance/baseline-build/
 build.log
 test-results
 .DS_Store
+tests/out
