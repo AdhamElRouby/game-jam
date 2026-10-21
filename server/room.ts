@@ -16,6 +16,10 @@ export interface Member {
   vote: string | null;
   /** last input sequence number accepted (reset when the socket changes: a reloaded tab restarts at 0) */
   lastSeq: number;
+  /** inputs received but not applied yet: one is applied per tick, in order (see `feedInputs`) */
+  queue: number[][];
+  /** ticks in a row the queue still held two or more inputs after this tick's (latency it doesn't need) */
+  deep: number;
 }
 
 const SNAP_EVERY = Math.round(C.TICK_HZ / C.SNAPSHOT_HZ);
@@ -39,6 +43,9 @@ export class Room {
   map = 0;
   mode: 'adventure' | 'single' = 'adventure';
   history: Results[] = [];
+  /** members' sockets that asked for server performance numbers (the dev overlay), sent once a second */
+  private perfSubs = new Set<Socket>();
+  private perf = { at: Date.now(), ticks: 0, steps: 0, stepSum: 0, stepMax: 0, snaps: 0, snapBytes: 0 };
 
   constructor(
     private io: Server,
@@ -73,7 +80,7 @@ export class Room {
 
   add(token: string, name: string, socket: Socket): Member {
     const slot = this.members.findIndex((m) => !m);
-    const m: Member = { token, name, slot, socket, connected: true, vote: null, lastSeq: -1 };
+    const m: Member = { token, name, slot, socket, connected: true, vote: null, lastSeq: -1, queue: [], deep: 0 };
     this.members[slot] = m;
     socket.join(this.id);
     this.log(`room ${this.id}: ${name} joined slot ${slot} (${this.list.length}/${this.capacity})`);
@@ -113,6 +120,8 @@ export class Room {
     m.socket = socket;
     m.connected = true;
     m.lastSeq = -1;
+    m.queue = [];
+    m.deep = 0;
     socket.join(this.id);
     this.sim?.setConnected(m.slot, true);
     this.log(`room ${this.id}: ${m.name} reconnected`);
@@ -208,7 +217,62 @@ export class Room {
     // drop duplicated / reordered packets (the counter fields make a skipped packet harmless)
     if (seq <= m.lastSeq && m.lastSeq - seq < 1e6) return;
     m.lastSeq = seq;
-    this.sim.setInput(m.slot, mx, mz, jump, grab === 1, resp, opt(buttons) ?? 0, opt(pilot), opt(use), opt(camYaw));
+    m.queue.push([seq, mx, mz, jump, grab === 1 ? 1 : 0, resp, opt(buttons) ?? 0, opt(pilot) ?? NaN, opt(use) ?? NaN, opt(camYaw) ?? NaN]);
+    if (m.queue.length > 30) m.queue.splice(0, m.queue.length - 30);
+  }
+
+  /**
+   * Clients send one input per 60 Hz tick. Applying one per tick, in order, keeps the server's timeline the same as the
+   * client's (its prediction replays from the input this tick applied, `ack`): with "newest wins", network jitter made
+   * an input last two ticks or none. A burst after a hiccup is caught up (only the newest few kept: the counters make
+   * skipped presses harmless); when nothing new has arrived, the last input simply holds.
+   */
+  private feedInputs(stepping: boolean) {
+    const sim = this.sim;
+    if (!sim) return;
+    for (const m of this.list) {
+      const q = m.queue;
+      if (!q.length) continue;
+      const keep = stepping ? 3 : 1;
+      if (q.length > keep) q.splice(0, q.length - keep);
+      // more queued than the jitter needs for a whole second: skip one to win back the latency
+      m.deep = q.length >= 3 ? m.deep + 1 : 0;
+      if (m.deep > 60) {
+        q.shift();
+        m.deep = 0;
+      }
+      const [seq, mx, mz, jump, grab, resp, buttons, pilot, use, camYaw] = q.shift()!;
+      const opt = (x: number) => (Number.isNaN(x) ? undefined : x);
+      sim.setInput(m.slot, mx, mz, jump, grab === 1, resp, buttons, opt(pilot), opt(use), opt(camYaw), seq);
+    }
+  }
+
+  /** The perf overlay (F3) asks for this room's server numbers; they stop when its socket goes away. */
+  perfSub(m: Member, on: boolean) {
+    if (!m.socket) return;
+    if (on) this.perfSubs.add(m.socket);
+    else this.perfSubs.delete(m.socket);
+  }
+
+  private reportPerf(now: number) {
+    const P = this.perf;
+    const span = (now - P.at) / 1000;
+    for (const s of this.perfSubs) if (!s.connected) this.perfSubs.delete(s);
+    if (this.perfSubs.size) {
+      const w = this.sim?.world;
+      const msg = {
+        tickHz: Math.round(P.ticks / span),
+        simHz: Math.round(P.steps / span),
+        stepMs: P.steps ? Math.round((P.stepSum / P.steps) * 1000) / 1000 : 0,
+        stepMaxMs: Math.round(P.stepMax * 1000) / 1000,
+        snapHz: Math.round(P.snaps / span),
+        snapBytes: P.snaps ? Math.round(P.snapBytes / P.snaps) : 0,
+        bodies: w ? w.bodies.len() : 0,
+        colliders: w ? w.colliders.len() : 0,
+      };
+      for (const s of this.perfSubs) s.emit('perf', msg);
+    }
+    this.perf = { at: now, ticks: 0, steps: 0, stepSum: 0, stepMax: 0, snaps: 0, snapBytes: 0 };
   }
 
   shift(m: Member, shape: unknown) {
@@ -352,9 +416,19 @@ export class Room {
     }
     const sim = this.sim;
     if (!sim) return;
-    if (this.phase === 'playing' || this.phase === 'countdown' || this.phase === 'resuming') {
+    const stepping = this.phase === 'playing' || this.phase === 'countdown' || this.phase === 'resuming';
+    this.feedInputs(stepping);
+    const P = this.perf;
+    P.ticks++;
+    if (stepping) {
+      const t0 = performance.now();
       sim.step(C.TICK_DT, this.phase === 'playing');
+      const ms = performance.now() - t0;
+      P.steps++;
+      P.stepSum += ms;
+      if (ms > P.stepMax) P.stepMax = ms;
     }
+    if (now - P.at >= 1000) this.reportPerf(now);
     if (sim.events.length) {
       const evs: GameEvent[] = sim.events;
       sim.events = [];
@@ -362,7 +436,10 @@ export class Room {
     }
     if (sim.finished && this.phase === 'playing') this.onFinished(sim);
     if (this.tick % SNAP_EVERY === 0 && this.phase !== 'finished') {
-      this.io.to(this.id).volatile.emit('snap', { ...sim.snapshot(this.phase), ack: this.members.map(m => m?.lastSeq ?? -1) });
+      const snap = sim.snapshot(this.phase);
+      this.io.to(this.id).emit('snap', snap);
+      P.snaps++;
+      if (this.perfSubs.size) P.snapBytes += JSON.stringify(snap).length;
     }
     // keep lobby timers fresh twice a second during timed phases
     if (this.tick % 30 === 0 && (this.phase === 'paused' || this.phase === 'countdown' || this.phase === 'resuming' || this.graceEndsAt)) {

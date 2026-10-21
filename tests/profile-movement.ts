@@ -27,7 +27,7 @@ try {
       let release = 0, stopServerMs: number | null = null, stopViewMs: number | null = null, releaseZ = 0;
       await new Promise<void>(resolve => {
         const loop = () => {
-          view = W.__SH_FRAME?.().players.find((p: any) => p.slot === slot) ?? view;
+          view = W.__SH_FRAME?.current.players.find((p: any) => p.slot === slot) ?? view;
           const t = performance.now(), p = net.latest().pl.find((p: any) => p[0] === slot);
           if (serverMs === null && p0[3] - p[3] > .015) serverMs = t - t0;
           if (viewMs === null && view && p0[3] - view.z > .015) viewMs = t - t0;

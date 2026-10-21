@@ -2,7 +2,6 @@
 // and the map's data-driven mechanisms (server/mechs.ts).
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Samples } from './diagnostics';
-import { approachVelocity } from '../src/shared/movement';
 import * as C from '../src/shared/constants';
 import { LEVEL, islandBoxes, type BoxDef, type IslandDef } from '../src/shared/level';
 import { MAPS, mapOrder } from '../src/shared/maps';
@@ -36,6 +35,7 @@ import {
   PF_GROUNDED,
   PF_MOVING,
   PF_ONMOVER,
+  PF_LAUNCH,
   PF_PILOT,
   PF_RESPAWNING,
   PF_SPRINT,
@@ -49,6 +49,7 @@ import {
   type Snapshot,
   type WorldSnap,
 } from '../src/shared/protocol';
+import { stepCourierMotion, type CourierControl, type CourierEnv, type CourierMotion } from '../src/shared/movement';
 import { Pilot } from './pilot';
 import { CollectMech, CraneMech, HazardMech, SlipMech, SwitchMech, WindMech, makeMech, type Freeze, type Mech } from './mechs';
 
@@ -63,6 +64,9 @@ const STATIC_FOR_ARTIFACT = C.groups(C.G_ARTIFACT, C.G_STATIC | C.G_CARGO_BARRIE
 const STATIC_ONLY = C.groups(C.G_ARTIFACT, C.G_STATIC);
 const PLAYERS_ONLY = C.groups(C.G_ARTIFACT, C.G_PLAYER);
 const WALKABLE_TAGS = new Set(['bridge', 'ramp', 'ledge']);
+// scratch state for the shared walking step (one courier at a time)
+const MOTION: CourierMotion = { vx: 0, vy: 0, vz: 0, grounded: false, coyote: 0, jumpBuffer: 0, airTime: 0, yaw: 0 };
+const CONTROL: CourierControl = { mx: 0, mz: 0, sprint: false, jumpPressed: false, canMove: false };
 
 interface Grip {
   local: Vec; // anchor in artifact local space (boxes) or world offset (ball)
@@ -113,6 +117,10 @@ export interface PlayerBody {
   /** after a reconnect the client's counters restart: adopt them without treating the jump as a press */
   syncCounters: boolean;
   lastInputAt: number;
+  /** sequence number of the newest input applied (echoed in snapshots: the client replays the inputs after it) */
+  ack: number;
+  /** the world's part of this tick's walk (platform, wind, slippery ground, ...), sent along for the prediction */
+  env: CourierEnv;
 }
 
 export interface SimOptions {
@@ -340,6 +348,8 @@ export class Sim {
       camYaw: 0,
       syncCounters: false,
       lastInputAt: -Infinity,
+      ack: -1,
+      env: { carryX: 0, carryY: 0, carryZ: 0, driftX: 0, driftZ: 0, slip: 1, knocked: false, launched: false, gripping: false },
     };
   }
 
@@ -366,10 +376,11 @@ export class Sim {
   }
 
   // ------------------------------------------------------------------ inputs
-  setInput(slot: number, mx: number, mz: number, jumpCount: number, grab: boolean, respawnCount: number, buttons = 0, pilotCount?: number, useCount?: number, camYaw?: number) {
+  setInput(slot: number, mx: number, mz: number, jumpCount: number, grab: boolean, respawnCount: number, buttons = 0, pilotCount?: number, useCount?: number, camYaw?: number, seq?: number) {
     const p = this.players[slot];
     if (!p) return;
     p.lastInputAt = this.time;
+    if (seq !== undefined) p.ack = seq;
     if (camYaw !== undefined && Number.isFinite(camYaw)) p.camYaw = camYaw;
     const m = Math.hypot(mx, mz);
     if (!Number.isFinite(m)) return;
@@ -535,62 +546,47 @@ export class Sim {
     // standing on a moving platform: walk relative to it
     const carry = p.grounded && hit ? this.carrierVel(hit) : ZERO;
     if (carry !== ZERO) p.onMover = true;
-    if (p.grounded) {
-      p.coyote = 0.12;
-      p.airTime = 0;
-    } else {
-      p.coyote -= dt;
-      p.airTime += dt;
-    }
     const canMove = canAct;
     const knocked = p.tumble > 0;
     const mx = canMove ? p.mx : 0;
     const mz = canMove ? p.mz : 0;
-    // sprinting is faster but slidier (less grip on the ground); not while holding a rope or knocked over
-    const sprint = p.sprint && !p.grip && !knocked;
-    const speed = p.grip ? C.GRIP_SPEED : sprint ? C.SPRINT_SPEED : C.WALK_SPEED;
     const pos = body.translation();
     const drift = this.windDrift(pos);
-    const tx = mx * speed + carry.x + drift.x;
-    const tz = mz * speed + carry.z + drift.z;
-    let accel = p.grounded ? (sprint ? 24 : 46) : 15;
     const slip = p.grounded ? this.slipAt({ x: pos.x, y: pos.y - C.PLAYER_CENTER_Y, z: pos.z }) : null;
-    if (slip) accel *= slip.grip;
-    if (knocked) accel *= 0.2;
-    const controlled = approachVelocity(v.x, v.z, tx, tz, accel, dt);
-    let dvx = controlled.x - v.x;
-    let dvz = controlled.z - v.z;
-    if (p.launchT > 0 && !p.grounded) {
-      // flung by a spring / puff: keep the momentum, steer gently toward the input (no air brakes)
-      dvx = mx * 6 * dt;
-      dvz = mz * 6 * dt;
-    }
-    const dl = Math.hypot(dvx, dvz);
-    const maxDv = accel * dt;
-    if (dl > maxDv) {
-      dvx *= maxDv / dl;
-      dvz *= maxDv / dl;
-    }
-    let vy = v.y;
-    // jumping with buffer + coyote time
-    if (p.jumpCount !== p.lastJumpCount) {
-      p.lastJumpCount = p.jumpCount;
-      if (canMove && !knocked) p.jumpBuffer = 0.15;
-    }
-    if (p.jumpBuffer > 0) {
-      p.jumpBuffer -= dt;
-      if (p.coyote > 0) {
-        vy = C.JUMP_SPEED + Math.max(0, carry.y);
-        p.jumpBuffer = 0;
-        p.coyote = 0;
-        p.grounded = false;
-      }
-    }
-    // ride descending platforms instead of bouncing on them
-    if (p.grounded && carry.y < 0 && vy > carry.y && p.jumpBuffer <= 0) vy = Math.min(vy, carry.y);
-    // snappier falls
-    if (!p.grounded && vy < 0) vy += C.GRAVITY * 0.35 * dt;
-    body.setLinvel({ x: v.x + dvx, y: vy, z: v.z + dvz }, true);
+    // the walk itself is shared with the client's prediction of its own courier (src/shared/movement.ts); the world's
+    // part of it (platform, wind, slippery ground, knocked over, launched, rope) goes out with the snapshot
+    const env = p.env;
+    env.carryX = carry.x;
+    env.carryY = carry.y;
+    env.carryZ = carry.z;
+    env.driftX = drift.x;
+    env.driftZ = drift.z;
+    env.slip = slip ? slip.grip : 1;
+    env.knocked = knocked;
+    env.launched = p.launchT > 0;
+    env.gripping = !!p.grip;
+    const jumpPressed = p.jumpCount !== p.lastJumpCount;
+    p.lastJumpCount = p.jumpCount;
+    const mo = MOTION;
+    mo.vx = v.x;
+    mo.vy = v.y;
+    mo.vz = v.z;
+    mo.grounded = p.grounded;
+    mo.coyote = p.coyote;
+    mo.jumpBuffer = p.jumpBuffer;
+    mo.airTime = p.airTime;
+    const ctl = CONTROL;
+    ctl.mx = mx;
+    ctl.mz = mz;
+    ctl.sprint = p.sprint;
+    ctl.jumpPressed = jumpPressed;
+    ctl.canMove = canMove;
+    stepCourierMotion(mo, ctl, env, dt);
+    p.grounded = mo.grounded;
+    p.coyote = mo.coyote;
+    p.jumpBuffer = mo.jumpBuffer;
+    p.airTime = mo.airTime;
+    body.setLinvel({ x: mo.vx, y: mo.vy, z: mo.vz }, true);
 
     // facing
     let targetYaw: number | null = null;
@@ -1524,7 +1520,13 @@ export class Sim {
         ay = r3(a.y);
         az = r3(a.z);
       }
-      pl.push([p.slot, r3(t.x), r3(t.y), r3(t.z), r3(p.yaw), r3(v.x), r3(v.y), r3(v.z), flags, ax, ay, az]);
+      if (p.launchT > 0 && !p.inside) flags |= PF_LAUNCH;
+      const row: PlayerSnap = [p.slot, r3(t.x), r3(t.y), r3(t.z), r3(p.yaw), r3(v.x), r3(v.y), r3(v.z), flags, ax, ay, az, p.ack];
+      const e = p.env;
+      const ex = e.carryX + e.driftX;
+      const ez = e.carryZ + e.driftZ;
+      if (!p.inside && (ex || ez || e.carryY || e.slip !== 1)) row.push(r3(ex), r3(ez), r3(e.carryY), r3(e.slip));
+      pl.push(row);
     }
     const t = this.artifact.translation();
     const q = this.artifact.rotation();

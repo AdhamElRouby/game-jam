@@ -1,9 +1,9 @@
 // Canvas + lighting + post-processing + composition of all visual layers.
-import { memo, Suspense, useEffect, useRef, useState } from 'react';
+import { memo, Suspense, use, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { EffectComposer, Bloom, N8AO, ToneMapping, Vignette, HueSaturation } from '@react-three/postprocessing';
-import { ToneMappingMode } from 'postprocessing';
+import { EffectComposer, EffectComposerContext, Bloom, N8AO, ToneMapping, Vignette, HueSaturation } from '@react-three/postprocessing';
+import { CopyPass, EffectPass, ToneMappingMode } from 'postprocessing';
 import { MapWorld } from './MapWorld';
 import { Artifact } from './Artifact';
 import { Players } from './Players';
@@ -14,11 +14,12 @@ import { Effects } from './Effects';
 import { Ending } from './Ending';
 import { updateFrame } from './frame';
 import { GameEvents } from './GameEvents';
-import { quality, lookDev } from './quality';
+import { quality, lookDev, pixelRatio, PRESETS } from './quality';
 import { look } from './look';
 import { Cockpit } from './Cockpit';
 import { HintBeacon } from './Beacon';
 import { DetailCull } from './DetailCull';
+import { AdaptiveResolution, BackgroundThrottle } from './FrameRate';
 
 function FrameTicker() {
   useFrame(() => updateFrame(), -100);
@@ -40,7 +41,7 @@ function RenderPreparation() {
   useFrame(({ camera }) => {
     scene.updateMatrixWorld();
     gl.shadowMap.needsUpdate = true;
-    if (quality.level === 'low') gl.render(scene, camera);
+    if (!PRESETS[quality.level].post) gl.render(scene, camera);
   }, 0.5);
   return null;
 }
@@ -110,16 +111,18 @@ function useQuality() {
   return q;
 }
 
-/** Applies the preset to the renderer: pixel ratio + shadow map resolution. */
+/** Applies the preset to the renderer: pixel ratio (cap + pixel budget + adaptive scale) and shadow map resolution. */
 function QualityApplier() {
   const q = useQuality();
   const { setDpr, scene } = useThree();
   useEffect(() => {
-    setDpr(Math.min(window.devicePixelRatio, q === 'low' ? 1.0 : q === 'medium' ? 1.35 : 1.75));
+    const apply = () => setDpr(pixelRatio(q));
+    apply();
+    window.addEventListener('resize', apply);
     scene.traverse((o) => {
       const l = o as THREE.DirectionalLight;
       if (l.isDirectionalLight && l.castShadow) {
-        const size = q === 'low' ? 1024 : 2048;
+        const size = PRESETS[q].shadow;
         if (l.shadow.mapSize.x !== size) {
           l.shadow.mapSize.set(size, size);
           l.shadow.map?.dispose();
@@ -127,20 +130,59 @@ function QualityApplier() {
         }
       }
     });
+    return () => window.removeEventListener('resize', apply);
   }, [q, setDpr, scene]);
+  return null;
+}
+
+const AO_COLOR = new THREE.Color('#2e2146');
+
+/**
+ * N8AO switches itself to "transparency aware" as soon as anything in the scene is transparent (clouds, water, glows,
+ * particles): every frame it then walks the whole scene three times and draws it twice more into two full-resolution
+ * HDR targets. Measured: that was the largest single cost of the post chain, for a difference too small to see here.
+ */
+function aoRef(pass: { autoDetectTransparency?: boolean; configuration?: { transparencyAware: boolean } } | null) {
+  if (!pass || lookDev.aoTransparency) return;
+  pass.autoDetectTransparency = false;
+  if (pass.configuration) pass.configuration.transparencyAware = false;
+}
+
+/**
+ * The composer wrapper appends a full-screen copy after the effects whenever N8AO is in the chain; the effect pass can
+ * draw to the screen itself, so the copy (a full-resolution HDR read + write every frame) is dropped.
+ */
+function DropTrailingCopy() {
+  const ctx = use(EffectComposerContext);
+  useFrame(() => {
+    const c = ctx?.composer;
+    const P = c?.passes;
+    if (!c || !P || P.length < 2) return;
+    const last = P[P.length - 1];
+    if (last instanceof CopyPass && P[P.length - 2] instanceof EffectPass) c.removePass(last);
+  });
   return null;
 }
 
 function Post() {
   const q = useQuality();
-  if (q === 'low') return null;
+  const P = PRESETS[q];
+  if (!P.post) return null;
+  const ao = lookDev.aoq === 'off' ? null : (lookDev.aoq ?? P.ao);
   return (
-    <EffectComposer multisampling={4} enableNormalPass={false}>
-      <>{lookDev.ao && <N8AO halfRes aoRadius={1.7} distanceFalloff={0.9} intensity={2.6} color={new THREE.Color('#2e2146')} quality={q === 'high' ? 'medium' : 'performance'} />}</>
-      <>{lookDev.bloom && <Bloom mipmapBlur luminanceThreshold={1.0} luminanceSmoothing={0.18} intensity={0.6} radius={0.72} />}</>
+    <EffectComposer
+      ref={(c) => {
+        (window as any).__SH_COMPOSER = c;
+      }}
+      multisampling={lookDev.msaa ?? P.msaa}
+      enableNormalPass={false}
+    >
+      <>{lookDev.ao && ao && <N8AO ref={aoRef as never} halfRes depthAwareUpsampling={lookDev.aoUp} aoRadius={1.7} distanceFalloff={0.9} intensity={2.6} color={AO_COLOR} quality={ao} />}</>
+      <>{lookDev.bloom && P.bloom && <Bloom mipmapBlur luminanceThreshold={1.0} luminanceSmoothing={0.18} intensity={0.6} radius={0.72} />}</>
       <HueSaturation saturation={lookDev.sat ?? 0.1} />
       <ToneMapping mode={TONE[lookDev.tm ?? 'neutral'] ?? ToneMappingMode.NEUTRAL} />
       <Vignette offset={0.3} darkness={0.38} />
+      <DropTrailingCopy />
     </EffectComposer>
   );
 }
@@ -150,8 +192,8 @@ export const Scene = memo(function Scene() {
   return (
     <Canvas
       shadows
-      dpr={[1, quality.level === 'low' ? 1.0 : quality.level === 'medium' ? 1.35 : 1.75]}
-      gl={{ antialias: true, powerPreference: 'high-performance' }}
+      dpr={pixelRatio()}
+      gl={{ antialias: lookDev.aa ?? true, powerPreference: 'high-performance' }}
       camera={{ fov: 44, near: 0.15, far: 1400, position: [2.2, 4.8, 13.5] }}
       onCreated={({ gl, scene }) => {
         gl.shadowMap.type = THREE.PCFShadowMap;
@@ -186,6 +228,8 @@ export const Scene = memo(function Scene() {
       <DetailCull root={world} />
       <GameEvents />
       <QualityApplier />
+      <AdaptiveResolution />
+      <BackgroundThrottle />
       <Post />
       <RenderPreparation />
     </Canvas>

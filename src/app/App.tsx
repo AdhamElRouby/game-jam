@@ -10,6 +10,7 @@ import { Hud } from './Hud';
 import { Results } from './Results';
 import { Menu } from './Menu';
 import { WorldLabels } from './WorldLabels';
+import { PerfOverlay } from './PerfOverlay';
 import { mapAt } from '../shared/maps';
 import { look } from '../render/look';
 import { toggleInsideView } from '../render/CameraRig';
@@ -90,6 +91,7 @@ export function App() {
       {screen === 'landing' && <Landing />}
       {screen === 'lobby' && <Lobby />}
       {screen === 'game' && <Hud />}
+      <PerfOverlay />
       {screen === 'game' && <Results />}
       {menuOpen && screen === 'game' && <Menu />}
     </div>

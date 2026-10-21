@@ -71,6 +71,7 @@ io.on('connection', (socket) => {
   socket.on('shift', (shape) => mm.withMember(socket, (room, m) => room.shift(m, shape)));
   socket.on('act', (msg) => mm.withMember(socket, (room, m) => room.action(m, msg?.type, msg?.value)));
   socket.on('dev', (cmd) => mm.withMember(socket, (room, m) => room.devCommand(m, cmd)));
+  socket.on('perf:sub', (on) => mm.withMember(socket, (room, m) => room.perfSub(m, on === true)));
   socket.on('ping:t', (t, ack) => typeof ack === 'function' && ack(Date.now()));
   socket.on('disconnect', () => mm.disconnect(socket));
 });

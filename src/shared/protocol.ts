@@ -39,8 +39,13 @@ export interface LobbyState {
   history: Results[];
 }
 
-/** [slot, x, y, z, yaw, vx, vy, vz, flags, anchorX, anchorY, anchorZ] */
-export type PlayerSnap = [number, number, number, number, number, number, number, number, number, number, number, number];
+/**
+ * [slot, x, y, z, yaw, vx, vy, vz, flags, anchorX, anchorY, anchorZ, ack, envX, envZ, envY, slip]
+ * ack = sequence number of the newest input the server applied for this courier (the client predicts from there);
+ * env* = what the world added to its walk this tick (platform carry + wind, platform vertical speed) and the ground's
+ * grip, only present when not plain ground (see src/shared/movement.ts).
+ */
+export type PlayerSnap = [number, number, number, number, number, number, number, number, number, number, number, number, number?, number?, number?, number?, number?];
 export const PF_GROUNDED = 1;
 export const PF_GRIP = 2;
 export const PF_CONNECTED = 4;
@@ -51,6 +56,7 @@ export const PF_TUMBLE = 64; // knocked over for a moment
 export const PF_SPRINT = 128;
 export const PF_USE = 256; // holding Q on a mechanism
 export const PF_ONMOVER = 512; // standing on a moving platform
+export const PF_LAUNCH = 1024; // flung by a spring / puff (no air brakes until it lands)
 
 /** [x, y, z, qx, qy, qz, qw, shape, vx, vy, vz] */
 export type ArtifactSnap = [number, number, number, number, number, number, number, number, number, number, number];

@@ -1,13 +1,34 @@
 // Client networking: session token, matchmaking messages, snapshot buffer + interpolation, input upload.
 import { io, type Socket } from 'socket.io-client';
-import { INPUT_HZ } from '../shared/constants';
+import { SNAPSHOT_HZ, TICK_HZ } from '../shared/constants';
 import { mapAt } from '../shared/maps';
 import type { GameEvent, LobbyState, Results, Snapshot, WorldSnap } from '../shared/protocol';
 import { PF_GRIP, PF_GROUNDED, PF_MOVING, PF_RESPAWNING, PF_CONNECTED, PF_PILOT, PF_TUMBLE, PF_SPRINT, PF_USE, PF_ONMOVER } from '../shared/protocol';
 import { input } from './input';
 
-export const INTERP_DELAY = 85; // ms behind newest server state
+/** starting interpolation delay (ms behind the newest server state); it then adapts to the measured jitter */
+export const INTERP_DELAY = 85;
 const MAX_SNAPS = 90;
+/** input ticks: the same 60 Hz as the server, one input packet per tick (the prediction steps on these) */
+export const TICK_MS = 1000 / TICK_HZ;
+const SNAP_MS = 1000 / SNAPSHOT_HZ;
+/** when the next snapshot is late, carry things on along their velocity for at most this long (ms), then hold */
+const EXTRAPOLATE_MS = 60;
+
+/** One input tick as sent to the server. `at` = its nominal start (performance.now ms). */
+export interface InputTick {
+  seq: number;
+  at: number;
+  mx: number;
+  mz: number;
+  jump: number;
+  grab: boolean;
+  respawn: number;
+  buttons: number;
+  pilot: number;
+  use: number;
+  camYaw: number;
+}
 
 export interface PlayerView {
   slot: number;
@@ -83,38 +104,40 @@ class Net {
   private sfxListeners = new Set<Listener<string>>();
   private resultsListeners = new Set<Listener<Results>>();
   private connListeners = new Set<Listener<boolean>>();
+  private snapListeners = new Set<Listener<Snapshot>>();
+  private tickListeners = new Set<Listener<InputTick>>();
+  private nextTick = 0;
+  /** how late snapshots arrive compared with the fastest one recently (ms), newest last */
+  private late: number[] = [];
+  /** p95 of `late`: the network + server jitter the interpolation has to absorb */
+  jitter = 0;
+  /** interpolation delay for other couriers / the world, and for things of your own that aren't predicted (ms) */
+  remoteDelay = INTERP_DELAY;
+  localDelay = 50;
+  /** snapshots that arrived per second (overlay) */
+  snapRate = 0;
+  private snapCount = 0;
+  private snapCountAt = 0;
   lobby: LobbyState | null = null;
   connected = false;
   name = '';
   private seq = 0;
   private inputTimer: number | null = null;
   rtt = 0;
-  lastSnapAt = 0;
-  private arrivals: number[] = [];
-  private underruns = 0;
-  private frames = 0;
-  private jitter = 0;
-  get interpolationDelay() { return Math.max(INTERP_DELAY, Math.min(180, 40 + this.jitter * 3)); }
-  private sentJumps: { seq: number; jump: number }[] = [];
-  pendingJump(jump: number) {
-    const slot = this.lobby?.you ?? -1, ack = this.latest()?.ack?.[slot];
-    if (ack === undefined) return false;
-    const accepted = this.sentJumps.find(i => i.seq === ack);
-    return !!accepted && jump > accepted.jump;
-  }
-  // Snapshots and input are superseding state. Never replay a backlog after congestion/reconnect.
-  diagnostics() { return { rtt: this.rtt, interpolationDelay: this.interpolationDelay, snapshotIntervals: this.arrivals.slice(), underruns: this.underruns, frames: this.frames }; }
+  /** server numbers for the perf overlay (only while it is open) */
+  serverPerf: { tickHz: number; simHz: number; stepMs: number; stepMaxMs: number; snapHz: number; snapBytes: number; bodies: number; colliders: number } | null = null;
+  private perfOn = false;
 
   constructor() {
     this.socket = io({ transports: ['websocket', 'polling'], reconnectionDelay: 500, reconnectionDelayMax: 3000 });
     this.socket.on('connect', () => {
       this.connected = true;
       this.socket.emit('hello', { token: this.token, name: this.name });
+      if (this.perfOn) this.socket.emit('perf:sub', true);
       this.connListeners.forEach((f) => f(true));
     });
     this.socket.on('disconnect', () => {
       this.connected = false;
-      this.sentJumps = [];
       this.connListeners.forEach((f) => f(false));
     });
     this.socket.on('lobby', (l: LobbyState) => {
@@ -129,7 +152,7 @@ class Net {
     this.socket.on('sfx', (n: string) => this.sfxListeners.forEach((f) => f(n)));
     this.socket.on('results', (r: Results) => this.resultsListeners.forEach((f) => f(r)));
     this.socket.on('start', () => this.resetBuffer());
-    input.onChange(() => this.sendInput());
+    this.socket.on('perf', (p) => (this.serverPerf = p));
     setInterval(() => {
       const t0 = performance.now();
       if (this.connected) this.socket.emit('ping:t', 0, () => (this.rtt = this.rtt * 0.7 + (performance.now() - t0) * 0.3));
@@ -159,6 +182,12 @@ class Net {
   dev(cmd: Record<string, unknown>) {
     this.socket.emit('dev', cmd);
   }
+  /** perf overlay open: ask the server for its tick / physics numbers once a second */
+  subscribePerf(on: boolean) {
+    this.perfOn = on;
+    if (!on) this.serverPerf = null;
+    this.socket.emit('perf:sub', on);
+  }
 
   on(type: 'ev', f: Listener<GameEvent>): () => void;
   on(type: 'lobby', f: Listener<LobbyState>): () => void;
@@ -166,9 +195,12 @@ class Net {
   on(type: 'sfx', f: Listener<string>): () => void;
   on(type: 'results', f: Listener<Results>): () => void;
   on(type: 'conn', f: Listener<boolean>): () => void;
+  on(type: 'snap', f: Listener<Snapshot>): () => void;
   on(type: string, f: Listener<any>) {
     const set =
-      type === 'ev'
+      type === 'snap'
+        ? this.snapListeners
+        : type === 'ev'
         ? this.evListeners
         : type === 'lobby'
           ? this.lobbyListeners
@@ -184,26 +216,40 @@ class Net {
   }
 
   // ---------------------------------------------------------------- input upload
-  private startInput() {
-    if (this.inputTimer !== null) return;
-    this.inputTimer = window.setInterval(() => this.sendInput(), 1000 / INPUT_HZ);
+  /** Called for every input tick (the prediction of your own courier steps on these). */
+  onTick(f: Listener<InputTick>) {
+    this.tickListeners.add(f);
+    return () => this.tickListeners.delete(f);
   }
 
-  private sendInput() {
-    if (!this.connected || !this.lobby || this.lobby.you < 0) return;
-    const i = input.sample();
-    const seq = this.seq++;
-    this.sentJumps.push({ seq, jump: i.jump });
-    if (this.sentJumps.length > 180) this.sentJumps.shift();
-    this.socket.volatile.emit('in', [seq, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use, Math.round(i.camYaw * 1000) / 1000]);
+  private startInput() {
+    if (this.inputTimer !== null) return;
+    this.nextTick = performance.now();
+    // a timer keeps inputs flowing at 60 Hz whatever the frame rate; each rendered frame also pumps (see frame.ts)
+    this.inputTimer = window.setInterval(() => this.pump(), 5);
+  }
+
+  /** Run every input tick that is due: sample the keys, send them, let the prediction step. */
+  pump(now = performance.now()) {
+    if (this.inputTimer === null) return;
+    // a hidden tab or a long stall: don't replay a backlog of ticks
+    if (now - this.nextTick > 250) this.nextTick = now - TICK_MS;
+    let n = 0;
+    while (now >= this.nextTick && n++ < 8) {
+      const at = this.nextTick;
+      this.nextTick += TICK_MS;
+      if (!this.connected || !this.lobby || this.lobby.you < 0) continue;
+      const i = input.sample();
+      const t: InputTick = { seq: this.seq++, at, ...i };
+      this.socket.emit('in', [t.seq, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use, Math.round(i.camYaw * 1000) / 1000]);
+      this.tickListeners.forEach((f) => f(t));
+    }
   }
 
   // ---------------------------------------------------------------- snapshots
   resetBuffer() {
     this.snaps = [];
     this.offset = null;
-    this.lastSnapAt = 0;
-    this.jitter = 0;
   }
 
   private onSnap(s: Snapshot) {
@@ -211,37 +257,67 @@ class Net {
     if (last && (s.mp !== last.mp || s.t < last.t - 1000)) this.resetBuffer(); // new round
     else if (last && s.t <= last.t) return;
     this.snaps.push(s);
-    const now = performance.now();
-    if (this.lastSnapAt) {
-      this.arrivals.push(now - this.lastSnapAt);
-      if (last) this.jitter += (Math.min(250, Math.abs(now - this.lastSnapAt - (s.t - last.t))) - this.jitter) * .1;
-      if (this.arrivals.length > 300) this.arrivals.shift();
-    }
-    this.lastSnapAt = now;
     if (this.snaps.length > MAX_SNAPS) this.snaps.shift();
-    const sample = s.t - performance.now();
+    const now = performance.now();
+    const sample = s.t - now;
     if (this.offset === null || Math.abs(sample - this.offset) > 250) this.offset = sample;
     else if (sample > this.offset) this.offset += (sample - this.offset) * 0.2;
     else this.offset += (sample - this.offset) * 0.02;
+    this.adaptDelay(Math.max(0, this.offset - sample));
+    this.snapCount++;
+    if (now - this.snapCountAt >= 1000) {
+      this.snapRate = (this.snapCount * 1000) / (now - this.snapCountAt);
+      this.snapCount = 0;
+      this.snapCountAt = now;
+    }
+    this.snapListeners.forEach((f) => f(s));
+  }
+
+  /**
+   * Interpolation delay = one snapshot interval + the recent p95 lateness + a margin: as short as the network allows,
+   * so other couriers and the world are shown as fresh as possible without running out of snapshots. It grows at once
+   * when the network gets worse and shrinks slowly (a ~5% slower playback) so nothing visibly jumps.
+   */
+  private adaptDelay(late: number) {
+    const L = this.late;
+    L.push(late);
+    if (L.length > 90) L.shift();
+    if (L.length < 10) return;
+    const sorted = [...L].sort((a, b) => a - b);
+    this.jitter = sorted[Math.floor(sorted.length * 0.95)];
+    const remote = Math.min(250, Math.max(55, SNAP_MS + this.jitter + 12));
+    const local = Math.min(220, Math.max(38, SNAP_MS + this.jitter + 4));
+    const ease = (cur: number, want: number) => (want > cur ? Math.min(want, cur + 8) : Math.max(want, cur - 1.6));
+    this.remoteDelay = ease(this.remoteDelay, remote);
+    this.localDelay = ease(this.localDelay, local);
   }
 
   latest(): Snapshot | null {
     return this.snaps[this.snaps.length - 1] ?? null;
   }
 
+  /** Test hook: is your own courier's render time past the newest snapshot right now (frozen on it)? */
+  localStarved(delay = this.localDelay): boolean | null {
+    const L = this.latest();
+    if (!L || this.offset === null) return null;
+    return performance.now() + this.offset - delay > L.t;
+  }
+
   /** Interpolated view of the world at render time. */
-  frame(delay = this.interpolationDelay): FrameView | null {
+  frame(delay = INTERP_DELAY): FrameView | null {
     const n = this.snaps.length;
     if (!n || this.offset === null) return null;
     const rt = performance.now() + this.offset - delay;
-    if (delay > 0) { this.frames++; if (rt > this.snaps[n - 1].t) this.underruns++; }
     const S = this.snaps;
     let a = S[0];
     let b = S[0];
+    /** past the newest snapshot (it's late): seconds to carry positions on along their velocities */
+    let ext = 0;
     if (rt <= S[0].t) {
       a = b = S[0];
     } else if (rt >= S[n - 1].t) {
       a = b = S[n - 1];
+      ext = Math.min(EXTRAPOLATE_MS, rt - S[n - 1].t) / 1000;
     } else {
       for (let i = n - 1; i > 0; i--) {
         if (S[i - 1].t <= rt) {
@@ -267,9 +343,9 @@ class Net {
       const grip = (f & PF_GRIP) !== 0;
       players.push({
         slot: pb[0],
-        x: LL(pa[1], pb[1]),
-        y: LL(pa[2], pb[2]),
-        z: LL(pa[3], pb[3]),
+        x: LL(pa[1], pb[1]) + pb[5] * ext,
+        y: LL(pa[2], pb[2]) + (pb[8] & PF_GROUNDED ? 0 : pb[6] * ext),
+        z: LL(pa[3], pb[3]) + pb[7] * ext,
         yaw: pa[4] + dy * kk,
         vx: L(pa[5], pb[5]),
         vy: L(pa[6], pb[6]),
@@ -304,9 +380,9 @@ class Net {
     const ql = Math.hypot(qx, qy, qz, qw) || 1;
     qx /= ql; qy /= ql; qz /= ql; qw /= ql;
     const artifact: ArtifactView = {
-      x: A[0] + (B[0] - A[0]) * ka,
-      y: A[1] + (B[1] - A[1]) * ka,
-      z: A[2] + (B[2] - A[2]) * ka,
+      x: A[0] + (B[0] - A[0]) * ka + B[8] * ext,
+      y: A[1] + (B[1] - A[1]) * ka + B[9] * ext,
+      z: A[2] + (B[2] - A[2]) * ka + B[10] * ext,
       qx,
       qy,
       qz,
@@ -339,6 +415,7 @@ class Net {
       if (!sameMap || !sa || sa.length !== sb.length) return sb;
       return sb.map((v, j) => {
         let delta = v - sa[j];
+        // a rotor's angle wraps: take the short way round
         if (j === 0 && definitions[i]?.kind === 'rotor') delta = Math.atan2(Math.sin(delta), Math.cos(delta));
         return sa[j] + delta * k;
       });

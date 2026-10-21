@@ -1397,3 +1397,19 @@ button.voted {
     min-height: 84px;
   }
 }
+
+/* dev performance overlay (F3) */
+.perf-overlay {
+  position: fixed;
+  left: 8px;
+  top: 44px;
+  z-index: 60;
+  margin: 0;
+  padding: 6px 9px;
+  font: 11px/1.45 ui-monospace, Menlo, monospace;
+  color: #e9f6ff;
+  background: rgba(20, 16, 40, 0.72);
+  border-radius: 8px;
+  pointer-events: none;
+  white-space: pre;
+}

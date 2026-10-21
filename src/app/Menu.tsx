@@ -33,13 +33,19 @@ export function AudioToggle() {
   );
 }
 
+const QUALITY_TIP: Record<Quality, string> = {
+  high: 'Sharpest picture and every effect (a strong graphics card)',
+  medium: 'Recommended: every effect at a lighter resolution',
+  low: 'No post effects: for slow computers',
+};
+
 function QualityPicker() {
   const [q, setQ] = useState<Quality>(quality.level);
   useEffect(() => quality.on(setQ), []);
   return (
     <div className="seg">
       {(['high', 'medium', 'low'] as Quality[]).map((v) => (
-        <button key={v} className={'seg-btn' + (q === v ? ' on' : '')} onClick={() => quality.set(v)}>
+        <button key={v} className={'seg-btn' + (q === v ? ' on' : '')} title={QUALITY_TIP[v]} onClick={() => quality.set(v)}>
           {v}
         </button>
       ))}
