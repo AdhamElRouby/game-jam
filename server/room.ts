@@ -362,7 +362,7 @@ export class Room {
     }
     if (sim.finished && this.phase === 'playing') this.onFinished(sim);
     if (this.tick % SNAP_EVERY === 0 && this.phase !== 'finished') {
-      this.io.to(this.id).emit('snap', sim.snapshot(this.phase));
+      this.io.to(this.id).volatile.emit('snap', { ...sim.snapshot(this.phase), ack: this.members.map(m => m?.lastSeq ?? -1) });
     }
     // keep lobby timers fresh twice a second during timed phases
     if (this.tick % 30 === 0 && (this.phase === 'paused' || this.phase === 'countdown' || this.phase === 'resuming' || this.graceEndsAt)) {

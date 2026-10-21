@@ -1,0 +1,69 @@
+{
+  "url": "http://127.0.0.1:3000",
+  "results": [
+    {
+      "serverMs": 312.6000000014901,
+      "viewMs": 312.6000000014901,
+      "stopServerMs": 174.39999999850988,
+      "stopViewMs": 231.69999999552965,
+      "distance": 1.98,
+      "postReleaseTravel": 0.7941441750515357
+    },
+    {
+      "serverMs": 126.10000000149012,
+      "viewMs": 126.10000000149012,
+      "stopServerMs": 188.20000000298023,
+      "stopViewMs": 214.60000000149012,
+      "distance": 2.97,
+      "postReleaseTravel": 0.7695590166807955
+    },
+    {
+      "serverMs": 53.5,
+      "viewMs": 91.60000000149012,
+      "stopServerMs": 164.70000000298023,
+      "stopViewMs": 208.89999999850988,
+      "distance": 3.15,
+      "postReleaseTravel": 0.7032059275261213
+    },
+    {
+      "serverMs": 85.10000000149012,
+      "viewMs": 116.39999999850988,
+      "stopServerMs": 149.89999999850988,
+      "stopViewMs": 209.89999999850988,
+      "distance": 2.97,
+      "postReleaseTravel": 0.6435250800901975
+    },
+    {
+      "serverMs": 84.5,
+      "viewMs": 111.10000000149012,
+      "stopServerMs": 161.79999999701977,
+      "stopViewMs": 219.60000000149012,
+      "distance": 3.06,
+      "postReleaseTravel": 0.6531973231923067
+    },
+    {
+      "serverMs": 57.70000000298023,
+      "viewMs": 87.30000000447035,
+      "stopServerMs": 174.10000000149012,
+      "stopViewMs": 205.60000000149012,
+      "distance": 2.97,
+      "postReleaseTravel": 0.6825098056386882
+    },
+    {
+      "serverMs": 68.30000000447035,
+      "viewMs": 107,
+      "stopServerMs": 135.69999999552965,
+      "stopViewMs": 206,
+      "distance": 3.06,
+      "postReleaseTravel": 0.6927972049621194
+    },
+    {
+      "serverMs": 127.10000000149012,
+      "viewMs": 175.5,
+      "stopServerMs": 169.39999999850988,
+      "stopViewMs": 205,
+      "distance": 2.88,
+      "postReleaseTravel": 0.6654069518260322
+    }
+  ]
+}

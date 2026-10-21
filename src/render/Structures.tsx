@@ -26,7 +26,7 @@ export function KitMeshes({ make, cast = true, receive = true }: { make: () => K
   return (
     <group>
       {meshes.map((m, i) => (
-        <mesh key={i} geometry={m.geo} material={m.mat} castShadow={cast} receiveShadow={receive} />
+        <mesh key={i} geometry={m.geo} material={m.mat} matrixAutoUpdate={false} castShadow={cast} receiveShadow={receive} />
       ))}
     </group>
   );

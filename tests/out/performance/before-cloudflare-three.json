@@ -1,0 +1,1442 @@
+{
+  "url": "https://lakes-says-automated-explaining.trycloudflare.com",
+  "label": "before-cloudflare-three",
+  "players": 3,
+  "viewport": "1280x720",
+  "measuredAt": "2026-10-21T10:53:09.012Z",
+  "gpu": {
+    "devices": [
+      {
+        "vendorId": 4098,
+        "deviceId": 5688,
+        "subSysId": 979179434,
+        "revision": 197,
+        "vendorString": "",
+        "deviceString": "AMD Radeon(TM) Graphics",
+        "driverVendor": "AMD",
+        "driverVersion": "31.0.21921.13001"
+      },
+      {
+        "vendorId": 4318,
+        "deviceId": 9632,
+        "subSysId": 979179434,
+        "revision": 161,
+        "vendorString": "",
+        "deviceString": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+        "driverVendor": "",
+        "driverVersion": "32.0.15.5599"
+      },
+      {
+        "vendorId": 5140,
+        "deviceId": 140,
+        "subSysId": 0,
+        "revision": 0,
+        "vendorString": "",
+        "deviceString": "Microsoft Basic Render Driver",
+        "driverVendor": "",
+        "driverVersion": "10.0.26100.9711"
+      }
+    ],
+    "auxAttributes": {
+      "amdSwitchable": false,
+      "bgra8OverlaySupport": "SOFTWARE",
+      "canSupportThreadedTextureMailbox": false,
+      "directComposition": true,
+      "directMLFeatureLevel": "Not supported",
+      "directRenderingVersion": "",
+      "displayType": "ANGLE_D3D11",
+      "dx12FeatureLevel": "Not supported",
+      "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_size GL_ANGLE_multiview_multisample GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_provoking_vertex GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_robust_client_memory GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_APPLE_clip_distance GL_ARM_rgba8 GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_external_wrap_modes GL_EXT_base_instance GL_EXT_blend_func_extended GL_EXT_blend_minmax GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_depth GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_render_snorm GL_EXT_robustness GL_EXT_sRGB GL_EXT_shader_texture_lod GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_EXT_texture_rg GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_debug GL_KHR_parallel_shader_compile GL_KHR_robustness GL_NV_EGL_stream_consumer_external GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_depth24 GL_OES_depth32 GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_border_clamp GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OVR_multiview GL_OVR_multiview2 ",
+      "glImplementationParts": "(gl=egl-angle,angle=d3d11)",
+      "glRenderer": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638) Direct3D11 vs_5_0 ps_5_0, D3D11-31.0.21921.13001)",
+      "glResetNotificationStrategy": 33362,
+      "glVendor": "Google Inc. (AMD)",
+      "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28854 git hash: cccf60cde32c)",
+      "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_d3d_share_handle_client_buffer EGL_ANGLE_d3d_texture_client_buffer EGL_ANGLE_surface_d3d_texture_2d_share_handle EGL_ANGLE_query_surface_pointer EGL_ANGLE_window_fixed_size EGL_ANGLE_keyed_mutex EGL_ANGLE_surface_orientation EGL_ANGLE_direct_composition EGL_NV_post_sub_buffer EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_stream EGL_KHR_stream_consumer_gltexture EGL_NV_stream_consumer_gltexture_yuv EGL_ANGLE_stream_producer_d3d_texture EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_CHROMIUM_sync_control EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_image_d3d11_texture EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_ANGLE_memory_usage_report ",
+      "glWsVendor": "Google Inc. (AMD)",
+      "glWsVersion": "1.5 (ANGLE 2.1.28854 git hash: cccf60cde32c)",
+      "inProcessGpu": false,
+      "initializationTime": 0.188097,
+      "isAsan": false,
+      "isClangCoverage": false,
+      "jpegDecodeAcceleratorSupported": false,
+      "maxMsaaSamples": "8",
+      "nv12OverlaySupport": "SCALING",
+      "optimus": false,
+      "p010OverlaySupport": "SCALING",
+      "passthroughCmdDecoder": true,
+      "pixelShaderVersion": "5.0",
+      "processCrashCount": 0,
+      "rgb10a2OverlaySupport": "SCALING",
+      "sandboxed": false,
+      "skiaBackendType": "GaneshGL",
+      "subpixelFontRendering": true,
+      "supportsD3dSharedImages": true,
+      "supportsDirectML": false,
+      "supportsDx12": false,
+      "supportsOverlays": true,
+      "supportsVulkan": false,
+      "targetCpuBits": 64,
+      "vertexShaderVersion": "5.0",
+      "visibilityCallbackCallCount": 0,
+      "vulkanVersion": "Not supported",
+      "yuy2OverlaySupport": "SOFTWARE"
+    },
+    "featureStatus": {
+      "2d_canvas": "enabled",
+      "direct_rendering_display_compositor": "disabled_off_ok",
+      "gpu_compositing": "enabled",
+      "multiple_raster_threads": "enabled_on",
+      "opengl": "enabled_on",
+      "rasterization": "enabled",
+      "raw_draw": "disabled_off_ok",
+      "skia_graphite": "disabled_off",
+      "trees_in_viz": "disabled_off",
+      "video_decode": "enabled",
+      "video_encode": "enabled",
+      "webgl": "enabled",
+      "webgpu": "enabled",
+      "webnn": "disabled_off"
+    },
+    "driverBugWorkarounds": [
+      "disable_d3d11_vp9_ksvc_decoding",
+      "disable_d3d12_video_encoder",
+      "disable_direct_composition_sw_video_overlays",
+      "disable_h264_accelerator_sw_brc",
+      "disable_nv12_dynamic_textures",
+      "disable_video_overlay_if_moving",
+      "disable_vp_auto_hdr",
+      "disable_vp_super_resolution",
+      "enable_webgl_timer_query_extensions",
+      "exit_on_context_lost",
+      "force_rgb10a2_overlay_support",
+      "disabled_extension_GL_KHR_blend_equation_advanced",
+      "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+    ],
+    "videoDecoding": [],
+    "videoEncoding": []
+  },
+  "results": [
+    {
+      "world": 0,
+      "samples": [
+        {
+          "fps": 8.2759533898305,
+          "frameMs": {
+            "n": 50,
+            "median": 124.80000000000291,
+            "p95": 158.40000000000146,
+            "max": 174.90000000000146
+          },
+          "calls": {
+            "n": 50,
+            "median": 835,
+            "p95": 835,
+            "max": 835
+          },
+          "triangles": {
+            "n": 50,
+            "median": 830162,
+            "p95": 830162,
+            "max": 830162
+          },
+          "renderSubmitMs": {
+            "n": 1530,
+            "median": 0,
+            "p95": 5.799999997019768,
+            "max": 44.900000005960464
+          },
+          "snapshotArrivalMs": {
+            "n": 199,
+            "median": 26.30000000447035,
+            "p95": 81.79999999701977,
+            "max": 210.40000000596046
+          },
+          "snapshotStepMs": {
+            "n": 200,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 113.40000000596046,
+            "p95": 170,
+            "max": 211.59999999403954
+          },
+          "longTasks": {
+            "n": 14,
+            "median": 73,
+            "p95": 89,
+            "max": 89
+          },
+          "memory": {
+            "geometries": 615,
+            "textures": 89
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 8.287338604080691,
+          "frameMs": {
+            "n": 50,
+            "median": 116.79999999999563,
+            "p95": 150.20000000000437,
+            "max": 183.29999999999563
+          },
+          "calls": {
+            "n": 50,
+            "median": 844,
+            "p95": 844,
+            "max": 844
+          },
+          "triangles": {
+            "n": 50,
+            "median": 833158,
+            "p95": 833158,
+            "max": 833158
+          },
+          "renderSubmitMs": {
+            "n": 1530,
+            "median": 0,
+            "p95": 5.199999995529652,
+            "max": 28.30000000447035
+          },
+          "snapshotArrivalMs": {
+            "n": 180,
+            "median": 31.899999998509884,
+            "p95": 77,
+            "max": 178.89999999850988
+          },
+          "snapshotStepMs": {
+            "n": 181,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 99.39999999850988,
+            "p95": 154.29999999701977,
+            "max": 157.89999999850988
+          },
+          "longTasks": {
+            "n": 6,
+            "median": 55,
+            "p95": 60,
+            "max": 60
+          },
+          "memory": {
+            "geometries": 617,
+            "textures": 89
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 8.223822231173322,
+          "frameMs": {
+            "n": 49,
+            "median": 116.79999999999927,
+            "p95": 158.29999999999563,
+            "max": 174.90000000000146
+          },
+          "calls": {
+            "n": 49,
+            "median": 832,
+            "p95": 832,
+            "max": 832
+          },
+          "triangles": {
+            "n": 49,
+            "median": 801240,
+            "p95": 801240,
+            "max": 801240
+          },
+          "renderSubmitMs": {
+            "n": 1500,
+            "median": 0,
+            "p95": 5.100000001490116,
+            "max": 29.299999997019768
+          },
+          "snapshotArrivalMs": {
+            "n": 179,
+            "median": 31.19999999552965,
+            "p95": 77.5,
+            "max": 141.80000000447035
+          },
+          "snapshotStepMs": {
+            "n": 180,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 101.90000000596046,
+            "p95": 191.09999999403954,
+            "max": 233.39999999850988
+          },
+          "longTasks": {
+            "n": 8,
+            "median": 54,
+            "p95": 66,
+            "max": 66
+          },
+          "memory": {
+            "geometries": 616,
+            "textures": 89
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        }
+      ],
+      "mainThread": {
+        "Timestamp": 6.81130299999495,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 0,
+        "Frames": 0,
+        "JSEventListeners": 365,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 0,
+        "Resources": 0,
+        "ContextLifecycleStateObservers": 1,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 0,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 0,
+        "LayoutCount": 52,
+        "RecalcStyleCount": 52,
+        "LayoutDuration": 0.033439,
+        "RecalcStyleDuration": 0.026223999999999997,
+        "DevToolsCommandDuration": 0.6269530000000001,
+        "ScriptDuration": 2.684657,
+        "V8CompileDuration": 0,
+        "TaskDuration": 3.5949690000000003,
+        "TaskOtherDuration": 0.223696,
+        "ThreadTime": 3.273689,
+        "ProcessTime": 4.532173,
+        "JSHeapUsedSize": 507236,
+        "JSHeapTotalSize": 3670016,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 0,
+        "NavigationStart": 0
+      },
+      "server": {
+        "ok": true,
+        "rooms": 1,
+        "sessions": 3,
+        "playing": 1
+      }
+    },
+    {
+      "world": 1,
+      "samples": [
+        {
+          "fps": 9.707112970711297,
+          "frameMs": {
+            "n": 58,
+            "median": 100,
+            "p95": 125.19999999999709,
+            "max": 133.39999999999418
+          },
+          "calls": {
+            "n": 58,
+            "median": 728,
+            "p95": 728,
+            "max": 728
+          },
+          "triangles": {
+            "n": 58,
+            "median": 788644,
+            "p95": 788644,
+            "max": 788644
+          },
+          "renderSubmitMs": {
+            "n": 1770,
+            "median": 0,
+            "p95": 4.199999995529652,
+            "max": 28
+          },
+          "snapshotArrivalMs": {
+            "n": 186,
+            "median": 31.5,
+            "p95": 66.30000000447035,
+            "max": 79.79999999701977
+          },
+          "snapshotStepMs": {
+            "n": 187,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 97.29999999701977,
+            "p95": 121.90000000596046,
+            "max": 122.39999999850988
+          },
+          "longTasks": {
+            "n": 1,
+            "median": 56,
+            "p95": 56,
+            "max": 56
+          },
+          "memory": {
+            "geometries": 620,
+            "textures": 89
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 9.765625000000002,
+          "frameMs": {
+            "n": 59,
+            "median": 100,
+            "p95": 125,
+            "max": 133.3000000000029
+          },
+          "calls": {
+            "n": 59,
+            "median": 746,
+            "p95": 746,
+            "max": 746
+          },
+          "triangles": {
+            "n": 59,
+            "median": 768166,
+            "p95": 768166,
+            "max": 768166
+          },
+          "renderSubmitMs": {
+            "n": 1800,
+            "median": 0,
+            "p95": 4.199999995529652,
+            "max": 24.899999998509884
+          },
+          "snapshotArrivalMs": {
+            "n": 181,
+            "median": 33.100000001490116,
+            "p95": 65.39999999850988,
+            "max": 72.20000000298023
+          },
+          "snapshotStepMs": {
+            "n": 182,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 95.5,
+            "p95": 117.60000000149012,
+            "max": 118.09999999403954
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 622,
+            "textures": 89
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 9.779059552815204,
+          "frameMs": {
+            "n": 59,
+            "median": 100,
+            "p95": 124.89999999999418,
+            "max": 125.19999999999709
+          },
+          "calls": {
+            "n": 59,
+            "median": 705,
+            "p95": 705,
+            "max": 705
+          },
+          "triangles": {
+            "n": 59,
+            "median": 786972,
+            "p95": 786972,
+            "max": 786972
+          },
+          "renderSubmitMs": {
+            "n": 1800,
+            "median": 0,
+            "p95": 3.899999998509884,
+            "max": 24.899999998509884
+          },
+          "snapshotArrivalMs": {
+            "n": 180,
+            "median": 33,
+            "p95": 63.399999998509884,
+            "max": 73.5
+          },
+          "snapshotStepMs": {
+            "n": 181,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 94.69999999552965,
+            "p95": 117.39999999850988,
+            "max": 129
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 624,
+            "textures": 89
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        }
+      ],
+      "mainThread": {
+        "Timestamp": 6.474256000001333,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 0,
+        "Frames": 0,
+        "JSEventListeners": 380,
+        "LayoutObjects": 15,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 16,
+        "Resources": 0,
+        "ContextLifecycleStateObservers": 1,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 0,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 0,
+        "LayoutCount": 61,
+        "RecalcStyleCount": 61,
+        "LayoutDuration": 0.036139000000000004,
+        "RecalcStyleDuration": 0.014873000000000004,
+        "DevToolsCommandDuration": 0.2910480000000001,
+        "ScriptDuration": 2.3446059999999997,
+        "V8CompileDuration": 0,
+        "TaskDuration": 2.8989599999999998,
+        "TaskOtherDuration": 0.21229400000000004,
+        "ThreadTime": 2.8423159999999994,
+        "ProcessTime": 3.6613380000000006,
+        "JSHeapUsedSize": -274888,
+        "JSHeapTotalSize": 2621440,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 0,
+        "NavigationStart": 0
+      },
+      "server": {
+        "ok": true,
+        "rooms": 1,
+        "sessions": 3,
+        "playing": 1
+      }
+    },
+    {
+      "world": 2,
+      "samples": [
+        {
+          "fps": 11.166666666666666,
+          "frameMs": {
+            "n": 67,
+            "median": 83.5,
+            "p95": 108.30000000000291,
+            "max": 124.5
+          },
+          "calls": {
+            "n": 67,
+            "median": 625,
+            "p95": 625,
+            "max": 625
+          },
+          "triangles": {
+            "n": 67,
+            "median": 654950,
+            "p95": 654950,
+            "max": 654950
+          },
+          "renderSubmitMs": {
+            "n": 2040,
+            "median": 0,
+            "p95": 3.2999999970197678,
+            "max": 22.299999997019768
+          },
+          "snapshotArrivalMs": {
+            "n": 187,
+            "median": 33,
+            "p95": 60.599999994039536,
+            "max": 130.5
+          },
+          "snapshotStepMs": {
+            "n": 188,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 96.69999999552965,
+            "p95": 127.30000000447035,
+            "max": 132
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 608,
+            "textures": 88
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 11.166666666666666,
+          "frameMs": {
+            "n": 67,
+            "median": 91.5,
+            "p95": 108.39999999999418,
+            "max": 116.80000000000291
+          },
+          "calls": {
+            "n": 67,
+            "median": 624,
+            "p95": 624,
+            "max": 624
+          },
+          "triangles": {
+            "n": 67,
+            "median": 659834,
+            "p95": 659834,
+            "max": 659834
+          },
+          "renderSubmitMs": {
+            "n": 2040,
+            "median": 0,
+            "p95": 3.3000000044703484,
+            "max": 22
+          },
+          "snapshotArrivalMs": {
+            "n": 180,
+            "median": 33.399999998509884,
+            "p95": 61.100000001490116,
+            "max": 101.5
+          },
+          "snapshotStepMs": {
+            "n": 181,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 93.89999999850988,
+            "p95": 98.70000000298023,
+            "max": 104.10000000149012
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 610,
+            "textures": 88
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 11.228987547555606,
+          "frameMs": {
+            "n": 67,
+            "median": 83.5,
+            "p95": 116.19999999999709,
+            "max": 116.69999999999709
+          },
+          "calls": {
+            "n": 67,
+            "median": 612,
+            "p95": 612,
+            "max": 612
+          },
+          "triangles": {
+            "n": 67,
+            "median": 657106,
+            "p95": 657106,
+            "max": 657106
+          },
+          "renderSubmitMs": {
+            "n": 2040,
+            "median": 0,
+            "p95": 3.2999999970197678,
+            "max": 21.600000001490116
+          },
+          "snapshotArrivalMs": {
+            "n": 178,
+            "median": 32.5,
+            "p95": 60.69999999552965,
+            "max": 96.10000000149012
+          },
+          "snapshotStepMs": {
+            "n": 179,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 94.89999999850988,
+            "p95": 130.5,
+            "max": 147.5
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 610,
+            "textures": 88
+          },
+          "programs": 53,
+          "renderer": "WebKit WebGL"
+        }
+      ],
+      "mainThread": {
+        "Timestamp": 6.462070000001404,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 0,
+        "Frames": 0,
+        "JSEventListeners": 370,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 0,
+        "Resources": 0,
+        "ContextLifecycleStateObservers": 1,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 0,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 0,
+        "LayoutCount": 70,
+        "RecalcStyleCount": 70,
+        "LayoutDuration": 0.038599999999999995,
+        "RecalcStyleDuration": 0.015242000000000006,
+        "DevToolsCommandDuration": 0.31826299999999996,
+        "ScriptDuration": 2.3085829999999987,
+        "V8CompileDuration": 0,
+        "TaskDuration": 2.907323,
+        "TaskOtherDuration": 0.22663500000000003,
+        "ThreadTime": 2.8573819999999994,
+        "ProcessTime": 3.5946369999999987,
+        "JSHeapUsedSize": -505548,
+        "JSHeapTotalSize": 1835008,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 0,
+        "NavigationStart": 0
+      },
+      "server": {
+        "ok": true,
+        "rooms": 1,
+        "sessions": 4,
+        "playing": 1
+      }
+    },
+    {
+      "world": 3,
+      "samples": [
+        {
+          "fps": 12.614107883817427,
+          "frameMs": {
+            "n": 76,
+            "median": 75.09999999999127,
+            "p95": 100,
+            "max": 108.30000000000291
+          },
+          "calls": {
+            "n": 76,
+            "median": 332,
+            "p95": 332,
+            "max": 332
+          },
+          "triangles": {
+            "n": 76,
+            "median": 356385,
+            "p95": 356385,
+            "max": 356385
+          },
+          "renderSubmitMs": {
+            "n": 2310,
+            "median": 0,
+            "p95": 2.7999999970197678,
+            "max": 14.600000001490116
+          },
+          "snapshotArrivalMs": {
+            "n": 187,
+            "median": 32.899999998509884,
+            "p95": 51.69999999552965,
+            "max": 95
+          },
+          "snapshotStepMs": {
+            "n": 188,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 96.5,
+            "p95": 128.20000000298023,
+            "max": 170.10000000149012
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 596,
+            "textures": 85
+          },
+          "programs": 75,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 12.596545894520485,
+          "frameMs": {
+            "n": 76,
+            "median": 75.10000000000582,
+            "p95": 100,
+            "max": 108.40000000000873
+          },
+          "calls": {
+            "n": 76,
+            "median": 334,
+            "p95": 334,
+            "max": 334
+          },
+          "triangles": {
+            "n": 76,
+            "median": 356525,
+            "p95": 356525,
+            "max": 356525
+          },
+          "renderSubmitMs": {
+            "n": 2310,
+            "median": 0,
+            "p95": 2.899999998509884,
+            "max": 13.399999998509884
+          },
+          "snapshotArrivalMs": {
+            "n": 181,
+            "median": 33.600000001490116,
+            "p95": 53,
+            "max": 76.5
+          },
+          "snapshotStepMs": {
+            "n": 182,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 94.09999999403954,
+            "p95": 111.20000000298023,
+            "max": 144.79999999701977
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 599,
+            "textures": 85
+          },
+          "programs": 75,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 12.666455559074004,
+          "frameMs": {
+            "n": 76,
+            "median": 75.10000000000582,
+            "p95": 100.20000000001164,
+            "max": 108.30000000000291
+          },
+          "calls": {
+            "n": 76,
+            "median": 333,
+            "p95": 333,
+            "max": 333
+          },
+          "triangles": {
+            "n": 76,
+            "median": 356265,
+            "p95": 356265,
+            "max": 356265
+          },
+          "renderSubmitMs": {
+            "n": 2310,
+            "median": 0,
+            "p95": 2.7000000029802322,
+            "max": 13
+          },
+          "snapshotArrivalMs": {
+            "n": 179,
+            "median": 33.100000001490116,
+            "p95": 53,
+            "max": 92.29999999701977
+          },
+          "snapshotStepMs": {
+            "n": 180,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 94.5,
+            "p95": 125.79999999701977,
+            "max": 141.5
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 601,
+            "textures": 85
+          },
+          "programs": 75,
+          "renderer": "WebKit WebGL"
+        }
+      ],
+      "mainThread": {
+        "Timestamp": 6.426970000000438,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 0,
+        "Frames": 0,
+        "JSEventListeners": 370,
+        "LayoutObjects": 3,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 2,
+        "Resources": 0,
+        "ContextLifecycleStateObservers": 1,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 0,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 0,
+        "LayoutCount": 78,
+        "RecalcStyleCount": 78,
+        "LayoutDuration": 0.03795899999999999,
+        "RecalcStyleDuration": 0.01746500000000001,
+        "DevToolsCommandDuration": 0.29432100000000005,
+        "ScriptDuration": 1.816829000000002,
+        "V8CompileDuration": 0,
+        "TaskDuration": 2.3812089999999984,
+        "TaskOtherDuration": 0.2146349999999999,
+        "ThreadTime": 2.383305,
+        "ProcessTime": 3.1671460000000025,
+        "JSHeapUsedSize": 20904032,
+        "JSHeapTotalSize": 0,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 0,
+        "NavigationStart": 0
+      },
+      "server": {
+        "ok": true,
+        "rooms": 1,
+        "sessions": 4,
+        "playing": 1
+      }
+    },
+    {
+      "world": 4,
+      "samples": [
+        {
+          "fps": 12.815605079639857,
+          "frameMs": {
+            "n": 77,
+            "median": 75,
+            "p95": 91.80000000000291,
+            "max": 116.80000000000291
+          },
+          "calls": {
+            "n": 77,
+            "median": 346,
+            "p95": 346,
+            "max": 346
+          },
+          "triangles": {
+            "n": 77,
+            "median": 283882,
+            "p95": 283882,
+            "max": 283882
+          },
+          "renderSubmitMs": {
+            "n": 2340,
+            "median": 0,
+            "p95": 2.899999998509884,
+            "max": 15.399999998509884
+          },
+          "snapshotArrivalMs": {
+            "n": 187,
+            "median": 32.899999998509884,
+            "p95": 55.70000000298023,
+            "max": 121.60000000149012
+          },
+          "snapshotStepMs": {
+            "n": 188,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 100.5,
+            "p95": 129.30000000447035,
+            "max": 176
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 620,
+            "textures": 90
+          },
+          "programs": 69,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 12.815391784834546,
+          "frameMs": {
+            "n": 77,
+            "median": 75.10000000000582,
+            "p95": 91.69999999999709,
+            "max": 108.5
+          },
+          "calls": {
+            "n": 77,
+            "median": 348,
+            "p95": 348,
+            "max": 348
+          },
+          "triangles": {
+            "n": 77,
+            "median": 284098,
+            "p95": 284098,
+            "max": 284098
+          },
+          "renderSubmitMs": {
+            "n": 2340,
+            "median": 0,
+            "p95": 2.9000000059604645,
+            "max": 15.600000001490116
+          },
+          "snapshotArrivalMs": {
+            "n": 180,
+            "median": 33.099999994039536,
+            "p95": 54.399999998509884,
+            "max": 131.29999999701977
+          },
+          "snapshotStepMs": {
+            "n": 181,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 94.10000000149012,
+            "p95": 107.89999999850988,
+            "max": 192.19999999552965
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 617,
+            "textures": 90
+          },
+          "programs": 69,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 12.868937393455239,
+          "frameMs": {
+            "n": 77,
+            "median": 75,
+            "p95": 91.79999999998836,
+            "max": 116.60000000000582
+          },
+          "calls": {
+            "n": 77,
+            "median": 352,
+            "p95": 352,
+            "max": 352
+          },
+          "triangles": {
+            "n": 77,
+            "median": 285286,
+            "p95": 285286,
+            "max": 285286
+          },
+          "renderSubmitMs": {
+            "n": 2340,
+            "median": 0,
+            "p95": 3,
+            "max": 14.199999995529652
+          },
+          "snapshotArrivalMs": {
+            "n": 179,
+            "median": 32.20000000298023,
+            "p95": 56.899999998509884,
+            "max": 123.80000000447035
+          },
+          "snapshotStepMs": {
+            "n": 180,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 96.60000000149012,
+            "p95": 123.5,
+            "max": 174.69999999552965
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 624,
+            "textures": 90
+          },
+          "programs": 69,
+          "renderer": "WebKit WebGL"
+        }
+      ],
+      "mainThread": {
+        "Timestamp": 6.4270959999994375,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 0,
+        "Frames": 0,
+        "JSEventListeners": 365,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 0,
+        "Resources": 0,
+        "ContextLifecycleStateObservers": 1,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 0,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 0,
+        "LayoutCount": 80,
+        "RecalcStyleCount": 80,
+        "LayoutDuration": 0.039689,
+        "RecalcStyleDuration": 0.01865,
+        "DevToolsCommandDuration": 0.30043200000000003,
+        "ScriptDuration": 2.0683420000000012,
+        "V8CompileDuration": 0,
+        "TaskDuration": 2.6622529999999998,
+        "TaskOtherDuration": 0.2351399999999999,
+        "ThreadTime": 2.638332000000002,
+        "ProcessTime": 3.433592999999995,
+        "JSHeapUsedSize": 21662568,
+        "JSHeapTotalSize": 0,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 0,
+        "NavigationStart": 0
+      },
+      "server": {
+        "ok": true,
+        "rooms": 1,
+        "sessions": 3,
+        "playing": 1
+      }
+    },
+    {
+      "world": 5,
+      "samples": [
+        {
+          "fps": 11.000183336388924,
+          "frameMs": {
+            "n": 66,
+            "median": 91.5,
+            "p95": 116.5,
+            "max": 141.5
+          },
+          "calls": {
+            "n": 66,
+            "median": 553,
+            "p95": 553,
+            "max": 553
+          },
+          "triangles": {
+            "n": 66,
+            "median": 642690,
+            "p95": 642690,
+            "max": 642690
+          },
+          "renderSubmitMs": {
+            "n": 2010,
+            "median": 0,
+            "p95": 3.6999999955296516,
+            "max": 28.799999997019768
+          },
+          "snapshotArrivalMs": {
+            "n": 187,
+            "median": 31.5,
+            "p95": 60,
+            "max": 123.89999999850988
+          },
+          "snapshotStepMs": {
+            "n": 188,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 100.10000000149012,
+            "p95": 122,
+            "max": 157.5
+          },
+          "longTasks": {
+            "n": 1,
+            "median": 67,
+            "p95": 67,
+            "max": 67
+          },
+          "memory": {
+            "geometries": 576,
+            "textures": 87
+          },
+          "programs": 71,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 10.96946831319492,
+          "frameMs": {
+            "n": 66,
+            "median": 91.59999999999127,
+            "p95": 108.69999999999709,
+            "max": 133.1999999999971
+          },
+          "calls": {
+            "n": 66,
+            "median": 558,
+            "p95": 558,
+            "max": 558
+          },
+          "triangles": {
+            "n": 66,
+            "median": 638858,
+            "p95": 638858,
+            "max": 638858
+          },
+          "renderSubmitMs": {
+            "n": 2010,
+            "median": 0,
+            "p95": 3.7000000029802322,
+            "max": 21.899999998509884
+          },
+          "snapshotArrivalMs": {
+            "n": 181,
+            "median": 33.19999999552965,
+            "p95": 58.20000000298023,
+            "max": 110.19999999552965
+          },
+          "snapshotStepMs": {
+            "n": 182,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 99.20000000298023,
+            "p95": 125.89999999850988,
+            "max": 171
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 624,
+            "textures": 89
+          },
+          "programs": 71,
+          "renderer": "WebKit WebGL"
+        },
+        {
+          "fps": 10.970278982633193,
+          "frameMs": {
+            "n": 65,
+            "median": 91.60000000000582,
+            "p95": 108.60000000000582,
+            "max": 133.3000000000029
+          },
+          "calls": {
+            "n": 65,
+            "median": 481,
+            "p95": 481,
+            "max": 481
+          },
+          "triangles": {
+            "n": 65,
+            "median": 628562,
+            "p95": 628562,
+            "max": 628562
+          },
+          "renderSubmitMs": {
+            "n": 1980,
+            "median": 0,
+            "p95": 3.600000001490116,
+            "max": 21.399999998509884
+          },
+          "snapshotArrivalMs": {
+            "n": 179,
+            "median": 33.5,
+            "p95": 62.399999998509884,
+            "max": 94.5
+          },
+          "snapshotStepMs": {
+            "n": 180,
+            "median": 33,
+            "p95": 34,
+            "max": 34
+          },
+          "rttMs": {
+            "n": 23,
+            "median": 95.69999999552965,
+            "p95": 122.90000000596046,
+            "max": 137.5
+          },
+          "longTasks": {
+            "n": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "memory": {
+            "geometries": 581,
+            "textures": 87
+          },
+          "programs": 71,
+          "renderer": "WebKit WebGL"
+        }
+      ],
+      "mainThread": {
+        "Timestamp": 6.437892000001739,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 0,
+        "Frames": 0,
+        "JSEventListeners": 375,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 0,
+        "Resources": 0,
+        "ContextLifecycleStateObservers": 1,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 0,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 0,
+        "LayoutCount": 69,
+        "RecalcStyleCount": 69,
+        "LayoutDuration": 0.03788400000000003,
+        "RecalcStyleDuration": 0.01599199999999998,
+        "DevToolsCommandDuration": 0.30990300000000004,
+        "ScriptDuration": 2.354447999999998,
+        "V8CompileDuration": 0,
+        "TaskDuration": 2.937995000000001,
+        "TaskOtherDuration": 0.21976799999999974,
+        "ThreadTime": 2.8676519999999996,
+        "ProcessTime": 3.818189999999994,
+        "JSHeapUsedSize": 24473380,
+        "JSHeapTotalSize": 0,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 0,
+        "NavigationStart": 0
+      },
+      "server": {
+        "ok": true,
+        "rooms": 1,
+        "sessions": 3,
+        "playing": 1
+      }
+    }
+  ],
+  "errors": []
+}

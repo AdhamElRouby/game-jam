@@ -91,6 +91,7 @@ export function InstancedModel({ id, items, shadow = true }: { id: string; items
       im.castShadow = shadow;
       im.receiveShadow = true;
       im.computeBoundingSphere();
+      im.matrixAutoUpdate = false; // placement lives in instanceMatrix; this mesh's local transform is identity
       return im;
     });
   }, [parts, items, shadow]);
@@ -122,6 +123,7 @@ export function Model({ id, p, s = 1, r = 0, shadow = true, spin }: { id: string
     });
     if (info) c.position.set(-(info.bboxMin[0] + info.bboxMax[0]) / 2, -info.bboxMin[1], -(info.bboxMin[2] + info.bboxMax[2]) / 2);
     spinNode.current = spin ? c.getObjectByName(spin.node) ?? null : null;
+    c.traverse(o => { o.updateMatrix(); o.matrixAutoUpdate = o === spinNode.current; });
     return c;
   }, [scene, info, shadow, spin?.node]);
   return (

@@ -1,5 +1,5 @@
 // Canvas + lighting + post-processing + composition of all visual layers.
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { memo, Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, N8AO, ToneMapping, Vignette, HueSaturation } from '@react-three/postprocessing';
@@ -22,6 +22,26 @@ import { DetailCull } from './DetailCull';
 
 function FrameTicker() {
   useFrame(() => updateFrame(), -100);
+  return null;
+}
+
+/** Prepare the world once, after all animation/camera callbacks and before the composer (priority 1).
+ * N8AO re-renders transparent layers twice: neither matrices nor opaque shadows belong to those passes.
+ */
+function RenderPreparation() {
+  const { gl, scene } = useThree();
+  useEffect(() => {
+    const autoMatrix = scene.matrixWorldAutoUpdate, autoLocal = scene.matrixAutoUpdate, autoShadow = gl.shadowMap.autoUpdate;
+    scene.matrixAutoUpdate = false;
+    scene.matrixWorldAutoUpdate = false;
+    gl.shadowMap.autoUpdate = false;
+    return () => { scene.matrixWorldAutoUpdate = autoMatrix; scene.matrixAutoUpdate = autoLocal; gl.shadowMap.autoUpdate = autoShadow; };
+  }, [gl, scene]);
+  useFrame(({ camera }) => {
+    scene.updateMatrixWorld();
+    gl.shadowMap.needsUpdate = true;
+    if (quality.level === 'low') gl.render(scene, camera);
+  }, 0.5);
   return null;
 }
 
@@ -125,7 +145,7 @@ function Post() {
   );
 }
 
-export function Scene() {
+export const Scene = memo(function Scene() {
   const world = useRef<THREE.Group>(null);
   return (
     <Canvas
@@ -167,6 +187,7 @@ export function Scene() {
       <GameEvents />
       <QualityApplier />
       <Post />
+      <RenderPreparation />
     </Canvas>
   );
-}
+});

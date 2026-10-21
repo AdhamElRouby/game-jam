@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 
 const base = process.argv[2] ?? 'http://localhost:5173';
-const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--ignore-gpu-blocklist'] });
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
 const page = await ctx.newPage();
 const errors: string[] = [];
@@ -392,7 +392,7 @@ await turnTo(1.2);
 await dev('{ map: 3 }');
 ok = await waitFor('world 4 playing', async () => {
   const s = await snap();
-  return s.mp === 3 && s.ph === 'playing';
+  return s?.mp === 3 && s.ph === 'playing';
 }, 12000);
 await sleep(800);
 c = await cam();

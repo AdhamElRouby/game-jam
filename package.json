@@ -9,7 +9,7 @@
     "dev:server": "tsx watch --clear-screen=false server/index.ts",
     "dev:client": "vite",
     "build": "vite build && esbuild server/index.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outfile=dist/server/index.js",
-    "start": "NODE_ENV=production node dist/server/index.js",
+    "start": "node -e \"process.env.NODE_ENV='production'; import('./dist/server/index.js')\"",
     "typecheck": "tsc --noEmit -p ."
   },
   "engines": {

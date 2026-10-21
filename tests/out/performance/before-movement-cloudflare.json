@@ -1,0 +1,69 @@
+{
+  "url": "https://lakes-says-automated-explaining.trycloudflare.com",
+  "results": [
+    {
+      "serverMs": 477.1000000014901,
+      "viewMs": 477.1000000014901,
+      "stopServerMs": 303.5,
+      "stopViewMs": 303.5,
+      "distance": 1.7999999999999998,
+      "postReleaseTravel": 1.2871283985640867
+    },
+    {
+      "serverMs": 165.69999999552965,
+      "viewMs": 200.5,
+      "stopServerMs": 260.79999999701977,
+      "stopViewMs": 297.59999999403954,
+      "distance": 2.97,
+      "postReleaseTravel": 1.1803031198068807
+    },
+    {
+      "serverMs": 193.29999999701977,
+      "viewMs": 193.29999999701977,
+      "stopServerMs": 279.70000000298023,
+      "stopViewMs": 323.5,
+      "distance": 3.06,
+      "postReleaseTravel": 1.2202366389382715
+    },
+    {
+      "serverMs": 175.60000000149012,
+      "viewMs": 175.60000000149012,
+      "stopServerMs": 291.69999999552965,
+      "stopViewMs": 340.6000000014901,
+      "distance": 3.33,
+      "postReleaseTravel": 1.3850660743100223
+    },
+    {
+      "serverMs": 195.89999999850988,
+      "viewMs": 195.89999999850988,
+      "stopServerMs": 256.3999999985099,
+      "stopViewMs": 318.80000000447035,
+      "distance": 3.15,
+      "postReleaseTravel": 1.2052370289901635
+    },
+    {
+      "serverMs": 162.10000000149012,
+      "viewMs": 197.80000000447035,
+      "stopServerMs": 253.5,
+      "stopViewMs": 291.5,
+      "distance": 2.97,
+      "postReleaseTravel": 1.2183814900696825
+    },
+    {
+      "serverMs": 162.79999999701977,
+      "viewMs": 200.60000000149012,
+      "stopServerMs": 262.69999999552965,
+      "stopViewMs": 299.8999999985099,
+      "distance": 2.97,
+      "postReleaseTravel": 1.1599309663589126
+    },
+    {
+      "serverMs": 227.29999999701977,
+      "viewMs": 227.29999999701977,
+      "stopServerMs": 268.70000000298023,
+      "stopViewMs": 309.5,
+      "distance": 2.97,
+      "postReleaseTravel": 1.262
+    }
+  ]
+}

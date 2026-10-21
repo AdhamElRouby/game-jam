@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 import { initPhysics } from './sim';
 import { Matchmaker } from './matchmaker';
 import { TICK_HZ } from '../src/shared/constants';
+import { serverTiming } from './diagnostics';
 
 const PORT = Number(process.env.PORT || 3000);
 // loopback by default; set HOST=0.0.0.0 only on a real host behind its own proxy (e.g. Render)
@@ -31,7 +32,13 @@ const io = new Server(httpServer, {
 const mm = new Matchmaker(io, DEV, log);
 
 app.get('/healthz', (_req, res) => {
-  res.json({ ok: true, ...mm.stats() });
+  res.json({ ok: true, ...mm.stats(), timing: {
+    tickIntervalMs: serverTiming.tickIntervalMs.summary(), tickWorkMs: serverTiming.tickWorkMs.summary(),
+    ticks: serverTiming.ticks, droppedSteps: serverTiming.droppedSteps,
+    rooms: [...mm.rooms.values()].filter(r => r.sim).map(r => ({ room: r.id, map: r.map, phase: r.phase,
+      physicsStepMs: r.sim!.physicsStepMs.summary(), simulationStepMs: r.sim!.simulationStepMs.summary(),
+      bodies: r.sim!.world.bodies.len(), colliders: r.sim!.world.colliders.len() })),
+  } });
 });
 
 // serve the production client build (dist/client) when present
@@ -71,17 +78,27 @@ io.on('connection', (socket) => {
 const STEP_MS = 1000 / TICK_HZ;
 let last = performance.now();
 let acc = 0;
+let lastTick = performance.now();
 setInterval(() => {
   const now = performance.now();
-  acc += Math.min(250, now - last);
+  acc += Math.max(0, now - last);
   last = now;
   let n = 0;
   while (acc >= STEP_MS && n < 5) {
+    const started = performance.now();
+    serverTiming.tickIntervalMs.add(started - lastTick);
+    lastTick = started;
     mm.step();
+    serverTiming.tickWorkMs.add(performance.now() - started);
+    serverTiming.ticks++;
     acc -= STEP_MS;
     n++;
   }
-  if (n === 5) acc = 0;
+  if (acc >= STEP_MS) {
+    const dropped = Math.floor(acc / STEP_MS);
+    serverTiming.droppedSteps += dropped;
+    acc -= dropped * STEP_MS; // preserve the fractional tick: overload must not introduce clock drift
+  }
 }, 4);
 
 httpServer.listen(PORT, HOST, () => log(`SHIFT HAPPENS server on http://${HOST}:${PORT} (${PROD ? 'production' : 'dev'}${DEV ? ', dev tools on' : ''})`));

@@ -2,6 +2,7 @@
 import { net, type FrameView } from '../net/net';
 import { LEVEL } from '../shared/level';
 import type { WorldSnap } from '../shared/protocol';
+import { presentLocal, predictionDiagnostics } from './localPlayer';
 
 export const DEFAULT_WORLD: WorldSnap = {
   plate: 0,
@@ -75,7 +76,7 @@ function demoFrame(): FrameView {
 export const frame: { current: FrameView; live: boolean } = { current: demoFrame(), live: false };
 
 /** Your own courier is drawn with less interpolation delay so controls feel snappier. */
-const LOCAL_DELAY = 50;
+const LOCAL_DELAY = 0;
 
 export function updateFrame() {
   const f = net.frame();
@@ -85,8 +86,22 @@ export function updateFrame() {
   if (f && you >= 0) {
     const fl = net.frame(LOCAL_DELAY);
     const mine = fl?.players.find((p) => p.slot === you);
-    if (mine) frame.current.players = f.players.map((p) => (p.slot === you ? mine : p));
+    if (mine) {
+      // Moving supports and ropes use the same timeline as their rendered support/anchor.
+      const local = mine.onMover || mine.grip ? f.players.find(p => p.slot === you) ?? mine : presentLocal(mine, performance.now());
+      frame.current.players = f.players.map((p) => (p.slot === you ? local : p));
+    }
     // piloting: the artifact is your body, so it gets the same short delay (the first-person view rides it)
-    if (fl && mine?.pilot) frame.current.artifact = fl.artifact;
+    if (mine?.pilot) {
+      const pilotFrame = net.frame(35);
+      if (pilotFrame) {
+        frame.current.artifact = pilotFrame.artifact;
+        frame.current.m = pilotFrame.m;
+        frame.current.w = pilotFrame.w;
+      }
+    }
   }
 }
+
+(window as any).__SH_FRAME = () => frame.current;
+(window as any).__SH_PREDICTION = predictionDiagnostics;

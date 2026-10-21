@@ -14,7 +14,15 @@ class Input {
   private respawnCount = 0;
   private pilotCount = 0;
   private useCount = 0;
-  enabled = false;
+  private active = false;
+  private changeHandlers = new Set<() => void>();
+  get enabled() { return this.active; }
+  set enabled(value: boolean) {
+    if (this.active === value) return;
+    this.active = value;
+    this.keys.clear();
+    this.changed();
+  }
   private shiftHandlers = new Set<ShiftHandler>();
   private keyHandlers = new Set<KeyHandler>();
   /** heading of the local camera (radians); sent along so the server knows which way "left" is */
@@ -32,10 +40,10 @@ class Input {
         e.preventDefault();
         el?.blur();
       }
+      if (e.repeat) return;
       this.keyHandlers.forEach((f) => f(e.code));
       if (!this.enabled) return;
       if (GAME_KEYS.has(e.code)) e.preventDefault();
-      if (e.repeat) return;
       this.keys.add(e.code);
       if (e.code === 'Space') this.jumpCount++;
       if (e.code === 'KeyR') this.respawnCount++;
@@ -43,14 +51,19 @@ class Input {
       if (e.code === 'KeyQ') this.useCount++;
       const shape = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3 }[e.code];
       if (shape !== undefined) this.shiftHandlers.forEach((f) => f(shape));
+      this.changed();
     });
-    window.addEventListener('keyup', (e) => this.keys.delete(e.code));
+    window.addEventListener('keyup', (e) => { if (this.keys.delete(e.code)) this.changed(); });
     // never leave a key "held" when focus moves away (alt-tab, devtools, hidden tab)
-    window.addEventListener('blur', () => this.keys.clear());
+    window.addEventListener('blur', () => this.clear());
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.keys.clear();
+      if (document.hidden) this.clear();
     });
   }
+
+  private changed() { this.changeHandlers.forEach(f => f()); }
+  private clear() { this.keys.clear(); this.changed(); }
+  onChange(f: () => void) { this.changeHandlers.add(f); return () => this.changeHandlers.delete(f); }
 
   onShift(f: ShiftHandler) {
     this.shiftHandlers.add(f);
@@ -67,12 +80,15 @@ class Input {
 
   pressJump() {
     this.jumpCount++;
+    this.changed();
   }
   pressPilot() {
     this.pilotCount++;
+    this.changed();
   }
   pressUse() {
     this.useCount++;
+    this.changed();
   }
 
   sample() {

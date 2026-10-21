@@ -1,6 +1,8 @@
 // Authoritative per-room simulation for ONE map: one Rapier world, three courier capsules, ONE artifact body,
 // and the map's data-driven mechanisms (server/mechs.ts).
 import RAPIER from '@dimforge/rapier3d-compat';
+import { Samples } from './diagnostics';
+import { approachVelocity } from '../src/shared/movement';
 import * as C from '../src/shared/constants';
 import { LEVEL, islandBoxes, type BoxDef, type IslandDef } from '../src/shared/level';
 import { MAPS, mapOrder } from '../src/shared/maps';
@@ -110,6 +112,7 @@ export interface PlayerBody {
   camYaw: number;
   /** after a reconnect the client's counters restart: adopt them without treating the jump as a press */
   syncCounters: boolean;
+  lastInputAt: number;
 }
 
 export interface SimOptions {
@@ -119,6 +122,8 @@ export interface SimOptions {
 }
 
 export class Sim {
+  readonly physicsStepMs = new Samples();
+  readonly simulationStepMs = new Samples();
   world: RAPIER.World;
   map: MapDef;
   time = 0; // seconds of simulated time
@@ -334,6 +339,7 @@ export class Sim {
       onMover: false,
       camYaw: 0,
       syncCounters: false,
+      lastInputAt: -Infinity,
     };
   }
 
@@ -363,6 +369,7 @@ export class Sim {
   setInput(slot: number, mx: number, mz: number, jumpCount: number, grab: boolean, respawnCount: number, buttons = 0, pilotCount?: number, useCount?: number, camYaw?: number) {
     const p = this.players[slot];
     if (!p) return;
+    p.lastInputAt = this.time;
     if (camYaw !== undefined && Number.isFinite(camYaw)) p.camYaw = camYaw;
     const m = Math.hypot(mx, mz);
     if (!Number.isFinite(m)) return;
@@ -429,6 +436,7 @@ export class Sim {
 
   // ------------------------------------------------------------------ main step
   step(dt: number, playing: boolean) {
+    const started = performance.now();
     this.time += dt;
     if (playing) this.runTime += dt;
     for (const m of this.mechs) m.pre(dt, playing);
@@ -439,8 +447,13 @@ export class Sim {
     this.updateArtifactForces(dt);
     for (const m of this.mechs) m.forces(dt, playing);
     this.pilot.update(dt, playing);
+    // Rapier and game forces must advance by the same fixed dt.
+    this.world.timestep = dt;
+    const physicsStarted = performance.now();
     this.world.step();
+    this.physicsStepMs.add(performance.now() - physicsStarted);
     this.postStep(dt, playing);
+    this.simulationStepMs.add(performance.now() - started);
   }
 
   private castGround(p: PlayerBody) {
@@ -481,6 +494,11 @@ export class Sim {
   }
 
   private updatePlayer(p: PlayerBody, dt: number, playing: boolean) {
+    // A live socket can stall for seconds before disconnecting. Do not keep its last direction/rope/use held.
+    if (this.time - p.lastInputAt > 0.5) {
+      p.mx = p.mz = 0;
+      p.grab = p.useHeld = p.sprint = false;
+    }
     const canAct = playing && p.connected && p.respawnTimer <= 0 && !this.finished;
     // F: hop in / out of the artifact
     if (p.pilotCount !== p.lastPilotCount) {
@@ -539,8 +557,9 @@ export class Sim {
     const slip = p.grounded ? this.slipAt({ x: pos.x, y: pos.y - C.PLAYER_CENTER_Y, z: pos.z }) : null;
     if (slip) accel *= slip.grip;
     if (knocked) accel *= 0.2;
-    let dvx = tx - v.x;
-    let dvz = tz - v.z;
+    const controlled = approachVelocity(v.x, v.z, tx, tz, accel, dt);
+    let dvx = controlled.x - v.x;
+    let dvz = controlled.z - v.z;
     if (p.launchT > 0 && !p.grounded) {
       // flung by a spring / puff: keep the momentum, steer gently toward the input (no air brakes)
       dvx = mx * 6 * dt;

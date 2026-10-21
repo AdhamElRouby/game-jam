@@ -1,6 +1,7 @@
 // Client networking: session token, matchmaking messages, snapshot buffer + interpolation, input upload.
 import { io, type Socket } from 'socket.io-client';
 import { INPUT_HZ } from '../shared/constants';
+import { mapAt } from '../shared/maps';
 import type { GameEvent, LobbyState, Results, Snapshot, WorldSnap } from '../shared/protocol';
 import { PF_GRIP, PF_GROUNDED, PF_MOVING, PF_RESPAWNING, PF_CONNECTED, PF_PILOT, PF_TUMBLE, PF_SPRINT, PF_USE, PF_ONMOVER } from '../shared/protocol';
 import { input } from './input';
@@ -88,6 +89,21 @@ class Net {
   private seq = 0;
   private inputTimer: number | null = null;
   rtt = 0;
+  lastSnapAt = 0;
+  private arrivals: number[] = [];
+  private underruns = 0;
+  private frames = 0;
+  private jitter = 0;
+  get interpolationDelay() { return Math.max(INTERP_DELAY, Math.min(180, 40 + this.jitter * 3)); }
+  private sentJumps: { seq: number; jump: number }[] = [];
+  pendingJump(jump: number) {
+    const slot = this.lobby?.you ?? -1, ack = this.latest()?.ack?.[slot];
+    if (ack === undefined) return false;
+    const accepted = this.sentJumps.find(i => i.seq === ack);
+    return !!accepted && jump > accepted.jump;
+  }
+  // Snapshots and input are superseding state. Never replay a backlog after congestion/reconnect.
+  diagnostics() { return { rtt: this.rtt, interpolationDelay: this.interpolationDelay, snapshotIntervals: this.arrivals.slice(), underruns: this.underruns, frames: this.frames }; }
 
   constructor() {
     this.socket = io({ transports: ['websocket', 'polling'], reconnectionDelay: 500, reconnectionDelayMax: 3000 });
@@ -98,6 +114,7 @@ class Net {
     });
     this.socket.on('disconnect', () => {
       this.connected = false;
+      this.sentJumps = [];
       this.connListeners.forEach((f) => f(false));
     });
     this.socket.on('lobby', (l: LobbyState) => {
@@ -112,6 +129,7 @@ class Net {
     this.socket.on('sfx', (n: string) => this.sfxListeners.forEach((f) => f(n)));
     this.socket.on('results', (r: Results) => this.resultsListeners.forEach((f) => f(r)));
     this.socket.on('start', () => this.resetBuffer());
+    input.onChange(() => this.sendInput());
     setInterval(() => {
       const t0 = performance.now();
       if (this.connected) this.socket.emit('ping:t', 0, () => (this.rtt = this.rtt * 0.7 + (performance.now() - t0) * 0.3));
@@ -131,9 +149,11 @@ class Net {
     this.resetBuffer();
   }
   shift(shape: number) {
+    if (!this.connected) return;
     this.socket.emit('shift', shape);
   }
   action(type: 'respawn' | 'resetVote' | 'again' | 'leave' | 'vote', value?: string) {
+    if (!this.connected) return;
     this.socket.emit('act', { type, value });
   }
   dev(cmd: Record<string, unknown>) {
@@ -166,24 +186,38 @@ class Net {
   // ---------------------------------------------------------------- input upload
   private startInput() {
     if (this.inputTimer !== null) return;
-    this.inputTimer = window.setInterval(() => {
-      if (!this.connected || !this.lobby || this.lobby.you < 0) return;
-      const i = input.sample();
-      this.socket.emit('in', [this.seq++, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use, Math.round(i.camYaw * 1000) / 1000]);
-    }, 1000 / INPUT_HZ);
+    this.inputTimer = window.setInterval(() => this.sendInput(), 1000 / INPUT_HZ);
+  }
+
+  private sendInput() {
+    if (!this.connected || !this.lobby || this.lobby.you < 0) return;
+    const i = input.sample();
+    const seq = this.seq++;
+    this.sentJumps.push({ seq, jump: i.jump });
+    if (this.sentJumps.length > 180) this.sentJumps.shift();
+    this.socket.volatile.emit('in', [seq, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use, Math.round(i.camYaw * 1000) / 1000]);
   }
 
   // ---------------------------------------------------------------- snapshots
   resetBuffer() {
     this.snaps = [];
     this.offset = null;
+    this.lastSnapAt = 0;
+    this.jitter = 0;
   }
 
   private onSnap(s: Snapshot) {
     const last = this.snaps[this.snaps.length - 1];
-    if (last && s.t < last.t - 1000) this.resetBuffer(); // new round
+    if (last && (s.mp !== last.mp || s.t < last.t - 1000)) this.resetBuffer(); // new round
     else if (last && s.t <= last.t) return;
     this.snaps.push(s);
+    const now = performance.now();
+    if (this.lastSnapAt) {
+      this.arrivals.push(now - this.lastSnapAt);
+      if (last) this.jitter += (Math.min(250, Math.abs(now - this.lastSnapAt - (s.t - last.t))) - this.jitter) * .1;
+      if (this.arrivals.length > 300) this.arrivals.shift();
+    }
+    this.lastSnapAt = now;
     if (this.snaps.length > MAX_SNAPS) this.snaps.shift();
     const sample = s.t - performance.now();
     if (this.offset === null || Math.abs(sample - this.offset) > 250) this.offset = sample;
@@ -196,10 +230,11 @@ class Net {
   }
 
   /** Interpolated view of the world at render time. */
-  frame(delay = INTERP_DELAY): FrameView | null {
+  frame(delay = this.interpolationDelay): FrameView | null {
     const n = this.snaps.length;
     if (!n || this.offset === null) return null;
     const rt = performance.now() + this.offset - delay;
+    if (delay > 0) { this.frames++; if (rt > this.snaps[n - 1].t) this.underruns++; }
     const S = this.snaps;
     let a = S[0];
     let b = S[0];
@@ -298,10 +333,15 @@ class Net {
     };
     const ma = a.m ?? [];
     const sameMap = a.mp === b.mp;
+    const definitions = mapAt(b.mp).mechs;
     const m = (b.m ?? []).map((sb, i) => {
       const sa = ma[i];
       if (!sameMap || !sa || sa.length !== sb.length) return sb;
-      return sb.map((v, j) => sa[j] + (v - sa[j]) * k);
+      return sb.map((v, j) => {
+        let delta = v - sa[j];
+        if (j === 0 && definitions[i]?.kind === 'rotor') delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+        return sa[j] + delta * k;
+      });
     });
     return { t: a.t + (b.t - a.t) * k, players, artifact, w, latest: S[n - 1], pilot: b.pi ?? -1, m };
   }

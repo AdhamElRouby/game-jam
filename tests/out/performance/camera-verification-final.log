@@ -1,0 +1,21 @@
+PASS  starts in third person, heading down the course  — view orbit yaw 0.00 dir.z -0.93
+PASS  camera sits behind and above your courier  — cam -2.60,4.67,14.33 me -2.60,0.68,6.50
+PASS  mouse drag right turns the camera right  — yaw -0.48 (≈ -0.48 expected)
+PASS  mouse drag down tilts the view down (camera higher)  — pitch 0.38 → 0.62
+PASS  scrolling down zooms out  — dist 8.50 → 14.37
+PASS  scrolling up zooms in  — dist → 5.03
+PASS  touchpad sideways swipe turns the camera  — yaw -0.48 → -0.90
+PASS  touchpad pinch zooms  — dist 5.03 → 7.50
+INFO  pointer lock on click: engaged
+INFO  locked mouse move: yaw -0.90 → -1.28
+PASS  Esc frees the mouse without opening the menu
+PASS  zoom back to the default distance  — dist 8.50
+PASS  WASD: camera facing +X, W walks +X  — moved (4.14, 0.00)
+PASS  WASD: camera facing +X, D walks +Z  — moved (0.00, 4.01)
+PASS  WASD: camera facing +Z, W walks +Z  — moved (0.00, 4.01)
+PASS  WASD: camera facing +Z, A walks +X  — moved (3.87, 0.00)
+PASS  WASD: camera facing -Z, S walks +Z  — moved (0.00, 4.01)
+FAIL  camera follows smoothly while walking (no jitter)  — max frame-to-frame velocity change 3.77 m/s, top speed 11.12 m/s, 90 frames
+PASS  a mouse flick turns the view smoothly and fully  — largest per-frame turn 0.13 rad of 0.6, reached 0.60
+PASS  wall behind you pulls the camera in (not through the palisade)  — cam z -9.36 dist 1.53
+PASS  under the low arch the camera stays below the ceiling  — cam -0.00,1.17,-26.34

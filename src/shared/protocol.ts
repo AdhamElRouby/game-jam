@@ -73,6 +73,8 @@ export interface WorldSnap {
 }
 
 export interface Snapshot {
+  /** Last input sequence integrated for each slot (local presentation only). */
+  ack?: number[];
   t: number; // sim time (ms)
   ph: Phase;
   el: number; // elapsed run time incl. penalties (ms)

@@ -1,5 +1,7 @@
 node_modules
 dist
+dist-after
+tests/out/performance/baseline-build/
 build.log
 test-results
 .DS_Store
