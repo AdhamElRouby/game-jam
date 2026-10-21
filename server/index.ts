@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { networkInterfaces } from 'node:os';
 import { Server } from 'socket.io';
 import { initPhysics } from './sim';
 import { Matchmaker } from './matchmaker';
@@ -101,4 +102,12 @@ setInterval(() => {
   }
 }, 4);
 
-httpServer.listen(PORT, HOST, () => log(`SHIFT HAPPENS server on http://${HOST}:${PORT} (${PROD ? 'production' : 'dev'}${DEV ? ', dev tools on' : ''})`));
+httpServer.listen(PORT, HOST, () => {
+  log(`SHIFT HAPPENS server on http://${HOST}:${PORT} (${PROD ? 'production' : 'dev'}${DEV ? ', dev tools on' : ''})`);
+  // LAN play (START_LAN_GAME.bat): list the addresses other players can open
+  if (HOST === '0.0.0.0') {
+    for (const a of Object.values(networkInterfaces()).flat()) {
+      if (a && a.family === 'IPv4' && !a.internal) log(`  players open: http://${a.address}:${PORT}`);
+    }
+  }
+});
