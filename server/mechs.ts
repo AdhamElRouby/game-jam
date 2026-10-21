@@ -464,20 +464,26 @@ class LiftMech extends Mech<LiftDef> {
     const ok = (p: PlayerBody) => (p.inside ? this.onDeck(c, 5) : this.onDeck(p.body.translation(), 3) || p.body.translation().y > L.top - 0.6);
     this.aboard = active.filter((p) => (p.inside ? this.onDeck(c, 5) : this.onDeck(p.body.translation(), 3))).length;
     const allSet = active.length > 0 && active.every(ok) && this.onDeck(c, 5);
-    // someone on the deck holding Q at the crank
+    // someone on the deck holding Q at the crank (a pilot riding the deck cranks from inside: Q is free while piloting)
     let cranking = false;
     if (L.crank) {
       const kx = L.cx + L.crank[0];
       const kz = L.cz + L.crank[2];
       for (const p of active) {
-        if (p.inside || !p.useHeld) continue;
+        if (!p.useHeld) continue;
+        if (p.inside) {
+          if (this.onDeck(c, 5)) cranking = true;
+          continue;
+        }
         const q = p.body.translation();
         if (Math.hypot(q.x - kx, q.z - kz) < 1.25 && this.onDeck(q, 3)) cranking = true;
       }
     }
     const released = !!L.brake && sim.sig(L.brake);
     if (this.stage === 1) {
-      if (L.crank) {
+      // brake off: nobody has to crank, it sets off once everyone is aboard
+      if (L.crank && !released) {
+        this.boardT = 0;
         this.crankT = allSet && cranking && playing ? this.crankT + dt : Math.max(0, this.crankT - dt * 2);
         if (this.crankT >= L.board) this.start();
       } else {

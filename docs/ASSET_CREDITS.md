@@ -172,7 +172,7 @@ Shipped under `public/assets/`: `models/` (85 self-contained .glb), `audio/` (30
 | `respawn.mp3` | `interface-sounds/confirmation_004.ogg` | 0.49 s |
 | `victory.mp3` | `music-jingles/Steel jingles/jingles_STEEL02.ogg` | 1.39 s |
 | `fail_jingle.mp3` | `music-jingles/Pizzicato jingles/jingles_PIZZI01.ogg` | 0.99 s |
-| `chapter.mp3` | `music-jingles/Hit jingles/jingles_HIT15.ogg` | 1.16 s |
+| `chapter.mp3` | `music-jingles/Steel jingles/jingles_STEEL07.ogg` | 1.55 s |
 | `confetti_pop.mp3` | `rpg-audio/bookClose.ogg` + `interface-sounds/glass_004.ogg` + `rpg-audio/bookFlip1.ogg` | 0.77 s |
 | `king_laugh.mp3` | `music-jingles/Sax jingles/jingles_SAX03.ogg` | 1.09 s |
 
