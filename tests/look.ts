@@ -2,10 +2,13 @@
 // npx tsx tests/look.ts <out.png> "<query>" '<json array of steps>' [w] [h]
 // step: { "dev": {...} } | { "wait": ms } | { "shot": "path.png" } | { "eval": "js" }
 import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
 
 const out = process.argv[2] ?? 'tests/out/look.png';
 const query = process.argv[3] ?? '';
-const steps = JSON.parse(process.argv[4] ?? '[]') as Record<string, unknown>[];
+const rawSteps = process.argv[4] ?? '[]';
+// steps inline as JSON, or "@path/to/steps.json"
+const steps = JSON.parse(rawSteps.startsWith('@') ? readFileSync(rawSteps.slice(1), 'utf8') : rawSteps) as Record<string, unknown>[];
 const W = Number(process.argv[5] ?? 1280);
 const H = Number(process.argv[6] ?? 720);
 const base = process.env.SH_URL ?? 'http://localhost:5173';

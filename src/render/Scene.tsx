@@ -4,12 +4,12 @@ import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, N8AO, ToneMapping, Vignette, HueSaturation } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
-import { World } from './World';
+import { MapWorld } from './MapWorld';
 import { Artifact } from './Artifact';
 import { Players } from './Players';
+import { PilotBadge } from './Pilot';
 import { CameraRig, camFocus, camView } from './CameraRig';
 import { Clouds, CloudSea, SkyDome, SkyEnvironment, SUN_DIR, SKY } from './Sky';
-import { Scenery } from './Scenery';
 import { Effects } from './Effects';
 import { Ending } from './Ending';
 import { updateFrame } from './frame';
@@ -134,9 +134,9 @@ export function Scene() {
       <Lights />
       <SkyDome />
       <Suspense fallback={null}>
-        <World />
-        <Scenery />
+        <MapWorld />
         <Artifact />
+        <PilotBadge />
         <Players />
         <Ending />
       </Suspense>

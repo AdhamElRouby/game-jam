@@ -1,8 +1,9 @@
 import { Sim, initPhysics } from '../server/sim';
+import { CLOCKWORK } from '../src/shared/maps/course';
 import { TICK_DT } from '../src/shared/constants';
 await initPhysics();
-const s = new Sim({ names: ['A','B','C'], slots: [0,1,2] });
-s.devWarp(2);
+const s = new Sim({ names: ['A','B','C'], slots: [0,1,2], map: CLOCKWORK });
+s.devWarp(1);
 s.devTeleportArtifact(-0.3, 1.02, -78.5);
 for (let i=0;i<3;i++) s.devTeleportPlayer(i, -0.9 + i*0.6, 0, -76.9);
 for (let k=0;k<180;k++){ for (let i=0;i<3;i++) s.setInput(i,0,-1,0,false,0); s.step(TICK_DT,true); }

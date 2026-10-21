@@ -1,4 +1,6 @@
 // Web Audio manager: unlocked on the first user gesture, seamless music loop, rate-limited SFX, persisted volumes.
+import { synth, type SynthName } from './synth';
+
 const SFX_NAMES = [
   'ui_click', 'ui_hover', 'join', 'countdown_tick', 'countdown_go', 'jump', 'land', 'step', 'grip', 'release',
   'shift', 'shift_fail', 'impact_wood', 'impact_heavy', 'impact_metal', 'wind_gust', 'lever', 'gate_open',
@@ -32,6 +34,7 @@ class AudioManager {
   private lastPlay = new Map<string, number>();
   private music: AudioBufferSourceNode | null = null;
   private musicName = '';
+  private musicRate = 1;
   settings: Settings = loadSettings();
   private listeners = new Set<() => void>();
 
@@ -111,16 +114,37 @@ class AudioManager {
     src.start();
   }
 
-  async playMusic(name: 'music_main' | 'music_alt', fade = 1.5) {
+  /** Procedural effect (see synth.ts), rate-limited like samples. */
+  synth(name: SynthName, o: { vol?: number; rate?: number; minGap?: number } = {}) {
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    const now = performance.now();
+    const key = 'synth:' + name;
+    if (now - (this.lastPlay.get(key) ?? 0) < (o.minGap ?? 60)) return;
+    this.lastPlay.set(key, now);
+    const g = this.ctx.createGain();
+    g.gain.value = o.vol ?? 1;
+    g.connect(this.sfxGain);
+    synth(this.ctx, g, name, (o.rate ?? 1) * (1 + (Math.random() - 0.5) * 0.05));
+    setTimeout(() => g.disconnect(), 2000);
+  }
+
+  async playMusic(name: 'music_main' | 'music_alt', fade = 1.5, rate = 1) {
     if (!this.ctx) return;
-    if (this.musicName === name) return; // already playing or loading this track
+    if (this.musicName === name) {
+      // already playing or loading this track: just glide to the new tempo
+      this.musicRate = rate;
+      this.music?.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, 0.6);
+      return;
+    }
     this.musicName = name;
+    this.musicRate = rate;
     const buf = await this.load(name);
     if (!buf || this.musicName !== name) return;
     if (this.music) this.fadeOut(this.music, 0.8);
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
     src.loop = true;
+    src.playbackRate.value = this.musicRate;
     const g = this.ctx.createGain();
     g.gain.value = 0;
     g.gain.setTargetAtTime(1, this.ctx.currentTime, fade / 3);

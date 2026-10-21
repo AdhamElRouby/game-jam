@@ -1,4 +1,4 @@
-// Render cost per chapter in a solo dev room: FPS over 3 s, draw calls and triangles for one full frame (all passes).
+// Render cost per world in a solo dev room: FPS over 3 s, draw calls and triangles for one full frame (all passes).
 // npx tsx tests/perf.ts [baseUrl] [query]   e.g. query "q=low"
 import { chromium } from 'playwright';
 
@@ -13,16 +13,17 @@ for (let k = 0; k < 60; k++) {
   if ((await page.evaluate(`(() => { const s = window.__SH_NET.latest(); return s ? s.ph : null; })()`)) === 'playing') break;
   await page.waitForTimeout(250);
 }
-const spots: [string, string][] = [
-  ['ch1', `{ me: [0.4, 0, 5.5] }`],
-  ['ch2', `{ warp: 1, art: [-2.5, 1.1, -55.5], me: [-1, 0, -52] }`],
-  ['ch3', `{ warp: 2, art: [-4.5, 1.1, -100.5], me: [-2.5, 0, -98.5] }`],
-  ['ch4', `{ warp: 3 }`],
-  ['goal', `{ art: [0, 1.2, -157], me: [1.5, 0, -154] }`],
-];
-for (const [name, cmd] of spots) {
-  const c = JSON.parse(JSON.stringify(cmd.replace(/(\w+):/g, '"$1":')));
-  await page.evaluate(`window.__SH_NET.dev(${c})`);
+// every world at its start and at a later checkpoint (dev `map` restarts the room on that world)
+const spots: [string, string[]][] = [];
+for (const [i, name, cp] of [[0, 'w1', 1], [1, 'w2', 2], [2, 'w3', 1], [3, 'w4', 3], [4, 'w5', 2], [5, 'w6', 2]] as const) {
+  spots.push([`${name}`, [`{ map: ${i} }`]]);
+  spots.push([`${name}cp${cp}`, [`{ warp: ${cp} }`]]);
+}
+for (const [name, cmds] of spots) {
+  for (const cmd of cmds) {
+    await page.evaluate(`window.__SH_NET.dev(${cmd})`);
+    await page.waitForTimeout(cmd.includes('map') ? 2200 : 300);
+  }
   await page.waitForTimeout(1800);
   const r = await page.evaluate(`new Promise((res) => {
     const gl = window.__SH_GL;
@@ -41,6 +42,6 @@ for (const [name, cmd] of spots) {
     };
     requestAnimationFrame(loop);
   })`);
-  console.log(name.padEnd(5), JSON.stringify(r));
+  console.log(name.padEnd(6), JSON.stringify(r));
 }
 await browser.close();

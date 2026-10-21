@@ -41,6 +41,11 @@ function demoFrame(): FrameView {
       moving: false,
       respawning: false,
       connected: true,
+      pilot: false,
+      tumble: false,
+      sprint: false,
+      use: false,
+      onMover: false,
       ax: 0,
       ay: 0,
       az: 0,
@@ -56,7 +61,14 @@ function demoFrame(): FrameView {
       pl: [],
       ar: [a[0], a[1], a[2], 0, 0, 0, 1, 0, 0, 0, 0],
       w: DEFAULT_WORLD,
+      pi: -1,
+      pa: 0,
+      mp: 0,
+      m: [],
+      ob: 0,
     },
+    pilot: -1,
+    m: [],
   };
 }
 

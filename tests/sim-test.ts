@@ -2,11 +2,13 @@
 import { Sim, initPhysics } from '../server/sim';
 import { ShapeId } from '../src/shared/shapes';
 import { TICK_DT } from '../src/shared/constants';
+import { CASTLE, CLOCKWORK, DOCK, WINDBRIDGE } from '../src/shared/maps/course';
+import type { MapDef } from '../src/shared/maps/types';
 
 await initPhysics();
 
-function mk(n = 3) {
-  return new Sim({ names: ['R', 'B', 'G'], slots: [0, 1, 2].slice(0, n) });
+function mk(n = 3, map: MapDef = DOCK) {
+  return new Sim({ names: ['R', 'B', 'G'], slots: [0, 1, 2].slice(0, n), map });
 }
 function run(sim: Sim, seconds: number, each?: (t: number) => void) {
   const steps = Math.round(seconds / TICK_DT);
@@ -75,13 +77,14 @@ for (const n of [1, 2, 3]) {
 // 4. low arch: cube blocked, long passes
 {
   const s = mk(3);
-  s.gateOpen = true;
-  s.gateT = 1;
-  s.devTeleportArtifact(0, 1.02, -21);
+  s.devSolve('dockGate');
+  s.devFreeze('turnstile'); // arch only (the turnstile maneuver is covered by bot-run): park its arm along the lane
+  (s.mechById('turnstile') as unknown as { angle: number }).angle = Math.PI / 2;
+  s.devTeleportArtifact(-1.3, 1.02, -21);
   run(s, 0.4);
   const n = 3;
   const xs = [-0.6, 0, 0.6];
-  for (let i = 0; i < n; i++) s.devTeleportPlayer(i, xs[i], 0, -19.4);
+  for (let i = 0; i < n; i++) s.devTeleportPlayer(i, -1.3 + xs[i], 0, -19.4);
   run(s, 3, () => {
     for (let i = 0; i < n; i++) s.setInput(i, 0, -1, 0, false, 0);
   });
@@ -90,14 +93,14 @@ for (const n of [1, 2, 3]) {
   s.lastShiftAt = -99;
   for (let i = 0; i < n; i++) s.setInput(i, 0, 0, 0, false, 0);
   run(s, 0.3);
-  s.devTeleportArtifact(0, 1.02, -21.5);
+  s.devTeleportArtifact(-1.3, 1.02, -21.5);
   run(s, 0.3);
-  s.devTeleportPlayer(0, 0, 0, -19.0);
+  s.devTeleportPlayer(0, -1.3, 0, -19.0);
   s.requestShift(0, ShapeId.LONG);
   console.log('  shift events:', JSON.stringify(s.events.filter((e) => e.k.startsWith('shift'))));
   s.events = [];
   run(s, 0.5);
-  for (let i = 0; i < n; i++) s.devTeleportPlayer(i, xs[i], 0, art(s).z + 3.0);
+  for (let i = 0; i < n; i++) s.devTeleportPlayer(i, art(s).x + xs[i], 0, art(s).z + 3.0);
   run(s, 5, () => {
     for (let i = 0; i < n; i++) s.setInput(i, 0, -1, 0, false, 0);
   });
@@ -109,13 +112,13 @@ for (const n of [1, 2, 3]) {
   const s = mk(3);
   s.devTeleportArtifact(0, 1.02, -3.5);
   run(s, 1.6);
-  check('plate opens gate', s.gateOpen && s.gateT > 0.3, `plateT=${f(s.plateT)} gateT=${f(s.gateT)}`);
+  const gate = s.mechById('dockGate')!;
+  check('plate opens gate', s.sig('dockPlate') && gate.progress() > 0.3, `plate=${s.sig('dockPlate')} gate=${f(gate.progress())}`);
 }
 
 // 6. wind: displacement per shape during a full cycle on island C
 for (const shape of [ShapeId.CUBE, ShapeId.LONG, ShapeId.TALL, ShapeId.ROUND]) {
-  const s = mk(3);
-  s.devWarp(1);
+  const s = mk(3, WINDBRIDGE);
   for (let i = 0; i < 3; i++) s.devTeleportPlayer(i, 6 + i, 0, -48);
   s.devTeleportArtifact(0, 3, -53);
   run(s, 0.6);
@@ -135,11 +138,11 @@ for (const shape of [ShapeId.CUBE, ShapeId.LONG, ShapeId.TALL, ShapeId.ROUND]) {
 
 // 7. lever: TALL at the wall triggers it; CUBE does not
 {
-  const s = mk(3);
-  s.devWarp(2);
+  const s = mk(3, CLOCKWORK);
+  s.devWarp(1);
   s.devTeleportArtifact(-4.5, 1.02, -102.6);
   run(s, 1.0);
-  check('cube does not reach lever', !s.leverOn);
+  check('cube does not reach lever', !s.sig('lever'));
   s.lastShiftAt = -99;
   s.devTeleportPlayer(0, -2.5, 0, -101);
   s.requestShift(0, ShapeId.TALL);
@@ -147,13 +150,12 @@ for (const shape of [ShapeId.CUBE, ShapeId.LONG, ShapeId.TALL, ShapeId.ROUND]) {
   run(s, 0.6);
   s.devTeleportPlayer(1, -4.5, 0, -101.2);
   run(s, 1.2, () => s.setInput(1, 0, -1, 0, false, 0));
-  check('TALL reaches lever', s.leverOn, `art=${f(art(s).x)},${f(art(s).y)},${f(art(s).z)} shape=${s.shape}`);
+  check('TALL reaches lever', s.sig('lever'), `art=${f(art(s).x)},${f(art(s).y)},${f(art(s).z)} shape=${s.shape}`);
 }
 
 // 8. ROUND downhill on the chute
 {
-  const s = mk(3);
-  s.devWarp(3);
+  const s = mk(3, CASTLE);
   for (let i = 0; i < 3; i++) s.devTeleportPlayer(i, -6 + i, 8, -108);
   s.devTeleportArtifact(5, 9.1, -114);
   run(s, 0.3);

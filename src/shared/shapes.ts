@@ -24,6 +24,11 @@ export interface ShapeSpec {
   maxSpeed: number;
   pro: string;
   con: string;
+  /** piloting: what WASD does, the Space ability, its cooldown (s) and a one-line tradeoff */
+  pilotMove: string;
+  ability: string;
+  abilityCd: number;
+  pilotTip: string;
 }
 
 export const SHAPES: ShapeSpec[] = [
@@ -43,6 +48,10 @@ export const SHAPES: ShapeSpec[] = [
     maxSpeed: 5.5,
     pro: 'Stable, steady to push, shrugs off wind',
     con: 'Too tall for low arches, can’t fit sockets',
+    pilotMove: 'scoot',
+    ability: 'Hop',
+    abilityCd: 1.0,
+    pilotTip: 'Hops up ledges — the landing shoves everyone nearby',
   },
   {
     id: ShapeId.LONG,
@@ -60,6 +69,10 @@ export const SHAPES: ShapeSpec[] = [
     maxSpeed: 5.5,
     pro: 'Slides under low arches, slots into receivers',
     con: 'Turns slowly, wind spins it around',
+    pilotMove: 'nudge',
+    ability: 'Swing 90°',
+    abilityCd: 0.9,
+    pilotTip: 'Swings around (A/D picks the side) — and keeps swinging',
   },
   {
     id: ShapeId.TALL,
@@ -77,6 +90,10 @@ export const SHAPES: ShapeSpec[] = [
     maxSpeed: 5.0,
     pro: 'Reaches high levers and ledges',
     con: 'Top-heavy — tips unless two hold it (E)',
+    pilotMove: 'waddle + lean',
+    ability: 'Brace',
+    abilityCd: 2.2,
+    pilotTip: 'Leans toward WASD; two holders let it lean further',
   },
   {
     id: ShapeId.ROUND,
@@ -94,6 +111,10 @@ export const SHAPES: ShapeSpec[] = [
     maxSpeed: 9.5,
     pro: 'Rolls fast, glides down slopes',
     con: 'Hard to stop or steer near edges',
+    pilotMove: 'roll (steer back to brake)',
+    ability: 'Boost',
+    abilityCd: 2.8,
+    pilotTip: 'Fast and slippery — brake early near edges',
   },
 ];
 

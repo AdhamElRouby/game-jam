@@ -69,8 +69,9 @@ export function Menu() {
           <QualityPicker />
         </div>
         <div className="menu-controls">
-          <div><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump</div>
+          <div><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump · <kbd>Shift</kbd> sprint</div>
           <div><kbd>E</kbd> hold near the artifact to grip a rope</div>
+          <div><kbd>F</kbd> hop inside the artifact and steer it · <kbd>Q</kbd> use levers &amp; machines</div>
           <div><kbd>1</kbd> CUBE · <kbd>2</kbd> LONG · <kbd>3</kbd> TALL · <kbd>4</kbd> ROUND</div>
           <div><kbd>R</kbd> hop back to your team · <kbd>T</kbd> vote to recall the artifact</div>
         </div>

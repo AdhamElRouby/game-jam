@@ -138,6 +138,11 @@ interface Anim {
   lookT: number;
   look: number;
   dustT: number;
+  /** piloting: diving into the artifact (0..1), hidden once done */
+  inside: boolean;
+  diveT: number;
+  diveFrom: THREE.Vector3;
+  tumbleT: number;
 }
 
 const tmpQ = new THREE.Quaternion();
@@ -192,7 +197,7 @@ function Courier({ slot, local }: { slot: number; local: boolean }) {
   const ringRef = useRef<THREE.Mesh>(null);
   const blob = useRef<THREE.Mesh>(null);
   const gripGlow = useRef<THREE.Mesh>(null);
-  const anim = useRef<Anim>({ phase: 0, squash: 1, squashV: 0, wasGrounded: true, airT: 0, blinkT: 2, stepT: 0, init: false, spawnT: 1, hatA: 0, hatV: 0, pomA: 0, pomV: 0, lastVx: 0, lastVz: 0, push: 0, lookT: 3, look: 0, dustT: 0 });
+  const anim = useRef<Anim>({ phase: 0, squash: 1, squashV: 0, wasGrounded: true, airT: 0, blinkT: 2, stepT: 0, init: false, spawnT: 1, hatA: 0, hatV: 0, pomA: 0, pomV: 0, lastVx: 0, lastVz: 0, push: 0, lookT: 3, look: 0, dustT: 0, inside: false, diveT: 0, diveFrom: new THREE.Vector3(), tumbleT: 0 });
   const v1 = useMemo(() => new THREE.Vector3(), []);
   const v2 = useMemo(() => new THREE.Vector3(), []);
   const v3 = useMemo(() => new THREE.Vector3(), []);
@@ -218,6 +223,37 @@ function Courier({ slot, local }: { slot: number; local: boolean }) {
       A.init = true;
       r.position.set(p.x, feetY, p.z);
     }
+    // piloting: hop up and dive into the artifact, then stay hidden until popping back out
+    if (p.pilot) {
+      if (!A.inside) {
+        A.inside = true;
+        A.diveT = 0;
+        A.diveFrom.copy(r.position);
+        if (frame.live) fx.sparkle(r.position.x, r.position.y + 0.7, r.position.z, 16, 0.6, SLOT_COLORS[slot]);
+      }
+      A.diveT = Math.min(1, A.diveT + dt / 0.3);
+      const hide = A.diveT >= 1;
+      r.visible = !hide;
+      if (ropeRef.current) ropeRef.current.visible = false;
+      if (gripGlow.current) gripGlow.current.visible = false;
+      if (blob.current) blob.current.visible = false;
+      if (!hide) {
+        const e = A.diveT * A.diveT;
+        r.position.lerpVectors(A.diveFrom, tmpV.set(p.x, p.y - 0.4, p.z), e);
+        r.position.y += Math.sin(A.diveT * Math.PI) * 1.1;
+        r.scale.setScalar(Math.max(0.01, 1 - e * 0.95));
+        r.rotation.y += dt * 14;
+      }
+      return;
+    }
+    if (A.inside) {
+      // popped out beside the artifact: appear in place with a bouncy scale-in (no respawn poof)
+      A.inside = false;
+      A.spawnT = 0;
+      r.position.set(p.x, feetY, p.z);
+      if (frame.live) fx.sparkle(p.x, feetY + 0.8, p.z, 22, 0.8, SLOT_COLORS[slot]);
+    }
+    r.scale.setScalar(1);
     // teleport (respawn) detection
     if (Math.hypot(p.x - r.position.x, feetY - r.position.y, p.z - r.position.z) > 3) {
       if (frame.live) {
@@ -229,7 +265,9 @@ function Courier({ slot, local }: { slot: number; local: boolean }) {
     const cut = useGame.getState().cutscene;
     const cheer = cut ? Math.abs(Math.sin(t * 6.5 + slot * 1.3)) : 0;
     r.position.set(p.x, feetY + cheer * 0.45, p.z);
-    r.rotation.y = cut ? Math.PI + Math.sin(t * 2 + slot) * 0.3 : p.yaw;
+    // knocked over: a dizzy spin that settles back onto the feet
+    A.tumbleT = p.tumble ? Math.min(1, A.tumbleT + dt * 6) : Math.max(0, A.tumbleT - dt * 4);
+    r.rotation.y = cut ? Math.PI + Math.sin(t * 2 + slot) * 0.3 : p.yaw + (A.tumbleT > 0 ? Math.sin(t * 9 + slot) * 1.2 * A.tumbleT : 0);
     const speed = Math.hypot(p.vx, p.vz);
     const falling = !p.grounded && p.vy < -4.5;
     // pushing: close to the artifact, moving into it, not gripping
@@ -306,8 +344,8 @@ function Courier({ slot, local }: { slot: number; local: boolean }) {
       body.current.scale.set((1 / Math.sqrt(sq)) * spawnS, sq * breathe * spawnS, (1 / Math.sqrt(sq)) * spawnS);
       // lean into a push, lean back on a pull, forward with speed
       const lean = A.push * 0.34 - pull * 0.22 + Math.min(0.2, speed * 0.04) * (1 - A.push) * (1 - pull);
-      body.current.rotation.x = lean + (falling ? -0.15 : 0);
-      body.current.rotation.z = sw * 0.06 * walk + (falling ? Math.sin(t * 9) * 0.12 : 0);
+      body.current.rotation.x = lean + (falling ? -0.15 : 0) - A.tumbleT * 0.85;
+      body.current.rotation.z = sw * 0.06 * walk + (falling ? Math.sin(t * 9) * 0.12 : 0) + A.tumbleT * Math.sin(t * 13) * 0.25;
     }
     if (hat.current) {
       hat.current.rotation.x = A.hatA * 0.6 + (cut ? Math.sin(t * 13 + slot) * 0.08 : 0);
@@ -364,8 +402,9 @@ function Courier({ slot, local }: { slot: number; local: boolean }) {
     }
     if (smile.current && mouthO.current && mouthLine.current) {
       smile.current.visible = !falling && effort < 0.5;
-      mouthO.current.visible = falling || cut;
-      mouthLine.current.visible = !falling && !cut && effort >= 0.5;
+      mouthO.current.visible = falling || cut || A.tumbleT > 0.3;
+      mouthLine.current.visible = !falling && !cut && effort >= 0.5 && A.tumbleT <= 0.3;
+      if (A.tumbleT > 0.3) smile.current.visible = false;
       if (cut) smile.current.visible = false;
     }
     // footsteps + push dust for the local courier

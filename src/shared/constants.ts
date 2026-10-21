@@ -29,6 +29,13 @@ export const GRIP_SPEED = 3.3;
 export const JUMP_SPEED = 7.4;
 export const GRIP_RANGE = 1.25; // from capsule surface to artifact surface
 export const GRIP_BREAK = 3.2;
+export const SPRINT_SPEED = 7.4; // faster, but with less grip on the ground (lower acceleration)
+
+// Piloting: one courier can ride inside the artifact and steer it.
+export const PILOT_RANGE = 1.1; // courier surface to artifact surface to hop in
+export const PILOT_TOGGLE_S = 0.6; // min time between hopping in and out
+export const PILOT_EXIT_MAX_SPEED = 3.4; // artifact must be slower than this to hop out
+export const PILOT_EXIT_RETRY_S = 4; // keep retrying a requested exit this long before giving up
 
 export const ARTIFACT_MASS = 5;
 

@@ -18,6 +18,8 @@ import { textTexture } from './Props';
 import { CargoBarrier, Drawbridge, Receiver, WindsockPost } from './Ch2';
 import { Lever, Lift, TowerWall } from './Ch3';
 import { quatEuler } from '../shared/math';
+import { useActiveMap } from './mapState';
+import { Disposer } from './Disposer';
 
 const tmpQ = new THREE.Quaternion();
 
@@ -341,8 +343,8 @@ function Plate() {
 }
 
 /** Delivery circle: golden rune ring that fills with progress, a soft upward light column and rising motes. */
-function Goal() {
-  const G = LEVEL.goal;
+export function Goal({ p, r }: { p: [number, number, number]; r: number }) {
+  const G = useMemo(() => ({ p, r }), [p, r]);
   const fill = useRef<THREE.Mesh>(null);
   const runes = useRef<THREE.Mesh>(null);
   const motes = useRef<THREE.InstancedMesh>(null);
@@ -463,13 +465,24 @@ function Goal() {
   );
 }
 
-function Checkpoints() {
+/** Flags of the active map's checkpoints (each world has its own). */
+export function Checkpoints() {
+  const map = useActiveMap();
   return (
-    <group>
-      {LEVEL.checkpoints.map((cp) => (
-        <CheckpointFlag key={cp.id} id={cp.id} p={cp.flag} />
+    <Disposer key={map.id}>
+      {map.checkpoints.map((cp) => (
+        <CheckpointFlag key={`${map.id}:${cp.id}`} id={cp.id} p={cp.flag} />
       ))}
-    </group>
+    </Disposer>
+  );
+}
+
+function ActiveGoal() {
+  const map = useActiveMap();
+  return (
+    <Disposer key={map.id}>
+      <Goal p={map.goal.p} r={map.goal.r} />
+    </Disposer>
   );
 }
 
@@ -547,7 +560,7 @@ export function World() {
       <Lever />
       <Lift />
       <TowerWall />
-      <Goal />
+      <ActiveGoal />
       <Checkpoints />
     </group>
   );

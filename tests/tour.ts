@@ -1,4 +1,4 @@
-// Visual tour: solo dev room, warp to each checkpoint, show each shape. npx tsx tests/tour.ts [base] [w] [h]
+// Visual tour: solo dev room, visit every world (dev `map`), show each shape. npx tsx tests/tour.ts [base] [w] [h]
 import { chromium } from 'playwright';
 
 const base = process.argv[2] ?? 'http://localhost:5173';
@@ -15,6 +15,11 @@ await page.screenshot({ path: `tests/out/tour-landing-${W}.png` });
 await page.getByText('Solo test room (dev)').click();
 await page.waitForTimeout(6500);
 const dev = (cmd: string) => page.evaluate(`window.__SH_NET.dev(${cmd})`);
+/** restart the solo room on world `i` and wait out its short countdown */
+const world = async (i: number) => {
+  await dev(`{ map: ${i} }`);
+  await page.waitForTimeout(2200);
+};
 const shot = async (name: string, wait = 1200) => {
   await page.waitForTimeout(wait);
   await page.screenshot({ path: `tests/out/tour-${name}.png` });
@@ -27,17 +32,25 @@ await dev(`{ art: [0, 1.1, -20.5], me: [1.5, 0, -18] }`);
 await shot('ch1-arch', 800);
 await dev(`{ shape: 1 }`);
 await shot('ch1-long', 900);
-await dev(`{ warp: 1 }`);
+await world(1);
 await dev(`{ art: [-2.5, 1.1, -56], me: [0, 0, -54] }`);
 await shot('ch2', 1500);
 await dev(`{ shape: 1 }`);
 await shot('ch2-long', 2600);
-await dev(`{ warp: 2 }`);
+await world(2);
 await dev(`{ art: [-4.5, 1.1, -100], me: [-2.5, 0, -98.5] }`);
 await shot('ch3', 1500);
 await dev(`{ shape: 2 }`);
 await shot('ch3-tall', 900);
-await dev(`{ warp: 3 }`);
+await world(3);
+await shot('w4', 1500);
+await dev(`{ warp: 2 }`);
+await shot('w4-grove', 1500);
+await world(4);
+await shot('w5', 1500);
+await dev(`{ warp: 2 }`);
+await shot('w5-crane', 1500);
+await world(5);
 await shot('ch4', 1500);
 await dev(`{ art: [5, 9.2, -113], me: [5, 8, -110.5] }`);
 await page.waitForTimeout(500);

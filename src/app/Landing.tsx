@@ -74,6 +74,7 @@ export function Landing() {
           <span><kbd>WASD</kbd> move</span>
           <span><kbd>Space</kbd> jump</span>
           <span><kbd>E</kbd> hold to grip</span>
+          <span><kbd>F</kbd> hop inside</span>
           <span><kbd>1</kbd>–<kbd>4</kbd> shift</span>
         </div>
         <div className="small-note">Exactly 3 players • no sign-up • auto-matchmaking</div>

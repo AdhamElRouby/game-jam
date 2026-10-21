@@ -8,6 +8,7 @@ import { useGame } from '../app/store';
 import { LEVEL, chapterAt } from '../shared/level';
 import { shapeSpec } from '../shared/shapes';
 import { currentHint } from './objective';
+import { activeMap } from './mapState';
 
 export const camFocus = new THREE.Vector3(0, 0, 0);
 export const camRef: { current: THREE.PerspectiveCamera | null } = { current: null };
@@ -136,7 +137,7 @@ export function CameraRig() {
       const spec = shapeSpec(a.shape);
       const aR = spec.ball ? spec.half[0] : Math.max(spec.half[0], spec.half[1], spec.half[2]);
       // per-chapter tuning, blended so chapter changes never snap
-      const target = CHAPTER_CAM[chapterAt(a.z, f.latest.cp)];
+      const target = activeMap().camera;
       const kc = 1 - Math.exp(-1.4 * dt);
       for (const k of Object.keys(target) as (keyof ChapterCam)[]) S.ch[k] += (target[k] - S.ch[k]) * (S.init ? kc : 1);
       const C = S.ch;

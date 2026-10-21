@@ -97,6 +97,7 @@ const KEEP: Rect[] = [
   [-9.5, -104, 9.5, -116.5],
   [-10, -116, 8.5, -153],
   [-10.5, -152, 10.5, -170],
+  ...LEVEL.decorKeepOut,
 ];
 
 function blocked(x: number, z: number) {

@@ -27,6 +27,14 @@ export interface LobbyState {
   timerMs?: number;
   reason?: string;
   dev?: boolean;
+  /** index of the map being played (MAPS order) */
+  map: number;
+  /** 'adventure' plays every map in order; 'single' replays one map */
+  mode: 'adventure' | 'single';
+  /** per-slot choice on the results screen: 'next' | 'retry' | 'map:<i>' | 'again' | null */
+  votes: (string | null)[];
+  /** results of the maps finished so far in this run */
+  history: Results[];
 }
 
 /** [slot, x, y, z, yaw, vx, vy, vz, flags, anchorX, anchorY, anchorZ] */
@@ -36,6 +44,11 @@ export const PF_GRIP = 2;
 export const PF_CONNECTED = 4;
 export const PF_MOVING = 8;
 export const PF_RESPAWNING = 16;
+export const PF_PILOT = 32; // riding inside the artifact (position = artifact centre)
+export const PF_TUMBLE = 64; // knocked over for a moment
+export const PF_SPRINT = 128;
+export const PF_USE = 256; // holding Q on a mechanism
+export const PF_ONMOVER = 512; // standing on a moving platform
 
 /** [x, y, z, qx, qy, qz, qw, shape, vx, vy, vz] */
 export type ArtifactSnap = [number, number, number, number, number, number, number, number, number, number, number];
@@ -66,6 +79,11 @@ export interface Snapshot {
   pl: PlayerSnap[];
   ar: ArtifactSnap;
   w: WorldSnap;
+  pi: number; // slot of the courier piloting the artifact, -1 if empty
+  pa: number; // pilot ability cooldown remaining (0..1 of its full length)
+  mp: number; // map index
+  m: number[][]; // per-mechanism state (map.mechs order)
+  ob: number; // current objective index
 }
 
 export type GameEvent =
@@ -85,18 +103,43 @@ export type GameEvent =
   | { k: 'respawn'; by: number; x: number; y: number; z: number }
   | { k: 'finish'; results: Results }
   | { k: 'toast'; text: string; slot?: number }
-  | { k: 'hop'; by: number };
+  | { k: 'hop'; by: number }
+  | { k: 'pilotIn'; by: number }
+  | { k: 'pilotOut'; by: number; x: number; y: number; z: number }
+  | { k: 'pilotFail'; by: number; why: string }
+  | { k: 'ability'; by: number; shape: number }
+  | { k: 'thump'; x: number; y: number; z: number; v: number }
+  | { k: 'tumble'; by: number }
+  | { k: 'bump'; a: number; b: number; v: number }
+  | { k: 'mech'; i: number; ev: string; v?: number; by?: number; who?: number }
+  | { k: 'collect'; i: number; by: number; n: number; total: number }
+  | { k: 'shortcut'; label: string }
+  | { k: 'stuck' };
 
+export interface Achievement {
+  label: string;
+  got: boolean;
+}
+
+/** One finished map. `adventure` is filled on the last map of a full run (totals over every map). */
 export interface Results {
+  map: number;
+  mapName: string;
   timeMs: number;
   rawMs: number;
+  par: number; // seconds
   drops: number;
   falls: number;
   shifts: number;
+  stamps: number;
+  stampTotal: number;
+  shortcuts: string[];
   score: number;
   crowns: number;
+  achievements: Achievement[];
   names: string[];
   title: string;
+  adventure?: { score: number; crowns: number; maxCrowns: number; timeMs: number; maps: number };
 }
 
 export interface HelloMsg {
@@ -110,16 +153,28 @@ export interface JoinMsg {
   solo?: boolean;
 }
 
-/** Input packet: [seq, moveX, moveZ, jumpCounter, grab(0/1), respawnCounter] */
-export type InputMsg = [number, number, number, number, number, number];
+/**
+ * Input packet: [seq, moveX, moveZ, jumpCounter, grab(0/1), respawnCounter, buttons, pilotCounter, useCounter].
+ * Counters only ever increase, so a lost packet never loses a press. The last three fields are optional (older clients).
+ */
+export type InputMsg = [number, number, number, number, number, number, number?, number?, number?];
+export const BTN_USE = 1; // Q held
+export const BTN_SPRINT = 2; // Shift held
+export const BTN_ABILITY = 4; // Space held
 
 export interface ActionMsg {
   type: 'respawn' | 'resetVote' | 'again' | 'leave';
 }
 
-export function scoreFor(timeMs: number, drops: number, falls: number) {
-  const seconds = timeMs / 1000;
-  const score = Math.max(0, Math.round(1200 - seconds * 2 - drops * 35 - falls * 10));
-  const crowns = score >= 760 ? 3 : score >= 560 ? 2 : 1;
-  return { score, crowns };
+/**
+ * Score for one map. Shifting is never penalized; finishing, speed, stamps, shortcuts and a clean run are rewarded;
+ * artifact drops and courier falls cost a little. Crowns: finish + under par + every royal stamp.
+ */
+export function mapScore(o: { seconds: number; par: number; drops: number; falls: number; stamps: number; stampTotal: number; shortcuts: number }) {
+  const timeBonus = Math.max(0, Math.round((o.par * 1.6 - o.seconds) * 4));
+  const score = Math.max(100, Math.round(500 + timeBonus + o.stamps * 60 + o.shortcuts * 80 + (o.drops === 0 ? 120 : 0) - o.drops * 35 - o.falls * 5));
+  const fast = o.seconds <= o.par;
+  const allStamps = o.stampTotal > 0 && o.stamps >= o.stampTotal;
+  const crowns = 1 + (fast ? 1 : 0) + (allStamps ? 1 : 0);
+  return { score, crowns, fast, allStamps };
 }

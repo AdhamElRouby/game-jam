@@ -1,7 +1,8 @@
-// One 3-player room: lobby -> countdown -> playing <-> paused -> finished -> (play again).
+// One 3-player room: lobby -> countdown -> playing <-> paused -> finished (map results + votes) -> next map / retry / pick.
 import type { Server, Socket } from 'socket.io';
 import { Sim } from './sim';
 import * as C from '../src/shared/constants';
+import { MAPS, mapAt } from '../src/shared/maps';
 import type { GameEvent, LobbyState, Phase, Results } from '../src/shared/protocol';
 
 export interface Member {
@@ -10,20 +11,29 @@ export interface Member {
   slot: number;
   socket: Socket | null;
   connected: boolean;
-  again: boolean;
+  /** results-screen choice: 'next' | 'retry' | 'again' | 'map:<i>' */
+  vote: string | null;
+  /** last input sequence number accepted (reset when the socket changes: a reloaded tab restarts at 0) */
+  lastSeq: number;
 }
 
 const SNAP_EVERY = Math.round(C.TICK_HZ / C.SNAPSHOT_HZ);
+const NEXT_COUNTDOWN_MS = C.RESUME_COUNTDOWN_MS + 500;
 
 export class Room {
   members: (Member | null)[];
   phase: Phase = 'waiting';
   sim: Sim | null = null;
   phaseEndsAt = 0;
+  /** disconnect grace deadline while on the results screen (0 = nobody missing) */
+  graceEndsAt = 0;
   tick = 0;
   emptySince = 0;
   lastResults: Results | null = null;
   closed = false;
+  map = 0;
+  mode: 'adventure' | 'single' = 'adventure';
+  history: Results[] = [];
 
   constructor(
     private io: Server,
@@ -58,12 +68,15 @@ export class Room {
 
   add(token: string, name: string, socket: Socket): Member {
     const slot = this.members.findIndex((m) => !m);
-    const m: Member = { token, name, slot, socket, connected: true, again: false };
+    const m: Member = { token, name, slot, socket, connected: true, vote: null, lastSeq: -1 };
     this.members[slot] = m;
     socket.join(this.id);
     this.log(`room ${this.id}: ${name} joined slot ${slot} (${this.list.length}/${this.capacity})`);
-    if (this.list.length === this.capacity) this.startCountdown(C.COUNTDOWN_MS);
-    else this.broadcastLobby();
+    if (this.list.length === this.capacity) {
+      this.mode = 'adventure';
+      this.history = [];
+      this.startMap(0, C.COUNTDOWN_MS);
+    } else this.broadcastLobby();
     this.io.to(this.id).emit('sfx', 'join');
     return m;
   }
@@ -79,7 +92,10 @@ export class Room {
       // run is over for this team; go back to the lobby keeping the remaining couriers together
       this.disposeSim();
       this.phase = 'waiting';
-      for (const o of this.list) o.again = false;
+      this.graceEndsAt = 0;
+      this.history = [];
+      this.map = 0;
+      for (const o of this.list) o.vote = null;
       const text = why === 'timeout' ? `${m.name} couldn't reconnect.` : `${m.name} left the delivery.`;
       this.io.to(this.id).emit('notice', { text, back: true });
     }
@@ -90,6 +106,7 @@ export class Room {
   attach(m: Member, socket: Socket) {
     m.socket = socket;
     m.connected = true;
+    m.lastSeq = -1;
     socket.join(this.id);
     this.sim?.setConnected(m.slot, true);
     this.log(`room ${this.id}: ${m.name} reconnected`);
@@ -97,9 +114,11 @@ export class Room {
       this.phase = 'resuming';
       this.phaseEndsAt = Date.now() + C.RESUME_COUNTDOWN_MS;
     }
+    if (this.phase === 'finished' && this.list.every((x) => x.connected)) this.graceEndsAt = 0;
     this.broadcastLobby();
     if (this.sim) socket.emit('snap', this.sim.snapshot(this.phase));
     if (this.phase === 'finished' && this.lastResults) socket.emit('results', this.lastResults);
+    this.tally();
   }
 
   disconnected(m: Member) {
@@ -109,15 +128,14 @@ export class Room {
       this.remove(m.token, 'disconnect');
       return;
     }
-    if (this.phase === 'countdown' || this.phase === 'finished') {
-      this.remove(m.token, 'disconnect');
-      return;
-    }
     this.sim?.setConnected(m.slot, false);
-    if (this.phase === 'playing' || this.phase === 'resuming') {
+    if (this.phase === 'playing' || this.phase === 'resuming' || this.phase === 'countdown') {
       this.phase = 'paused';
       this.phaseEndsAt = Date.now() + C.PAUSE_TIMEOUT_MS;
       this.log(`room ${this.id}: paused, waiting for ${m.name}`);
+    } else if (this.phase === 'finished' && !this.graceEndsAt) {
+      // results screen: keep the team together for a while so a refresh doesn't end the adventure
+      this.graceEndsAt = Date.now() + C.PAUSE_TIMEOUT_MS;
     }
     this.broadcastLobby();
   }
@@ -127,36 +145,45 @@ export class Room {
     this.sim = null;
   }
 
-  private startCountdown(ms: number) {
+  /** Build a fresh world for map `index` and count down into it. */
+  private startMap(index: number, ms: number) {
     this.disposeSim();
+    this.map = Math.max(0, Math.min(MAPS.length - 1, index));
     const names: string[] = [];
     const slots: number[] = [];
     for (const m of this.list) {
       names[m.slot] = m.name;
       slots.push(m.slot);
-      m.again = false;
+      m.vote = null;
     }
-    this.sim = new Sim({ names, slots });
+    this.sim = new Sim({ names, slots, map: mapAt(this.map) });
+    for (const m of this.list) if (!m.connected) this.sim.setConnected(m.slot, false);
     this.lastResults = null;
+    this.graceEndsAt = 0;
     this.phase = 'countdown';
     this.phaseEndsAt = Date.now() + ms;
-    this.log(`room ${this.id}: countdown (${this.list.map((m) => m.name).join(', ')})`);
+    this.log(`room ${this.id}: ${mapAt(this.map).name} (${this.mode}) countdown (${this.list.map((m) => m.name).join(', ')})`);
     this.broadcastLobby();
-    this.io.to(this.id).emit('start', { roomId: this.id });
+    this.io.to(this.id).emit('start', { roomId: this.id, map: this.map });
   }
 
   lobbyFor(m: Member | null): LobbyState {
     const now = Date.now();
+    const timed = ['countdown', 'resuming', 'paused'].includes(this.phase);
     return {
       roomId: this.id,
       code: this.code,
       phase: this.phase,
       you: m ? m.slot : -1,
       slots: this.members.map((x) =>
-        x ? { slot: x.slot, name: x.name, connected: x.connected, you: !!m && x.token === m.token, again: x.again } : null,
+        x ? { slot: x.slot, name: x.name, connected: x.connected, you: !!m && x.token === m.token, again: x.vote !== null } : null,
       ),
-      timerMs: ['countdown', 'resuming', 'paused'].includes(this.phase) ? Math.max(0, this.phaseEndsAt - now) : undefined,
+      timerMs: timed ? Math.max(0, this.phaseEndsAt - now) : this.graceEndsAt ? Math.max(0, this.graceEndsAt - now) : undefined,
       dev: this.dev,
+      map: this.map,
+      mode: this.mode,
+      votes: this.members.map((x) => (x ? x.vote : null)),
+      history: this.history,
     };
   }
 
@@ -166,10 +193,14 @@ export class Room {
 
   // ------------------------------------------------------------------ messages
   input(m: Member, data: unknown) {
-    if (!this.sim || !Array.isArray(data) || data.length < 6) return;
-    const [, mx, mz, jump, grab, resp] = data as number[];
-    if (![mx, mz, jump, grab, resp].every((x) => typeof x === 'number' && Number.isFinite(x))) return;
-    this.sim.setInput(m.slot, mx, mz, jump, grab === 1, resp);
+    if (!this.sim || !Array.isArray(data) || data.length < 6 || data.length > 12) return;
+    const [seq, mx, mz, jump, grab, resp, buttons, pilot, use] = data as number[];
+    if (![seq, mx, mz, jump, grab, resp].every((x) => typeof x === 'number' && Number.isFinite(x))) return;
+    const opt = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : undefined);
+    // drop duplicated / reordered packets (the counter fields make a skipped packet harmless)
+    if (seq <= m.lastSeq && m.lastSeq - seq < 1e6) return;
+    m.lastSeq = seq;
+    this.sim.setInput(m.slot, mx, mz, jump, grab === 1, resp, opt(buttons) ?? 0, opt(pilot), opt(use));
   }
 
   shift(m: Member, shape: unknown) {
@@ -177,29 +208,94 @@ export class Room {
     this.sim.requestShift(m.slot, shape);
   }
 
-  action(m: Member, type: unknown) {
-    if (type === 'again' && this.phase === 'finished') {
-      m.again = true;
-      if (this.list.length === this.capacity && this.list.every((x) => x.again)) {
-        this.startCountdown(C.RESUME_COUNTDOWN_MS + 500);
-      } else this.broadcastLobby();
+  /** Is `v` a valid results-screen choice right now? */
+  private validVote(v: string) {
+    if (v === 'retry' || v === 'again') return true;
+    if (v === 'next') return this.mode === 'adventure' && this.map < MAPS.length - 1;
+    const mm = /^map:(\d+)$/.exec(v);
+    return !!mm && Number(mm[1]) < MAPS.length;
+  }
+
+  action(m: Member, type: unknown, value?: unknown) {
+    if (type === 'vote' && this.phase === 'finished' && typeof value === 'string' && this.validVote(value)) {
+      m.vote = value;
+      this.broadcastLobby();
+      this.tally();
+    } else if (type === 'again' && this.phase === 'finished') {
+      // older clients: "play again" = next map in an adventure, restart after the last one
+      m.vote = this.mode === 'adventure' && this.map < MAPS.length - 1 ? 'next' : 'again';
+      this.broadcastLobby();
+      this.tally();
     } else if (type === 'resetVote' && this.sim && this.phase === 'playing') {
       this.sim.voteReset(m.slot);
     }
   }
 
-  devCommand(m: Member, cmd: any) {
-    if (!this.dev || !this.sim || !cmd) return;
-    if (cmd.warp !== undefined) this.sim.devWarp(Number(cmd.warp));
-    if (cmd.shape !== undefined) this.sim.devSetShape(Number(cmd.shape));
-    if (cmd.art) this.sim.devTeleportArtifact(cmd.art[0], cmd.art[1], cmd.art[2]);
-    if (cmd.me) this.sim.devTeleportPlayer(m.slot, cmd.me[0], cmd.me[1], cmd.me[2]);
-    if (cmd.finish) {
-      (this.sim as any).finish();
+  /** Majority of the team (2 of 3) decides; everyone must be connected so nobody gets left behind mid-transition. */
+  private tally() {
+    if (this.phase !== 'finished' || !this.list.every((x) => x.connected)) return;
+    const counts = new Map<string, number>();
+    for (const x of this.list) if (x.vote) counts.set(x.vote, (counts.get(x.vote) ?? 0) + 1);
+    const need = Math.floor(this.list.length / 2) + 1;
+    for (const [v, n] of counts) {
+      if (n < need) continue;
+      if (v === 'next') this.startMap(this.map + 1, NEXT_COUNTDOWN_MS);
+      else if (v === 'retry') {
+        // a retried map replaces its earlier result
+        this.history = this.history.filter((r) => r.map !== this.map);
+        this.startMap(this.map, NEXT_COUNTDOWN_MS);
+      } else if (v === 'again') {
+        this.mode = 'adventure';
+        this.history = [];
+        this.startMap(0, NEXT_COUNTDOWN_MS);
+      } else {
+        this.mode = 'single';
+        this.history = [];
+        this.startMap(Number(v.slice(4)), NEXT_COUNTDOWN_MS);
+      }
+      return;
     }
   }
 
+  devCommand(m: Member, cmd: any) {
+    if (!this.dev || !cmd) return;
+    if (cmd.map !== undefined && this.phase !== 'waiting') {
+      this.mode = 'single';
+      this.history = [];
+      this.startMap(Number(cmd.map) | 0, 600);
+      return;
+    }
+    const sim = this.sim;
+    if (!sim) return;
+    if (cmd.warp !== undefined) sim.devWarp(Number(cmd.warp));
+    if (cmd.solve !== undefined) sim.devSolve(String(cmd.solve));
+    if (cmd.shape !== undefined) sim.devSetShape(Number(cmd.shape));
+    if (cmd.art) sim.devTeleportArtifact(Number(cmd.art[0]), Number(cmd.art[1]), Number(cmd.art[2]));
+    if (cmd.me) sim.devTeleportPlayer(m.slot, Number(cmd.me[0]), Number(cmd.me[1]), Number(cmd.me[2]));
+    if (cmd.finish) sim.finish();
+  }
+
   // ------------------------------------------------------------------ tick
+  private onFinished(sim: Sim) {
+    const r = { ...sim.results! };
+    this.history = [...this.history.filter((h) => h.map !== r.map), r];
+    if (this.mode === 'adventure' && this.map === MAPS.length - 1) {
+      const maps = this.history.length;
+      r.adventure = {
+        score: this.history.reduce((a, h) => a + h.score, 0),
+        crowns: this.history.reduce((a, h) => a + h.crowns, 0),
+        maxCrowns: MAPS.length * 3,
+        timeMs: this.history.reduce((a, h) => a + h.timeMs, 0),
+        maps,
+      };
+      this.history[this.history.length - 1] = r;
+    }
+    this.lastResults = r;
+    this.phase = 'finished';
+    this.log(`room ${this.id}: ${r.mapName} done in ${(r.timeMs / 1000).toFixed(1)}s score ${r.score} crowns ${r.crowns}`);
+    this.broadcastLobby();
+  }
+
   step() {
     if (this.closed) return;
     const now = Date.now();
@@ -208,6 +304,9 @@ export class Room {
       this.phase = 'playing';
       this.broadcastLobby();
     } else if (this.phase === 'paused' && now >= this.phaseEndsAt) {
+      for (const m of this.list) if (!m.connected) this.remove(m.token, 'timeout');
+      return;
+    } else if (this.phase === 'finished' && this.graceEndsAt && now >= this.graceEndsAt) {
       for (const m of this.list) if (!m.connected) this.remove(m.token, 'timeout');
       return;
     }
@@ -221,17 +320,12 @@ export class Room {
       sim.events = [];
       this.io.to(this.id).emit('ev', evs);
     }
-    if (sim.finished && this.phase === 'playing') {
-      this.phase = 'finished';
-      this.lastResults = sim.results;
-      this.log(`room ${this.id}: finished in ${(sim.results!.timeMs / 1000).toFixed(1)}s score ${sim.results!.score}`);
-      this.broadcastLobby();
-    }
+    if (sim.finished && this.phase === 'playing') this.onFinished(sim);
     if (this.tick % SNAP_EVERY === 0 && this.phase !== 'finished') {
       this.io.to(this.id).emit('snap', sim.snapshot(this.phase));
     }
     // keep lobby timers fresh twice a second during timed phases
-    if (this.tick % 30 === 0 && (this.phase === 'paused' || this.phase === 'countdown' || this.phase === 'resuming')) {
+    if (this.tick % 30 === 0 && (this.phase === 'paused' || this.phase === 'countdown' || this.phase === 'resuming' || this.graceEndsAt)) {
       this.broadcastLobby();
     }
   }

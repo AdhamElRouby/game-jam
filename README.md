@@ -2,7 +2,7 @@
 
 **Three friends. One shape. Many problems.**
 
-A 3‑player online co‑op physics game in the browser. Three tiny royal couriers must haul a giant, shape‑shifting golden artifact across four floating‑island chapters to the King's castle. Every shape helps in one way and hurts in another. (The King uses it as a doorstop.)
+A 3‑player online co‑op physics game in the browser. Three tiny royal couriers must haul a giant, shape‑shifting golden artifact through six floating‑island worlds to the King's castle. Every shape helps in one way and hurts in another, one courier can hop *inside* the artifact and drive it, and the worlds are full of springs, wind, wobbly bridges, clockwork, carts and cranes. (The King uses it as a doorstop.)
 
 - Exactly 3 players per room, automatic matchmaking, optional room code, no sign‑up.
 - One authoritative Rapier physics world per room on the Node server. Clients only send inputs and render interpolated snapshots, so all three players always see the same artifact.
@@ -30,43 +30,53 @@ To play, open the URL in three browser windows or on three machines, then press 
 |---|---|
 | WASD / arrows | move |
 | Space | jump |
+| Shift (hold) | sprint (faster, less grip) |
 | **E** (hold) | grip a rope on the artifact and pull |
-| **1 2 3 4** | shift to CUBE / LONG / TALL / ROUND (must be near the artifact; shared 1.5 s cooldown) |
-| R | hop back next to your team |
-| T | vote to recall the artifact to the last checkpoint (2 votes, +7 s) |
-| Esc | menu (music / SFX volume, mute, leave) |
+| **F** | hop inside the artifact / hop back out (one pilot at a time) |
+| **Q** | use the nearest lever, valve, crank, wheel or button (some must be held) |
+| **1 2 3 4** | shift to CUBE / LONG / TALL / ROUND (near the artifact or from inside; shared 1.5 s cooldown) |
+| R | hop back next to your team (inside the artifact: bail out) |
+| T | vote to recall the artifact to the last checkpoint (2 votes; +7 s, free when it's stuck) |
+| Esc | menu (music / SFX volume, quality, mute, leave) |
 | M | mute |
 
 ## The four shapes (all one rigid body with one collider)
 
-| Shape | Upside | Downside |
-|---|---|---|
-| CUBE 2×2×2 | stable, pushes steadily, ignores wind | too tall for the low arch, can't fit the receiver |
-| LONG 4.7×0.76×1.1 | slides under the low arch, slots into the receiver | turns slowly; gusts spin it and slide it toward the edge |
-| TALL 1.1×4.4×1.1 | reaches the high lever | top‑heavy; wobbles and tips unless **two** couriers hold E |
-| ROUND r 1.05 | rolls down the castle chute faster than anything | hard to stop; the big fan blows it off the chute |
+| Shape | Upside | Downside | Piloted: WASD · Space |
+|---|---|---|---|
+| CUBE 2×2×2 | stable, pushes steadily, ignores wind | too tall for the low arch, can't fit the receiver | scoot · **Hop** (onto ledges) |
+| LONG 4.7×0.76×1.1 | slides under the low arch, slots into the receiver, bridges gaps | turns slowly; gusts spin it and slide it toward the edge | nudge · **Swing** 90° |
+| TALL 1.1×4.4×1.1 | reaches the high lever | top‑heavy; wobbles and tips unless **two** couriers hold E | waddle + lean · **Brace** |
+| ROUND r 1.05 | rolls down the castle chute faster than anything | hard to stop; wind and fans blow it away | roll (steer back to brake) · **Boost** |
 
-## The Golden Road (about 3–5 minutes)
+**Piloting.** Stand next to the artifact and press F. Inside, WASD drives it with the current shape's movement, Space is the shape's ability, 1–4 still shift, and the others can keep pushing and pulling. Hopping out picks a safe spot beside the artifact (ground below, room to stand, no walls in between). If there isn't one, or the artifact is moving too fast, the game keeps trying for a few seconds; R always bails you out to the nearest safe spot.
 
-1. **Royal Loading Dock.** Push the artifact onto the pressure plate to open the gate, then shift to LONG to fit under the low arch.
-2. **Windbridge Cliffs.** Gusts blow toward the open edge. Lay LONG in the glowing receiver to lower the drawbridge, and cross it as CUBE to stay put in the wind. Couriers have their own catwalk.
-3. **The Crooked Tower.** A steadied, upright TALL pillar throws the high lever. Then everyone and the artifact ride the lift.
-4. **Castle Dash.** Take either the safe railed road (CUBE) or the fast fan chute (ROUND). All three couriers and the artifact must hold inside the golden ring for 1.5 s.
+## The six worlds (each built for about 2–4 minutes)
 
-Checkpoints sit between chapters. If the artifact falls, it and the team respawn at the checkpoint with a 7 s penalty. A courier who falls respawns next to the team.
+1. **Royal Loading Dock** (learn to cooperate). Push onto the heavy plate to open the gate, shift to LONG under the low arch while a turnstile sweeps the lane, then hop inside as CUBE and Hop it onto the loading dock. A spring pad flings couriers (or the artifact) over the arch wall.
+2. **Windbridge Cliffs** (control versus speed). A wobbly, wind‑rocked rope bridge, a valve that calms the cliff wind but turns on a gust gauntlet, LONG into the glowing cradle to lower the drawbridge, then hug the windbreaks.
+3. **The Crooked Clockwork Tower** (stability versus freedom). Ride the rotating clock hand across while someone holds the hub brake, steady TALL against the high lever, then load the lift, crank it, and release its brake from the top.
+4. **Mushroom Mayhem** (momentum versus precision). Bouncy mushrooms launch couriers and the artifact, slippery moss, a puffball that blows everyone away, and the Giant Bounce: aim it and pump it with Q to fling the artifact to the village, or ride the bobbing caps.
+5. **Sky Railway Disaster** (coordination under pressure). Push the artifact into a mine cart, pull Depart, set the junction to the SAFE loop or the EXPRESS catapult, then work the crane (let go mid‑swing to fling it onto the mesa).
+6. **Castle Dash** (everything you've learned). Choose the safe switchback or the chaos chute past the fan, then two couriers hold the royal plates while the third brings the artifact through the portcullis. Ends with the King's cutscene.
 
-Score = 1200 − 2 × seconds − 35 × drops − 10 × tumbles, shown with a rating of 1–3 crowns.
+**Recovery.** Checkpoints sit inside each world. If the artifact falls, it and the team respawn at the checkpoint (+7 s). A courier who falls respawns next to the team. If the artifact gets stuck, recalling it (T) is free, and if it wanders off the map it comes back by itself. Machines that could trap it (the lift, the cart, gates) reset or wait for it.
+
+**Scoring.** Each world gives up to three crowns: delivered, under par time, and every royal stamp found. Score adds a time bonus under par, stamps, shortcuts and a clean‑run bonus, and subtracts drops and tumbles. Shape shifts are never penalized. Best times and crowns are saved in the browser. After each world, two of the three players vote to go to the next world, retry, or pick any world; an adventure of all six ends with a total.
 
 ## Architecture
 
 ```
 server/index.ts       Express + Socket.IO, fixed 60 Hz loop with accumulator
 server/matchmaker.ts  auto-match into 3-slot rooms, room codes, session-token reconnect
-server/room.ts        waiting → countdown → playing ⇄ paused (45 s hold) → finished → replay
-server/sim.ts         Rapier world: courier capsules, artifact body, grip ropes, shifts, puzzles
-src/shared/           level data (the same source for colliders and visuals), shapes, protocol
+server/room.ts        waiting → countdown → playing ⇄ paused (45 s hold) → finished (results + votes) → next world
+server/sim.ts         Rapier world for one map: courier capsules, artifact body, grip ropes, shifts, checkpoints
+server/mechs.ts       data-driven mechanisms (plates, gates, wind, springs, rotors, wobble bridges, cart, crane, …)
+server/pilot.ts       riding inside the artifact: occupancy, safe exits, per-shape steering and abilities
+src/shared/maps/      the six worlds as data (islands, checkpoints, mechanisms, objectives, par, music)
+src/shared/           original course level data, shapes, protocol (the same source for colliders and visuals)
 src/net/              socket client, snapshot buffer + interpolation, keyboard input
-src/render/           R3F scene: islands, machines, artifact morph, couriers, camera, FX, ending
+src/render/           R3F scene: islands, machines, mechanisms, artifact morph, couriers, camera, FX, ending
 src/app/              landing, lobby, HUD, results, menu (React DOM)
 ```
 
@@ -77,15 +87,21 @@ src/app/              landing, lobby, HUD, results, menu (React DOM)
 ## Tests (all scripted, run against real code)
 
 ```bash
-npx tsx tests/sim-test.ts      # headless physics: push scaling, grips, shifts, arch, plate, wind per shape, lever
-npx tsx tests/bot-run.ts safe  # 3 scripted couriers beat the whole course with normal inputs only
-npx tsx tests/net-test.ts      # 4 socket clients: 3 matched, 4th isolated, identical state, shift sync, pause
-npx tsx tests/play-three.ts    # 3 real Chrome sessions: shared room, identical artifact state, shift seen by all
-npx tsx tests/flow-three.ts    # browsers: 4th isolated, disconnect→pause→reload rejoin, finish, results, replay
-npx tsx tests/tour.ts          # screenshots of every chapter + ending (dev server)
+npx tsx tests/sim-test.ts             # headless physics: push scaling, grips, shifts, arch, plate, wind per shape, lever
+npx tsx tests/pilot-test.ts           # piloting: entry/exit rules, safe exits, every shape's controls and ability
+npx tsx tests/mushroom-test.ts        # springs, puffball, Giant Bounce aim + pump
+npx tsx tests/stress-test.ts          # shift spam, fast ROUND into walls, long rides, crane with a pilot, out of bounds
+npx tsx tests/bot-run.ts safe         # 3 scripted couriers beat all six worlds with normal inputs only (also: fast)
+npx tsx tests/bot-run.ts safe --room  # the same, as one full adventure through the server Room (inputs, votes, totals)
+npx tsx tests/net-test.ts             # 4 socket clients: 3 matched, 4th isolated, identical state, shift sync, pause
+npx tsx tests/net-test2.ts            # pilot sync, stale/malformed packets, identical mechanisms, results votes + drop
+npx tsx tests/play-three.ts           # 3 real Chrome sessions: shared room, identical artifact state, shift seen by all
+npx tsx tests/flow-three.ts           # browsers: 4th isolated, disconnect→pause→reload rejoin, results, vote → World 2
+npx tsx tests/perf.ts                 # FPS, draw calls, triangles in every world (dev server)
+npx tsx tests/tour.ts                 # screenshots of every world + ending (dev server)
 ```
 
-The browser tests use the installed Google Chrome through Playwright (`channel: 'chrome'`). Pass a URL as the first argument to test a production or public server.
+The browser and socket tests use the installed Google Chrome through Playwright (`channel: 'chrome'`). Pass a URL as the first argument to test a production or public server.
 
 ## Public demo
 

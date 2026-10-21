@@ -12,6 +12,8 @@ const TIPS = [
   'ROUND races downhill… straight off a cliff if nobody holds on.',
   'Hold E near the artifact to grab a rope and pull together.',
   'Fell off? Press R to hop back next to your team.',
+  'Press F next to the artifact to hop inside and steer it — but then only two of you are left outside.',
+  'Piloting, Space is the form’s trick: CUBE hops, LONG swings, TALL braces, ROUND boosts.',
 ];
 
 export function Portrait({ slot, name, empty, you, connected = true }: { slot: number; name?: string; empty?: boolean; you?: boolean; connected?: boolean }) {

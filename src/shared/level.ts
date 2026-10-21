@@ -1,4 +1,4 @@
-// "The Golden Road" — single hero course in four chapters.
+// "The Golden Road" — the original continuous course. Worlds 1-3 and 6 (src/shared/maps/course.ts) are built on it.
 // Shared by the server (colliders, triggers) and the client (visuals), so both always agree.
 // Coordinates: Y up, course runs toward -Z. Units ~ meters.
 
@@ -41,6 +41,8 @@ export interface BoxDef {
   collide?: Collide;
   occluder?: boolean;
   tag?: string;
+  /** gameplay-owned visual (render/Mechanisms.tsx draws it; pair with mat 'invisible') */
+  vis?: 'loadDock' | 'crate' | 'hedge' | 'shroomRim' | 'shroomCap' | 'shroomStem' | 'station' | 'signalBox' | 'cranePad';
 }
 
 export interface WindZone {
@@ -63,12 +65,17 @@ export interface CheckpointDef {
   artifact: V3;
   players: [V3, V3, V3];
   flag: V3;
+  /** mechanisms put in their solved state when a run starts here (dev warps) */
+  solve?: string[];
+  /** where the rail cart waits when the artifact is recalled here: legs ridden + branch (World 5) */
+  cart?: { ridden: number; branch?: number };
 }
 
 export interface AnchorDef {
   p: V3;
   cp: number;
-  req?: 'gate' | 'bridge' | 'lift';
+  /** only usable once this signal is on (e.g. the gate that leads there is open) */
+  req?: string;
 }
 
 export interface ChapterDef {
@@ -92,6 +99,23 @@ function island(
   seed: number,
   style?: 'grass' | 'stone',
 ) {
+  islands.push(chamferIsland(id, cx, cz, hx, hz, ch, top, thick, depth, seed, style));
+}
+
+/** Chamfered-rectangle island definition (shared by every map's level data). */
+export function chamferIsland(
+  id: string,
+  cx: number,
+  cz: number,
+  hx: number,
+  hz: number,
+  ch: [number, number, number, number],
+  top: number,
+  thick: number,
+  depth: number,
+  seed: number,
+  style?: 'grass' | 'stone',
+): IslandDef {
   const [fl, fr, br, bl] = ch;
   const pts: V2[] = [];
   const push = (x: number, z: number) => {
@@ -107,7 +131,7 @@ function island(
   push(cx - hx, cz - hz + bl);
   push(cx - hx, cz + hz - fl);
   if (Math.abs(pts[0][0] - pts[pts.length - 1][0]) < 1e-6 && Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 1e-6) pts.pop();
-  islands.push({ id, pts, rect: { cx, cz, hx, hz, ch }, top, thick, depth, seed, style });
+  return { id, pts, rect: { cx, cz, hx, hz, ch }, top, thick, depth, seed, style };
 }
 
 /** Solid boxes that exactly cover a chamfered-rect island (robust contacts; no convex hulls). */
@@ -243,7 +267,11 @@ box({ id: 'archTop', p: [0, 2.725, -26.5], s: [4, 2.55, 3], mat: 'stone', occlud
 box({ id: 'funL', p: [-3.1, 0.5, -23.6], s: [0.5, 1, 2.4], rot: [0, -0.5, 0], mat: 'stone', tag: 'funnel' });
 box({ id: 'funR', p: [3.1, 0.5, -23.6], s: [0.5, 1, 2.4], rot: [0, 0.5, 0], mat: 'stone', tag: 'funnel' });
 
-bridge('bBC', 0, -38, -45, 0, 5.2);
+// B -> C: the wobbly wind bridge (a mechanism of World 2, see maps/course.ts) spans z -38..-45
+
+// World 1 finale: the raised royal loading dock (CUBE pilot hop) with a crate stack for a royal stamp
+box({ id: 'loadDock', p: [5.0, 0.55, -34.6], s: [4.8, 1.1, 4.8], mat: 'invisible', vis: 'loadDock', tag: 'ledge' });
+box({ id: 'dockCrates', p: [6.6, 1.75, -36.2], s: [1.2, 1.3, 1.2], mat: 'invisible', vis: 'crate', tag: 'ledge' });
 
 // ---------------------------------------------------------------- Chapter 2: Windbridge Cliffs
 island('C', 0, -53.5, 10, 8.5, [3, 3, 0, 0], 0, 2, 12, 3);
@@ -260,7 +288,13 @@ for (const z of [-50, -54, -58]) {
 
 island('D', 0, -73.15, 10, 7.85, [0, 0, 3, 3], 0, 2, 12, 4);
 
-bridge('bDE', 0, -81, -87, 0, 5.2);
+// World 2 gust gauntlet: stone windbreaks shelter a lane on the open cliff, plus a high ridge for royal stamps
+box({ id: 'windbreak1', p: [-1.2, 1.2, -68.1], s: [0.7, 2.4, 3.0], mat: 'stone', tag: 'curb' });
+box({ id: 'windbreak2', p: [-1.2, 1.2, -74.5], s: [0.7, 2.4, 3.0], mat: 'stone', tag: 'curb' });
+box({ id: 'windbreak3', p: [-1.2, 1.2, -79.7], s: [0.7, 2.4, 2.2], mat: 'stone', tag: 'curb' });
+box({ id: 'ridge', p: [9.0, 1.2, -70.5], s: [1.2, 2.4, 8.0], mat: 'stone', tag: 'curb' });
+
+// D -> E: the Clock Hand (a rotating plank, World 3) carries the team across z -81..-87
 
 // ---------------------------------------------------------------- Chapter 3: The Crooked Tower
 island('E', 0, -95.5, 10, 8.5, [3, 3, 0, 0], 0, 2, 11, 5);
@@ -291,12 +325,22 @@ box({ id: 'plazaRailMid', p: [-0.25, 0.6, -152.2], s: [5.4, 1.2, 0.4], mat: 'sto
 box({ id: 'plazaRailFL', p: [-10.6, 0.6, -152.4], s: [2.2, 1.2, 0.4], mat: 'stone', tag: 'curb' });
 box({ id: 'plazaRailFR', p: [9.9, 0.6, -152.4], s: [4.4, 1.2, 0.4], mat: 'stone', tag: 'curb' });
 box({ id: 'castleWall', p: [0, 3, -170.6], s: [26, 6, 1.2], mat: 'stone', tag: 'castlewall' });
+// World 6 royal courtyard: hedges + a cargo-only portcullis (couriers squeeze through) around the delivery ring
+box({ id: 'hedgeL', p: [-5.9, 0.55, -163.35], s: [0.8, 1.1, 13.1], mat: 'invisible', vis: 'hedge', tag: 'hedge' });
+box({ id: 'hedgeR', p: [5.9, 0.55, -163.35], s: [0.8, 1.1, 13.1], mat: 'invisible', vis: 'hedge', tag: 'hedge' });
 
 // ---------------------------------------------------------------- export
 
 export const LEVEL = {
   islands,
   boxes,
+  /** decoration keep-out rectangles (x0, z0, x1, z1) for gameplay areas added after the original scenery pass */
+  decorKeepOut: [
+    [2.0, -31.6, 8.0, -37.6],
+    [-8, -19.5, -4.2, -23.8],
+    [-2.2, -65.6, 10.4, -81],
+    [-9.8, -96.8, -6.4, -100.4],
+  ] as [number, number, number, number][],
   spawn: {
     artifact: [0, 1.02, 2.5] as V3,
     players: [

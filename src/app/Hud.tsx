@@ -5,8 +5,9 @@ import { useGame } from './store';
 import { ShapeIcon } from './ShapeIcon';
 import { SHAPES, ShapeId } from '../shared/shapes';
 import { SLOT_COLORS, SHIFT_COOLDOWN_MS } from '../shared/constants';
-import { LEVEL } from '../shared/level';
+import { mapAt } from '../shared/maps';
 import type { Snapshot } from '../shared/protocol';
+import { PF_GRIP, PF_PILOT } from '../shared/protocol';
 
 export function fmtTime(ms: number) {
   const s = Math.max(0, ms) / 1000;
@@ -15,28 +16,15 @@ export function fmtTime(ms: number) {
   return `${m}:${r < 10 ? '0' : ''}${r.toFixed(1)}`;
 }
 
+/** Objective line from the active map's objective list (the server says which one is current). */
 function objective(s: Snapshot): { text: string; hint?: number } {
-  const w = s.w;
-  const z = s.ar[2];
+  const map = mapAt(s.mp ?? 0);
+  const ob = map.objectives[s.ob ?? 0];
+  if (!ob) return { text: '' };
   const shape = s.ar[7];
-  const cp = s.cp;
-  if (w.goal > 0.01) return { text: 'Everyone into the golden ring!' };
-  if (cp >= 3) return { text: 'Down to the castle — ROUND rolls fast', hint: shape === ShapeId.ROUND ? undefined : ShapeId.ROUND };
-  if (w.lift === 2) return { text: 'Going up!' };
-  if (w.lift === 1) return { text: `All aboard the lift (${w.aboard}/3)` };
-  if (z < -83) {
-    if (shape === ShapeId.TALL) return { text: w.steady >= 2 ? 'Steady! Push TALL into the lever' : 'Two couriers hold E to steady TALL' };
-    return { text: 'Lever too high — shift to TALL', hint: ShapeId.TALL };
-  }
-  if (cp >= 2) return { text: 'On to the Crooked Tower' };
-  if (w.bridge > 0) return { text: 'Cross the bridge — CUBE shrugs off gusts', hint: shape === ShapeId.CUBE ? undefined : ShapeId.CUBE };
-  if (z < -41.5) {
-    if (shape === ShapeId.LONG) return { text: 'Lay LONG in the glowing slot' };
-    return { text: 'Shift to LONG at the receiver', hint: ShapeId.LONG };
-  }
-  if (cp >= 1) return { text: 'Cross to Windbridge Cliffs' };
-  if (w.gate > 0) return shape === ShapeId.LONG ? { text: 'Slide LONG under the arch' } : { text: 'Low arch — only LONG fits', hint: ShapeId.LONG };
-  return { text: 'Push the artifact onto the plate' };
+  let text = ob.text;
+  if (shape === ShapeId.TALL && ob.shape === ShapeId.TALL) text = s.w.steady >= 2 ? 'Steady! Now push TALL into the lever' : 'Two couriers hold E to steady TALL, one pushes';
+  return { text, hint: ob.shape !== undefined && ob.shape !== shape ? ob.shape : undefined };
 }
 
 function useSnap(hz = 10) {
@@ -153,16 +141,18 @@ function ShapeBar({ snap, you }: { snap: Snapshot | null; you: number }) {
   const hint = snap ? objective(snap).hint : undefined;
   const me = snap?.pl.find((p) => p[0] === you);
   const dist = me && snap ? Math.hypot(me[1] - snap.ar[0], me[3] - snap.ar[2]) : 99;
-  const near = dist < 5.5;
+  const near = dist < 5.5 || (!!me && (me[8] & PF_PILOT) !== 0);
   const [fresh, setFresh] = useState(true);
   useEffect(() => {
     setFresh(true);
     const id = setTimeout(() => setFresh(false), 4200);
     return () => clearTimeout(id);
   }, [shape]);
-  const caption = hint !== undefined ? SHAPES[hint] : fresh ? spec : null;
+  const inside = !!me && (me[8] & PF_PILOT) !== 0;
+  const caption = inside ? null : hint !== undefined ? SHAPES[hint] : fresh ? spec : null;
   return (
     <div className="shapebar">
+      <PilotPanel snap={snap} you={you} />
       {caption && (
         <div className={'shape-caption' + (hint !== undefined ? ' suggest' : '')} key={caption.id + (hint !== undefined ? 'h' : '')}>
           <b>{caption.name}</b>
@@ -196,12 +186,14 @@ function TeamTags({ snap }: { snap: Snapshot | null }) {
       {lobby?.slots.map((s, i) => {
         if (!s) return null;
         const p = snap?.pl.find((x) => x[0] === i);
-        const gripping = p ? (p[8] & 2) !== 0 : false;
+        const gripping = p ? (p[8] & PF_GRIP) !== 0 : false;
+        const inside = p ? (p[8] & PF_PILOT) !== 0 : false;
         return (
           <div key={i} className={'tag' + (s.you ? ' you' : '') + (!s.connected ? ' dc' : '') + (gripping ? ' grip' : '')} style={{ ['--c' as string]: SLOT_COLORS[i] }}>
             <span className="dot" />
             {s.name}
             {s.you && <span className="you-pill">you</span>}
+            {inside && <span className="pilot-pill">inside</span>}
             {!s.connected && <span className="dc-pill">reconnecting</span>}
           </div>
         );
@@ -215,23 +207,29 @@ function Controls({ snap, you }: { snap: Snapshot | null; you: number }) {
   const [open, setOpen] = useState(false);
   const [moved, setMoved] = useState(false);
   const [gripped, setGripped] = useState(false);
+  const [piloted, setPiloted] = useState(false);
   const me = snap?.pl.find((p) => p[0] === you);
   useEffect(() => {
     if (!me) return;
     if (!moved && Math.hypot(me[5], me[7]) > 1) setMoved(true);
-    if (!gripped && (me[8] & 2) !== 0) setGripped(true);
-  }, [me, moved, gripped]);
+    if (!gripped && (me[8] & PF_GRIP) !== 0) setGripped(true);
+    if (!piloted && (me[8] & PF_PILOT) !== 0) setPiloted(true);
+  }, [me, moved, gripped, piloted]);
   const early = (snap?.el ?? 0) < 60000;
+  const inside = !!me && (me[8] & PF_PILOT) !== 0;
   let tip: React.ReactNode = null;
-  if (early && !moved) tip = <><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump</>;
+  if (inside) tip = null;
+  else if (early && !moved) tip = <><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>Shift</kbd> sprint</>;
   else if (early && !gripped) tip = <>Hold <kbd>E</kbd> near the artifact to grip &amp; pull</>;
+  else if ((snap?.el ?? 0) < 150000 && !piloted && snap && snap.pi < 0) tip = <>Press <kbd>F</kbd> next to the artifact to hop inside and steer it</>;
   return (
     <>
       {tip && !open && <div className="tip-strip">{tip}</div>}
       {open ? (
         <div className="controls card" onClick={() => setOpen(false)}>
           <div><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump</div>
-          <div><kbd>E</kbd> hold to grip &amp; pull</div>
+          <div><kbd>Shift</kbd> sprint · <kbd>E</kbd> hold to grip &amp; pull</div>
+          <div><kbd>F</kbd> hop in / out of the artifact · <kbd>Q</kbd> use</div>
           <div><kbd>1</kbd>–<kbd>4</kbd> shift shape</div>
           <div><kbd>R</kbd> hop back · <kbd>T</kbd> recall vote</div>
           <div><kbd>Esc</kbd> menu · <kbd>M</kbd> mute</div>
@@ -245,13 +243,45 @@ function Controls({ snap, you }: { snap: Snapshot | null; you: number }) {
   );
 }
 
+/** While you ride inside the artifact: what WASD and Space do for this form, the ability cooldown, how to get out. */
+function PilotPanel({ snap, you }: { snap: Snapshot | null; you: number }) {
+  if (!snap || snap.pi !== you || you < 0) return null;
+  const spec = SHAPES[snap.ar[7]];
+  return (
+    <div className="pilot-panel">
+      <div className="pilot-title">
+        Piloting <b>{spec.name}</b>
+      </div>
+      <div className="pilot-keys">
+        <span><kbd>WASD</kbd> {spec.pilotMove}</span>
+        <span className="pilot-ability">
+          <kbd>Space</kbd> {spec.ability}
+          <i className="pilot-cd" style={{ width: `${(1 - snap.pa) * 100}%` }} />
+        </span>
+        <span><kbd>F</kbd> hop out</span>
+        <span><kbd>R</kbd> bail</span>
+      </div>
+      <div className="pilot-tip">{spec.pilotTip}</div>
+    </div>
+  );
+}
+
 function StatusChips({ snap }: { snap: Snapshot | null }) {
   if (!snap) return null;
   const chips: { text: string; kind: string }[] = [];
-  const z = snap.ar[2];
-  if (z < -44 && z > -67 && snap.w.wind < -0.05) chips.push({ text: '💨 Gust incoming', kind: 'warn' });
-  if (z < -44 && z > -67 && snap.w.wind > 0.2) chips.push({ text: '💨 Gust!', kind: 'bad' });
-  if (snap.cp >= 3 && snap.w.fan > 0.2 && z < -118 && z > -146) chips.push({ text: '🌀 Fan blowing', kind: 'bad' });
+  const map = mapAt(snap.mp ?? 0);
+  const [ax, ay, az] = snap.ar;
+  // any gusting zone the artifact is in (or about to be)
+  map.mechs.forEach((def, i) => {
+    if (def.kind !== 'wind') return;
+    const s = snap.m?.[i]?.[0] ?? 0;
+    const z = def.zone;
+    if (ax < z.min[0] || ax > z.max[0] || az < z.min[2] - 2 || az > z.max[2] + 2 || ay < z.min[1] || ay > z.max[1]) return;
+    if (s < -0.05) chips.push({ text: def.legacy === 'fan' ? '🌀 Fan spinning up' : '💨 Gust incoming', kind: 'warn' });
+    else if (s > 0.2) chips.push({ text: def.legacy === 'fan' ? '🌀 Fan blowing' : '💨 Gust!', kind: 'bad' });
+  });
+  const stamps = map.mechs.reduce((n, def, i) => n + (def.kind === 'collect' && (!def.map || def.map === map.id) && (snap.m?.[i]?.[0] ?? 0) > 0.5 ? 1 : 0), 0);
+  if (stamps > 0) chips.push({ text: `👑 Stamps ${stamps}/${map.bonus.stamps}`, kind: stamps >= map.bonus.stamps ? 'good' : '' });
   if (snap.ar[7] === ShapeId.TALL) chips.push({ text: snap.w.steady >= 2 ? `✊ Steady (${snap.w.steady})` : `⚠ Wobbly ${snap.w.steady}/2`, kind: snap.w.steady >= 2 ? 'good' : 'warn' });
   if (snap.w.resetVotes > 0) chips.push({ text: `Recall vote ${snap.w.resetVotes}/2 — T`, kind: 'warn' });
   if (!chips.length) return null;
@@ -272,7 +302,8 @@ export function Hud() {
   const cutscene = useGame((s) => s.cutscene);
   const you = lobby?.you ?? -1;
   const obj = snap ? objective(snap) : null;
-  const ch = snap ? LEVEL.chapters[Math.min(3, snap.cp >= 3 ? 3 : snap.ar[2] < -83 ? 2 : snap.ar[2] < -41.5 ? 1 : 0)] : null;
+  const map = mapAt(snap?.mp ?? lobby?.map ?? 0);
+  const ch = { sub: map.sub, name: map.name };
   return (
     <div className="hud">
       {!cutscene && (
@@ -280,7 +311,7 @@ export function Hud() {
           <div className="top">
             <div className="timer-row">
               <div className="timer">{fmtTime(snap?.el ?? 0)}</div>
-              {ch && <div className="chapter-name">{ch.sub.replace('Chapter ', 'Ch ')} · {ch.name}</div>}
+              {ch && <div className="chapter-name">{ch.sub.replace('World ', 'W')} · {ch.name}</div>}
             </div>
             {obj && lobby?.phase === 'playing' && (
               <div className="objective" key={obj.text}>

@@ -2,7 +2,7 @@
 import { io, type Socket } from 'socket.io-client';
 import { INPUT_HZ } from '../shared/constants';
 import type { GameEvent, LobbyState, Results, Snapshot, WorldSnap } from '../shared/protocol';
-import { PF_GRIP, PF_GROUNDED, PF_MOVING, PF_RESPAWNING, PF_CONNECTED } from '../shared/protocol';
+import { PF_GRIP, PF_GROUNDED, PF_MOVING, PF_RESPAWNING, PF_CONNECTED, PF_PILOT, PF_TUMBLE, PF_SPRINT, PF_USE, PF_ONMOVER } from '../shared/protocol';
 import { input } from './input';
 
 export const INTERP_DELAY = 85; // ms behind newest server state
@@ -22,6 +22,12 @@ export interface PlayerView {
   moving: boolean;
   respawning: boolean;
   connected: boolean;
+  /** riding inside the artifact (x/y/z are the artifact centre) */
+  pilot: boolean;
+  tumble: boolean;
+  sprint: boolean;
+  use: boolean;
+  onMover: boolean;
   ax: number;
   ay: number;
   az: number;
@@ -47,6 +53,10 @@ export interface FrameView {
   artifact: ArtifactView;
   w: WorldSnap;
   latest: Snapshot;
+  /** slot of the courier inside the artifact, -1 if empty */
+  pilot: number;
+  /** interpolated mechanism states (same layout as Snapshot.m) */
+  m: number[][];
 }
 
 type Listener<T> = (v: T) => void;
@@ -123,8 +133,8 @@ class Net {
   shift(shape: number) {
     this.socket.emit('shift', shape);
   }
-  action(type: 'respawn' | 'resetVote' | 'again' | 'leave') {
-    this.socket.emit('act', { type });
+  action(type: 'respawn' | 'resetVote' | 'again' | 'leave' | 'vote', value?: string) {
+    this.socket.emit('act', { type, value });
   }
   dev(cmd: Record<string, unknown>) {
     this.socket.emit('dev', cmd);
@@ -159,7 +169,7 @@ class Net {
     this.inputTimer = window.setInterval(() => {
       if (!this.connected || !this.lobby || this.lobby.you < 0) return;
       const i = input.sample();
-      this.socket.emit('in', [this.seq++, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn]);
+      this.socket.emit('in', [this.seq++, i.mx, i.mz, i.jump, i.grab ? 1 : 0, i.respawn, i.buttons, i.pilot, i.use]);
     }, 1000 / INPUT_HZ);
   }
 
@@ -234,6 +244,11 @@ class Net {
         moving: (f & PF_MOVING) !== 0,
         respawning: (f & PF_RESPAWNING) !== 0,
         connected: (f & PF_CONNECTED) !== 0,
+        pilot: (pb[8] & PF_PILOT) !== 0,
+        tumble: (f & PF_TUMBLE) !== 0,
+        sprint: (f & PF_SPRINT) !== 0,
+        use: (f & PF_USE) !== 0,
+        onMover: (f & PF_ONMOVER) !== 0,
         ax: grip ? (pa[8] & PF_GRIP ? L(pa[9], pb[9]) : pb[9]) : 0,
         ay: grip ? (pa[8] & PF_GRIP ? L(pa[10], pb[10]) : pb[10]) : 0,
         az: grip ? (pa[8] & PF_GRIP ? L(pa[11], pb[11]) : pb[11]) : 0,
@@ -281,7 +296,14 @@ class Net {
       fan: L(wa.fan, wb.fan),
       goal: L(wa.goal, wb.goal),
     };
-    return { t: a.t + (b.t - a.t) * k, players, artifact, w, latest: S[n - 1] };
+    const ma = a.m ?? [];
+    const sameMap = a.mp === b.mp;
+    const m = (b.m ?? []).map((sb, i) => {
+      const sa = ma[i];
+      if (!sameMap || !sa || sa.length !== sb.length) return sb;
+      return sb.map((v, j) => sa[j] + (v - sa[j]) * k);
+    });
+    return { t: a.t + (b.t - a.t) * k, players, artifact, w, latest: S[n - 1], pilot: b.pi ?? -1, m };
   }
 }
 

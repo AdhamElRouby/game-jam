@@ -60,13 +60,21 @@ await pages[0].evaluate(`window.__SH_NET.dev({ finish: true })`);
 await pages[0].waitForTimeout(9000);
 for (let i = 0; i < 3; i++) check(`results shown on client ${i}`, (await pages[i].getByText('Delivered!').count()) > 0);
 await pages[0].screenshot({ path: 'tests/out/flow-results.png' });
-for (const p of pages) await p.getByRole('button', { name: 'Play again' }).click();
+check('results show crowns + achievements', (await pages[1].locator('.achievements li').count()) >= 3);
+// one vote is not enough; the second vote (majority) moves the team on to World 2
+await pages[0].getByRole('button', { name: /Next:/ }).click();
+await pages[0].waitForTimeout(700);
+check('a single vote waits for the team', (await lobby(pages[0]))?.phase === 'finished');
+await pages[1].getByRole('button', { name: /Next:/ }).click();
 await pages[0].waitForTimeout(1200);
-check('replay countdown starts for the same team', (await lobby(pages[0]))?.phase === 'countdown');
+const nl = (await pages[0].evaluate(`(() => { const l = window.__SH_NET.lobby; return { phase: l.phase, map: l.map, hist: l.history.length }; })()`)) as any;
+check('majority vote starts the next world', nl.phase === 'countdown' && nl.map === 1 && nl.hist === 1, JSON.stringify(nl));
 await pages[0].waitForTimeout(4500);
-check('new round playing', (await lobby(pages[1]))?.phase === 'playing');
+check('next world playing', (await lobby(pages[1]))?.phase === 'playing');
 const el = await pages[0].evaluate(`window.__SH_NET.latest().el`);
-check('timer reset for the new round', (el as number) < 3000, String(el));
+check('timer reset for the new world', (el as number) < 3000, String(el));
+const mp = await pages[2].evaluate(`window.__SH_NET.latest().mp`);
+check('all clients on World 2', mp === 1, String(mp));
 
 console.log(errors.length ? 'page errors:\n' + errors.slice(0, 8).join('\n') : 'no page errors');
 console.log(fails ? `${fails} FAILURES` : 'ALL FLOW CHECKS PASSED');

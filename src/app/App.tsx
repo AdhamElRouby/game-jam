@@ -10,6 +10,7 @@ import { Hud } from './Hud';
 import { Results } from './Results';
 import { Menu } from './Menu';
 import { WorldLabels } from './WorldLabels';
+import { mapAt } from '../shared/maps';
 
 export function App() {
   const screen = useGame((s) => s.screen);
@@ -26,7 +27,10 @@ export function App() {
         if (l.phase === 'countdown' && prev?.phase !== 'countdown') {
           set({ results: null, showResults: false, cutscene: false, banner: null });
         }
-        if (inGame) void sfx.playMusic('music_main');
+        if (inGame) {
+          const map = mapAt(l.map ?? 0);
+          void sfx.playMusic(map.music, 1.5, map.musicRate ?? 1);
+        }
       }),
       net.on('notice', (n) => {
         set({ notice: n });

@@ -1,4 +1,4 @@
-// Visual gallery: three couriers share one dev room; the slot-0 view is captured at fixed beats in every chapter.
+// Visual gallery: three couriers share one dev room; the slot-0 view is captured at fixed beats in every world.
 // npx tsx tests/gallery.ts [baseUrl] [outPrefix] [width] [height] [only]
 // Needs the dev server (uses dev warp/teleport commands). `only` = comma list of beat names to capture.
 import { chromium, type Page } from 'playwright';
@@ -35,6 +35,11 @@ you.forEach((s, i) => (bySlot[s] = pages[i]));
 const main = pages[0];
 const mainSlot = you[0];
 const dev = (p: Page, cmd: string) => p.evaluate(`window.__SH_NET.dev(${cmd})`);
+/** restart the room on world `i` (dev `map`), then wait for its short countdown */
+const world = async (i: number) => {
+  await dev(main, `{ map: ${i} }`);
+  await main.waitForTimeout(2200);
+};
 const drive = (slot: number, mx: number, mz: number, grab = false) => bySlot[slot].evaluate(`window.__SH_INPUT.override = { mx: ${mx}, mz: ${mz}, grab: ${grab} }`);
 const stopAll = () => Promise.all([0, 1, 2].map((s) => drive(s, 0, 0, false)));
 const place = async (pos: [number, number, number][]) => {
@@ -49,7 +54,7 @@ const shot = async (name: string, wait = 1200) => {
 await main.evaluate(`document.querySelector('.controls')?.click()`);
 console.log('slots', you.join(','), 'main slot', mainSlot);
 
-// Chapter 1 — dock
+// World 1 — royal loading dock
 await shot('ch1-start', 600);
 await drive(0, 0.3, -1);
 await drive(1, 0, -1);
@@ -65,8 +70,8 @@ await place([[-2.0, 0, -17.8], [0.6, 0, -17.2], [2.4, 0, -18.4]]);
 await main.waitForTimeout(400);
 await dev(main, `{ shape: 1 }`);
 await shot('ch1-arch', 1400);
-// Chapter 2 — windbridge cliffs
-await dev(main, `{ warp: 1 }`);
+// World 2 — windbridge cliffs
+await world(1);
 await dev(main, `{ art: [-2.5, 1.1, -55.5] }`);
 await place([[-4.6, 0, -52.4], [-1.0, 0, -52.0], [3.2, 0, -54.5]]);
 await shot('ch2-cliffs', 1500);
@@ -76,8 +81,9 @@ await dev(main, `{ warp: 2 }`);
 await dev(main, `{ art: [-2.5, 1.1, -63.2] }`);
 await place([[-3.6, 0, -59.6], [6.3, 0, -63.2], [-1.2, 0, -59.4]]);
 await shot('ch2-bridge', 1400);
-// Chapter 3 — crooked tower
-await dev(main, `{ warp: 2 }`);
+// World 3 — crooked clockwork tower
+await world(2);
+await dev(main, `{ warp: 1 }`);
 await dev(main, `{ art: [-4.5, 1.1, -100.5] }`);
 await place([[-6.4, 0, -99.2], [-2.6, 0, -99.4], [-4.4, 0, -97.6]]);
 await shot('ch3-tower', 1400);
@@ -87,9 +93,19 @@ await drive(0, 0, 0, true);
 await drive(1, 0, 0, true);
 await shot('ch3-tall', 1300);
 await stopAll();
-await dev(main, `{ warp: 3 }`);
+// World 4 — mushroom mayhem (its own islands at x = +70)
+await world(3);
+await shot('w4-meadow', 1400);
+await dev(main, `{ warp: 2 }`);
+await shot('w4-grove', 1600);
+// World 5 — sky railway (x = -70)
+await world(4);
+await shot('w5-station', 1400);
+await dev(main, `{ warp: 2 }`);
+await shot('w5-crane', 1600);
+// World 6 — castle dash, starting on top of the tower
+await world(5);
 await shot('ch3-top', 1600);
-// Chapter 4 — castle dash
 await dev(main, `{ art: [-6, 7.4, -121] }`);
 await place([[-7.6, 6.6, -118.8], [-4.4, 6.6, -118.6], [-6.0, 6.6, -117.6]]);
 await shot('ch4-safe', 1400);
